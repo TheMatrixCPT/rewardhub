@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
+import { ThemeToggle } from "./ThemeToggle";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +42,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
+    <nav className="fixed top-0 w-full bg-background/80 backdrop-blur-md z-50 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -59,12 +60,13 @@ const Navigation = () => {
                 className={`${
                   isActive(item.href)
                     ? "text-primary"
-                    : "text-gray-600 hover:text-primary"
+                    : "text-foreground hover:text-primary"
                 } transition-colors duration-200 font-medium`}
               >
                 {item.name}
               </Link>
             ))}
+            <ThemeToggle />
             {user ? (
               <Button
                 variant="ghost"
@@ -83,9 +85,10 @@ const Navigation = () => {
 
           {/* Mobile Navigation Button */}
           <div className="flex items-center md:hidden">
+            <ThemeToggle />
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-600 hover:text-primary transition-colors duration-200"
+              className="text-foreground hover:text-primary transition-colors duration-200 ml-4"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -96,7 +99,7 @@ const Navigation = () => {
       {/* Mobile Navigation Menu */}
       {isOpen && (
         <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-b border-gray-100">
+          <div className="px-2 pt-2 pb-3 space-y-1 bg-background border-b border-border">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -104,7 +107,7 @@ const Navigation = () => {
                 className={`${
                   isActive(item.href)
                     ? "text-primary bg-primary/5"
-                    : "text-gray-600 hover:text-primary hover:bg-primary/5"
+                    : "text-foreground hover:text-primary hover:bg-primary/5"
                 } block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200`}
                 onClick={() => setIsOpen(false)}
               >
@@ -114,14 +117,14 @@ const Navigation = () => {
             {user ? (
               <button
                 onClick={handleLogout}
-                className="w-full text-left px-3 py-2 text-gray-600 hover:text-primary hover:bg-primary/5 rounded-md text-base font-medium transition-colors duration-200"
+                className="w-full text-left px-3 py-2 text-foreground hover:text-primary hover:bg-primary/5 rounded-md text-base font-medium transition-colors duration-200"
               >
                 Logout
               </button>
             ) : (
               <Link
                 to="/auth"
-                className="block px-3 py-2 text-gray-600 hover:text-primary hover:bg-primary/5 rounded-md text-base font-medium transition-colors duration-200"
+                className="block px-3 py-2 text-foreground hover:text-primary hover:bg-primary/5 rounded-md text-base font-medium transition-colors duration-200"
                 onClick={() => setIsOpen(false)}
               >
                 Login
