@@ -24,6 +24,7 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth event:", event);
+        
         if (event === "SIGNED_IN" && session) {
           console.log("User signed in:", session.user.email);
           toast({
@@ -35,9 +36,14 @@ const Auth = () => {
           console.log("New user signed up:", session.user.email);
           toast({
             title: "Welcome to RewardHub!",
-            description: "Your account has been created successfully.",
+            description: "Please check your email to confirm your account.",
           });
-          navigate("/dashboard");
+        } else if (event === "USER_UPDATED" && session) {
+          console.log("User updated:", session.user.email);
+          toast({
+            title: "Email Confirmed!",
+            description: "You can now sign in to your account.",
+          });
         } else if (event === "SIGNED_OUT") {
           console.log("User signed out");
           toast({
@@ -61,6 +67,16 @@ const Auth = () => {
           Welcome to RewardHub
         </h2>
         
+        {/* Email verification notice */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-md text-sm text-gray-600">
+          <h3 className="font-medium mb-2">Important Notice:</h3>
+          <ul className="list-disc list-inside space-y-1">
+            <li>You will need to verify your email address after signing up</li>
+            <li>Check your inbox for the verification link</li>
+            <li>After verification, you can sign in to your account</li>
+          </ul>
+        </div>
+
         {/* Password requirements notice */}
         <div className="mb-6 p-4 bg-gray-50 rounded-md text-sm text-gray-600">
           <h3 className="font-medium mb-2">Password Requirements:</h3>
