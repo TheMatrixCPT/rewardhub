@@ -33,18 +33,6 @@ const Auth = () => {
             description: "You have successfully signed in.",
           });
           navigate("/dashboard");
-        } else if (event === "SIGNED_UP" && session) {
-          console.log("New user signed up:", session.user.email);
-          toast({
-            title: "Welcome to RewardHub!",
-            description: "Please check your email to confirm your account.",
-          });
-        } else if (event === "USER_UPDATED" && session) {
-          console.log("User updated:", session.user.email);
-          toast({
-            title: "Email Confirmed!",
-            description: "You can now sign in to your account.",
-          });
         } else if (event === "SIGNED_OUT") {
           console.log("User signed out");
           toast({
@@ -52,6 +40,17 @@ const Auth = () => {
             description: "You have been signed out successfully.",
           });
           navigate("/auth");
+        } else if (session) {
+          // Handle other auth events with session
+          if (event === "TOKEN_REFRESHED") {
+            console.log("Token refreshed for user:", session.user.email);
+          } else if (event === "USER_UPDATED") {
+            console.log("User updated:", session.user.email);
+            toast({
+              title: "Profile Updated",
+              description: "Your profile has been updated successfully.",
+            });
+          }
         }
       }
     );
