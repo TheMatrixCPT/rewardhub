@@ -180,6 +180,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_engagement_stats: {
+        Args: {
+          start_date: string
+          end_date: string
+        }
+        Returns: {
+          company_tag: string
+          mentor_tag: string
+          total_submissions: number
+          approved_submissions: number
+          average_points: number
+        }[]
+      }
       is_admin: {
         Args: {
           user_id: string
