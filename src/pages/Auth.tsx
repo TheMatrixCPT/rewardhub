@@ -4,6 +4,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { AuthChangeEvent } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -22,16 +23,16 @@ const Auth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session) => {
         if (event === "SIGNED_IN" && session) {
           navigate("/dashboard");
-        } else if (event === "SIGNED_UP" && session) {
+        } else if (event === "SIGNED_IN" && session) {
           toast({
             title: "Welcome to RewardHub!",
             description: "Your account has been created successfully.",
           });
           navigate("/dashboard");
-        } else if (event === "USER_DELETED") {
+        } else if (event === "SIGNED_OUT") {
           toast({
             title: "Account Deleted",
             description: "Your account has been deleted successfully.",
@@ -80,7 +81,6 @@ const Auth = () => {
                 }
               }
             },
-            // Enhance the styling of the auth component
             style: {
               button: {
                 borderRadius: '0.5rem',
