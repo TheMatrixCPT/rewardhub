@@ -24,26 +24,28 @@ const Auth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
+        console.log("Auth event:", event);
         if (event === "SIGNED_IN" && session) {
+          console.log("User signed in:", session.user.email);
+          toast({
+            title: "Welcome to RewardHub!",
+            description: "You have successfully signed in.",
+          });
           navigate("/dashboard");
-        } else if (event === "SIGNED_IN" && session) {
+        } else if (event === "SIGNED_UP" && session) {
+          console.log("New user signed up:", session.user.email);
           toast({
             title: "Welcome to RewardHub!",
             description: "Your account has been created successfully.",
           });
           navigate("/dashboard");
         } else if (event === "SIGNED_OUT") {
+          console.log("User signed out");
           toast({
-            title: "Account Deleted",
-            description: "Your account has been deleted successfully.",
-            variant: "destructive",
+            title: "Signed out",
+            description: "You have been signed out successfully.",
           });
           navigate("/auth");
-        } else if (event === "PASSWORD_RECOVERY") {
-          toast({
-            title: "Password Reset Email Sent",
-            description: "Check your email for the password reset link.",
-          });
         }
       }
     );
