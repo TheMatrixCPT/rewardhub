@@ -4,6 +4,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { AuthError, AuthResponse } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -62,13 +63,13 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen pt-16 pb-12">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm p-8 mt-8">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-900">
+      <div className="max-w-md mx-auto bg-card rounded-lg shadow-sm p-8 mt-8">
+        <h2 className="text-2xl font-bold text-center mb-6 text-card-foreground">
           Welcome to RewardHub
         </h2>
         
         {/* Email verification notice */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-md text-sm text-gray-600">
+        <div className="mb-6 p-4 bg-muted rounded-md text-sm text-muted-foreground">
           <h3 className="font-medium mb-2">Important Notice:</h3>
           <ul className="list-disc list-inside space-y-1">
             <li>You will need to verify your email address after signing up</li>
@@ -78,7 +79,7 @@ const Auth = () => {
         </div>
 
         {/* Password requirements notice */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-md text-sm text-gray-600">
+        <div className="mb-6 p-4 bg-muted rounded-md text-sm text-muted-foreground">
           <h3 className="font-medium mb-2">Password Requirements:</h3>
           <ul className="list-disc list-inside space-y-1">
             <li>Minimum 6 characters long</li>
