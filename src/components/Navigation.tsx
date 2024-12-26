@@ -1,10 +1,35 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "./ui/button";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -40,6 +65,20 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
+            {user ? (
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            ) : (
+              <Link to="/auth">
+                <Button>Login</Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Navigation Button */}
@@ -56,7 +95,7 @@ const Navigation = () => {
 
       {/* Mobile Navigation Menu */}
       {isOpen && (
-        <div className="md:hidden animate-fade-in">
+        <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-b border-gray-100">
             {navigation.map((item) => (
               <Link
@@ -72,6 +111,22 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-3 py-2 text-gray-600 hover:text-primary hover:bg-primary/5 rounded-md text-base font-medium transition-colors duration-200"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/auth"
+                className="block px-3 py-2 text-gray-600 hover:text-primary hover:bg-primary/5 rounded-md text-base font-medium transition-colors duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       )}
