@@ -19,21 +19,20 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        // First get all points with user information
-        const { data: pointsData, error: pointsError } = await supabase
+        const { data, error } = await supabase
           .from('points')
           .select(`
             points,
             user_id,
-            profiles (
+            profiles!points_user_id_fkey (
               email
             )
           `);
 
-        if (pointsError) throw pointsError;
+        if (error) throw error;
 
         // Process and aggregate points by user
-        const userPoints = pointsData.reduce((acc: { [key: string]: any }, curr) => {
+        const userPoints = data.reduce((acc: { [key: string]: any }, curr) => {
           const userId = curr.user_id;
           if (!acc[userId]) {
             acc[userId] = {
