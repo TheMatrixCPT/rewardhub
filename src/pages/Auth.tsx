@@ -4,7 +4,6 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { AuthChangeEvent } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -23,7 +22,7 @@ const Auth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session) => {
+      async (event, session) => {
         console.log("Auth event:", event);
         if (event === "SIGNED_IN" && session) {
           console.log("User signed in:", session.user.email);

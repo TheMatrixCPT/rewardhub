@@ -19,38 +19,42 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        // Join points with profiles through user_id
-        const { data, error } = await supabase
+        // First get all profiles
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, email');
+
+        if (profilesError) throw profilesError;
+
+        // Then get points for each user
+        const { data: pointsData, error: pointsError } = await supabase
           .from('points')
-          .select(`
-            points,
-            user_id,
-            profiles!inner(email)
-          `)
+          .select('user_id, points')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (pointsError) throw pointsError;
 
         // Process and aggregate points by user
-        const userPoints = data.reduce((acc: { [key: string]: any }, curr) => {
+        const userPoints = pointsData.reduce((acc: { [key: string]: number }, curr) => {
           const userId = curr.user_id;
           if (!acc[userId]) {
-            acc[userId] = {
-              user_id: userId,
-              email: curr.profiles.email,
-              total_points: 0,
-            };
+            acc[userId] = 0;
           }
-          acc[userId].total_points += curr.points;
+          acc[userId] += curr.points;
           return acc;
         }, {});
 
-        // Convert to array and add ranks
-        const leaderboardData = Object.values(userPoints)
-          .sort((a: any, b: any) => b.total_points - a.total_points)
-          .map((entry: any, index) => ({
+        // Combine profiles with points and create leaderboard entries
+        const leaderboardData = profiles
+          .map(profile => ({
+            user_id: profile.id,
+            email: profile.email || 'Unknown',
+            total_points: userPoints[profile.id] || 0
+          }))
+          .sort((a, b) => b.total_points - a.total_points)
+          .map((entry, index) => ({
             ...entry,
-            rank: index + 1,
+            rank: index + 1
           }));
 
         setLeaderboard(leaderboardData);
@@ -67,7 +71,7 @@ const Leaderboard = () => {
     };
 
     fetchLeaderboard();
-  }, []);
+  }, [toast]);
 
   if (loading) {
     return <div className="container py-10">Loading...</div>;
