@@ -19,15 +19,15 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
+        // Join points with profiles through user_id
         const { data, error } = await supabase
           .from('points')
           .select(`
             points,
             user_id,
-            profiles!points_user_id_fkey (
-              email
-            )
-          `);
+            profiles!inner(email)
+          `)
+          .order('created_at', { ascending: false });
 
         if (error) throw error;
 
@@ -37,7 +37,7 @@ const Leaderboard = () => {
           if (!acc[userId]) {
             acc[userId] = {
               user_id: userId,
-              email: curr.profiles?.email,
+              email: curr.profiles.email,
               total_points: 0,
             };
           }
