@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,7 +27,7 @@ const Submit = () => {
   const form = useForm<FormData>();
 
   // Fetch activities on component mount
-  useState(() => {
+  useEffect(() => {
     const fetchActivities = async () => {
       const { data, error } = await supabase
         .from("activities")
@@ -52,6 +52,13 @@ const Submit = () => {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
+      // Get the current user's ID
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("No user found");
+      }
+
       const { error } = await supabase
         .from("submissions")
         .insert({
@@ -60,6 +67,7 @@ const Submit = () => {
           proof_url: data.proofUrl,
           company_tag: data.companyTag,
           mentor_tag: data.mentorTag,
+          user_id: user.id // Add the user_id to the submission
         });
 
       if (error) throw error;
