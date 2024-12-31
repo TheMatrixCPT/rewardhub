@@ -60,7 +60,7 @@ const Admin = () => {
   }, []);
 
   // Fetch daily stats
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<DailyStats>({
     queryKey: ['dailyStats'],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
@@ -69,7 +69,7 @@ const Admin = () => {
       });
 
       if (error) throw error;
-      return data as DailyStats;
+      return data[0] as DailyStats;
     },
   });
 
@@ -211,7 +211,7 @@ const Admin = () => {
                       submission.status === 'pending'
                         ? 'default'
                         : submission.status === 'approved'
-                        ? 'success'
+                        ? 'secondary'
                         : 'destructive'
                     }
                   >

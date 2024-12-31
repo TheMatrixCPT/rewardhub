@@ -180,6 +180,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_daily_stats: {
+        Args: {
+          check_date: string
+        }
+        Returns: {
+          pending_reviews: number
+          approved_today: number
+          rejected_today: number
+          active_users: number
+        }[]
+      }
       get_engagement_stats: {
         Args: {
           start_date: string
