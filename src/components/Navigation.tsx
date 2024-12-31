@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
-import { ThemeToggle } from "./ThemeToggle";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -66,7 +65,6 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
-            <ThemeToggle />
             {user ? (
               <Button
                 variant="ghost"
@@ -85,7 +83,6 @@ const Navigation = () => {
 
           {/* Mobile Navigation Button */}
           <div className="flex items-center md:hidden">
-            <ThemeToggle />
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="text-foreground hover:text-primary transition-colors duration-200 ml-4"
