@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Prize = Tables<"prizes">
 
 const PrizeManagement = () => {
   const queryClient = useQueryClient();
@@ -25,7 +28,7 @@ const PrizeManagement = () => {
         .order('points_required', { ascending: true });
 
       if (error) throw error;
-      return data;
+      return data as Prize[];
     },
   });
 
