@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card } from "@/components/Card";
+import { Card } from "@/components/ui/card";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Prize = Tables<"prizes">
