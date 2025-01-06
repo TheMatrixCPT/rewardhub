@@ -1,14 +1,20 @@
 import { useState } from "react";
-import { Menu, X, LogOut, Gift, ClipboardList } from "lucide-react";
+import { Menu, X, LogOut, Gift, ClipboardList, LucideIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon?: LucideIcon;
+}
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAdmin, isLoading, handleLogout } = useAuth();
 
-  const navigation = [
+  const navigation: NavigationItem[] = [
     { name: "Home", href: "/" },
     { name: "Dashboard", href: "/dashboard" },
     { name: "Submit", href: "/submit" },
