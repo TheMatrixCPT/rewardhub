@@ -25,10 +25,12 @@ interface SubmissionsTableProps {
   submissions: Submission[] | undefined;
 }
 
+type SubmissionStatus = "pending" | "approved" | "rejected";
+
 const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
   const queryClient = useQueryClient();
 
-  const handleStatusChange = async (submissionId: string, newStatus: string) => {
+  const handleStatusChange = async (submissionId: string, newStatus: SubmissionStatus) => {
     console.log(`Updating submission ${submissionId} to status: ${newStatus}`);
     
     const { error } = await supabase
@@ -84,7 +86,7 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
             <TableCell>
               <Select
                 value={submission.status}
-                onValueChange={(value) => handleStatusChange(submission.id, value)}
+                onValueChange={(value: SubmissionStatus) => handleStatusChange(submission.id, value)}
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Change status" />
