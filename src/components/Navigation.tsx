@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, Gift, ClipboardList } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,7 +16,10 @@ const Navigation = () => {
   ];
 
   if (isAdmin) {
-    navigation.push({ name: "Admin", href: "/admin" });
+    navigation.push(
+      { name: "Manage Prizes", href: "/admin", icon: Gift },
+      { name: "Manage Submissions", href: "/admin?tab=submissions", icon: ClipboardList }
+    );
   }
 
   if (isLoading) {
@@ -39,8 +42,9 @@ const Navigation = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
               >
+                {item.icon && <item.icon className="h-4 w-4" />}
                 {item.name}
               </Link>
             ))}
@@ -84,9 +88,10 @@ const Navigation = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className="text-foreground hover:text-primary block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+                className="text-foreground hover:text-primary block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 flex items-center gap-2"
                 onClick={() => setIsOpen(false)}
               >
+                {item.icon && <item.icon className="h-4 w-4" />}
                 {item.name}
               </Link>
             ))}
