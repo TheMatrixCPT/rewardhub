@@ -17,7 +17,7 @@ const Navigation = () => {
     { name: "Leaderboard", href: "/leaderboard" },
     { 
       name: "Manage Prizes", 
-      href: "/admin", 
+      href: "/admin?tab=prizes", 
       icon: Gift, 
       adminOnly: true 
     },
