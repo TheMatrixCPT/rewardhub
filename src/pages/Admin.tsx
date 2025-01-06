@@ -15,7 +15,9 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import { Clock, CheckCircle, XCircle, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
+// Move types to separate interfaces
 interface DailyStats {
   pending_reviews: number;
   approved_today: number;
@@ -38,30 +40,49 @@ interface Submission {
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Check if user is admin
+  // Check authentication and admin status
   useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+    const checkAuthAndAdmin = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log("No session found, redirecting to login");
+          navigate("/auth");
+          return;
+        }
+
+        console.log("Session found, checking admin status");
+        const { data: adminStatus, error: adminError } = await supabase.rpc('is_admin', {
+          user_id: session.user.id
+        });
+
+        if (adminError) {
+          console.error('Error checking admin status:', adminError);
+          toast.error("Error checking permissions");
+          navigate("/");
+          return;
+        }
+
+        console.log("Admin status:", adminStatus);
+        setIsAdmin(adminStatus);
         setIsLoading(false);
-        return;
+
+        if (!adminStatus) {
+          toast.error("You don't have permission to access this page");
+          navigate("/");
+        }
+      } catch (error) {
+        console.error('Error in auth check:', error);
+        toast.error("Authentication error");
+        navigate("/auth");
       }
-
-      const { data, error } = await supabase.rpc('is_admin', {
-        user_id: user.id
-      });
-
-      if (error) {
-        console.error('Error checking admin status:', error);
-      }
-
-      setIsAdmin(data);
-      setIsLoading(false);
     };
 
-    checkAdmin();
-  }, []);
+    checkAuthAndAdmin();
+  }, [navigate]);
 
   // Fetch daily stats
   const { data: stats } = useQuery<DailyStats>({
@@ -75,7 +96,7 @@ const Admin = () => {
       if (error) throw error;
       return data[0] as DailyStats;
     },
-    enabled: isAdmin, // Only fetch if user is admin
+    enabled: isAdmin,
   });
 
   // Fetch recent submissions
@@ -91,7 +112,7 @@ const Admin = () => {
       if (error) throw error;
       return data as Submission[];
     },
-    enabled: isAdmin, // Only fetch if user is admin
+    enabled: isAdmin,
   });
 
   const handleApprove = async (submissionId: string) => {
@@ -125,11 +146,14 @@ const Admin = () => {
   };
 
   if (isLoading) {
-    return null; // Don't show anything while checking admin status
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
   }
 
   if (!isAdmin) {
-    window.location.href = '/'; // Redirect non-admin users to home
     return null;
   }
 
