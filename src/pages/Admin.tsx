@@ -3,39 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { format } from "date-fns";
-import { Clock, CheckCircle, XCircle, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-// Move types to separate interfaces
-interface DailyStats {
-  pending_reviews: number;
-  approved_today: number;
-  rejected_today: number;
-  active_users: number;
-}
-
-interface Submission {
-  id: string;
-  user_id: string;
-  activity_id: string;
-  created_at: string;
-  status: "pending" | "approved" | "rejected";
-  linkedin_url: string | null;
-  proof_url: string | null;
-  company_tag: string | null;
-  mentor_tag: string | null;
-}
+import StatsCards from "@/components/admin/StatsCards";
+import SubmissionsTable from "@/components/admin/SubmissionsTable";
+import type { DailyStats, Submission } from "@/types/admin";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -100,7 +72,7 @@ const Admin = () => {
   });
 
   // Fetch recent submissions
-  const { data: submissions, refetch: refetchSubmissions } = useQuery({
+  const { data: submissions } = useQuery<Submission[]>({
     queryKey: ['recentSubmissions'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -114,36 +86,6 @@ const Admin = () => {
     },
     enabled: isAdmin,
   });
-
-  const handleApprove = async (submissionId: string) => {
-    const { error } = await supabase
-      .from('submissions')
-      .update({ status: 'approved' })
-      .eq('id', submissionId);
-
-    if (error) {
-      toast.error('Failed to approve submission');
-      return;
-    }
-
-    toast.success('Submission approved');
-    refetchSubmissions();
-  };
-
-  const handleReject = async (submissionId: string) => {
-    const { error } = await supabase
-      .from('submissions')
-      .update({ status: 'rejected' })
-      .eq('id', submissionId);
-
-    if (error) {
-      toast.error('Failed to reject submission');
-      return;
-    }
-
-    toast.success('Submission rejected');
-    refetchSubmissions();
-  };
 
   if (isLoading) {
     return (
@@ -171,107 +113,13 @@ const Admin = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card className="p-4">
-          <div className="flex items-center gap-2">
-            <Clock className="text-yellow-500" />
-            <div>
-              <p className="text-sm text-muted-foreground">Pending Reviews</p>
-              <p className="text-2xl font-bold">{stats?.pending_reviews || 0}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="text-green-500" />
-            <div>
-              <p className="text-sm text-muted-foreground">Approved Today</p>
-              <p className="text-2xl font-bold">{stats?.approved_today || 0}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-2">
-            <XCircle className="text-red-500" />
-            <div>
-              <p className="text-sm text-muted-foreground">Rejected Today</p>
-              <p className="text-2xl font-bold">{stats?.rejected_today || 0}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-2">
-            <Users className="text-blue-500" />
-            <div>
-              <p className="text-sm text-muted-foreground">Active Users</p>
-              <p className="text-2xl font-bold">{stats?.active_users || 0}</p>
-            </div>
-          </div>
-        </Card>
-      </div>
+      <StatsCards stats={stats} />
 
       <Card>
         <div className="p-4 border-b">
           <h2 className="text-xl font-semibold">Recent Submissions</h2>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Activity</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {submissions?.map((submission) => (
-              <TableRow key={submission.id}>
-                <TableCell>{submission.user_id}</TableCell>
-                <TableCell>{submission.activity_id}</TableCell>
-                <TableCell>
-                  {format(new Date(submission.created_at), 'MM/dd/yyyy')}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      submission.status === 'pending'
-                        ? 'default'
-                        : submission.status === 'approved'
-                        ? 'secondary'
-                        : 'destructive'
-                    }
-                  >
-                    {submission.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {submission.status === 'pending' && (
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleApprove(submission.id)}
-                        className="bg-green-500 hover:bg-green-600"
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleReject(submission.id)}
-                      >
-                        Reject
-                      </Button>
-                    </div>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <SubmissionsTable submissions={submissions} />
       </Card>
     </div>
   );
