@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import StatsCards from "@/components/admin/StatsCards";
@@ -82,16 +81,11 @@ const Admin = () => {
 
   return (
     <div className="container py-10">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold">Submission Management</h1>
-          <p className="text-muted-foreground">
-            Review and manage user submissions
-          </p>
-        </div>
-        <Button onClick={() => navigate("/prizes")} className="bg-primary">
-          Manage Prizes
-        </Button>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold">Submission Management</h1>
+        <p className="text-muted-foreground">
+          Review and manage user submissions
+        </p>
       </div>
 
       <StatsCards stats={stats} />

@@ -10,11 +10,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Filter } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubmissionsTable from "./SubmissionsTable";
+import PrizeManagement from "./PrizeManagement";
 import type { Submission } from "@/types/admin";
 
 const SubmissionManagement = () => {
   const [filter, setFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState("submissions");
 
   const { data: submissions, isLoading } = useQuery({
     queryKey: ['recentSubmissions', filter],
@@ -55,27 +58,41 @@ const SubmissionManagement = () => {
 
   return (
     <Card>
-      <div className="p-6 border-b space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Recent Submissions</h2>
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter submissions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Submissions</SelectItem>
-                <SelectItem value="pending">Pending Only</SelectItem>
-                <SelectItem value="approved">Approved Only</SelectItem>
-                <SelectItem value="rejected">Rejected Only</SelectItem>
-                <SelectItem value="today">Today's Submissions</SelectItem>
-              </SelectContent>
-            </Select>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="p-6 border-b">
+          <div className="flex justify-between items-center">
+            <TabsList className="bg-muted/50">
+              <TabsTrigger value="submissions">Submissions</TabsTrigger>
+              <TabsTrigger value="prizes">Prize Management</TabsTrigger>
+            </TabsList>
+            {activeTab === "submissions" && (
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={filter} onValueChange={setFilter}>
+                  <SelectTrigger className="w-[180px] bg-background">
+                    <SelectValue placeholder="Filter submissions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Submissions</SelectItem>
+                    <SelectItem value="pending">Pending Only</SelectItem>
+                    <SelectItem value="approved">Approved Only</SelectItem>
+                    <SelectItem value="rejected">Rejected Only</SelectItem>
+                    <SelectItem value="today">Today's Submissions</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-      <SubmissionsTable submissions={submissions} />
+
+        <TabsContent value="submissions" className="m-0">
+          <SubmissionsTable submissions={submissions} />
+        </TabsContent>
+        
+        <TabsContent value="prizes" className="m-0 p-6">
+          <PrizeManagement />
+        </TabsContent>
+      </Tabs>
     </Card>
   );
 };
