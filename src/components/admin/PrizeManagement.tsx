@@ -131,7 +131,7 @@ const PrizeManagement = () => {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       <Card className="p-6 bg-muted/50">
         <h2 className="text-xl font-semibold mb-4">Add New Prize</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -192,13 +192,13 @@ const PrizeManagement = () => {
         </form>
       </Card>
 
-      <div>
+      <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Current Prizes</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {prizes?.map((prize) => (
             <Card
               key={prize.id}
-              className={`p-4 space-y-3 ${!prize.active ? 'opacity-75' : ''}`}
+              className={`p-4 space-y-3 ${!prize.active ? 'opacity-75 bg-muted' : ''}`}
             >
               {prize.image_url && (
                 <img
@@ -214,7 +214,11 @@ const PrizeManagement = () => {
                 <Button
                   variant={prize.active ? "destructive" : "default"}
                   onClick={() => togglePrizeStatus(prize.id, prize.active)}
-                  className="flex-1"
+                  className={`flex-1 ${
+                    prize.active 
+                      ? 'bg-red-500 hover:bg-red-600 text-white' 
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                  }`}
                 >
                   {prize.active ? "Deactivate" : "Activate"}
                 </Button>
@@ -231,7 +235,7 @@ const PrizeManagement = () => {
             </Card>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

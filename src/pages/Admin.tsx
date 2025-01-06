@@ -2,20 +2,18 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import StatsCards from "@/components/admin/StatsCards";
-import SubmissionsTable from "@/components/admin/SubmissionsTable";
+import SubmissionManagement from "@/components/admin/SubmissionManagement";
 import PrizeManagement from "@/components/admin/PrizeManagement";
-import type { DailyStats, Submission } from "@/types/admin";
+import type { DailyStats } from "@/types/admin";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Check authentication and admin status
   useEffect(() => {
     const checkAuthAndAdmin = async () => {
       try {
@@ -57,7 +55,6 @@ const Admin = () => {
     checkAuthAndAdmin();
   }, [navigate]);
 
-  // Fetch daily stats
   const { data: stats } = useQuery<DailyStats>({
     queryKey: ['dailyStats'],
     queryFn: async () => {
@@ -68,22 +65,6 @@ const Admin = () => {
 
       if (error) throw error;
       return data[0] as DailyStats;
-    },
-    enabled: isAdmin,
-  });
-
-  // Fetch recent submissions
-  const { data: submissions } = useQuery<Submission[]>({
-    queryKey: ['recentSubmissions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('submissions')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      return data as Submission[];
     },
     enabled: isAdmin,
   });
@@ -116,17 +97,16 @@ const Admin = () => {
 
       <StatsCards stats={stats} />
 
-      <div className="space-y-8 mt-8">
-        <Card>
-          <div className="p-4 border-b">
-            <h2 className="text-xl font-semibold">Recent Submissions</h2>
-          </div>
-          <SubmissionsTable submissions={submissions} />
-        </Card>
+      <div className="grid grid-cols-1 gap-8 mt-8">
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Submission Management</h2>
+          <SubmissionManagement />
+        </section>
 
-        <Card className="p-6">
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Prize Management</h2>
           <PrizeManagement />
-        </Card>
+        </section>
       </div>
     </div>
   );
