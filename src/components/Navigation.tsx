@@ -8,6 +8,7 @@ const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,6 +16,8 @@ const Navigation = () => {
       setUser(session?.user ?? null);
       if (session?.user) {
         checkAdmin(session.user.id);
+      } else {
+        setIsLoading(false);
       }
     });
 
@@ -22,6 +25,9 @@ const Navigation = () => {
       setUser(session?.user ?? null);
       if (session?.user) {
         checkAdmin(session.user.id);
+      } else {
+        setIsLoading(false);
+        setIsAdmin(false);
       }
     });
 
@@ -34,9 +40,10 @@ const Navigation = () => {
     const { data, error } = await supabase.rpc('is_admin', {
       user_id: userId
     });
-    if (!error && data) {
+    if (!error) {
       setIsAdmin(data);
     }
+    setIsLoading(false);
   };
 
   const handleLogout = async () => {
@@ -51,8 +58,13 @@ const Navigation = () => {
     { name: "Leaderboard", href: "/leaderboard" },
   ];
 
+  // Only add Admin link if user is confirmed as admin
   if (isAdmin) {
     navigation.push({ name: "Admin", href: "/admin" });
+  }
+
+  if (isLoading) {
+    return null; // Don't render navigation while checking admin status
   }
 
   return (

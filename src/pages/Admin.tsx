@@ -37,12 +37,16 @@ interface Submission {
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check if user is admin
   useEffect(() => {
     const checkAdmin = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase.rpc('is_admin', {
         user_id: user.id
@@ -50,10 +54,10 @@ const Admin = () => {
 
       if (error) {
         console.error('Error checking admin status:', error);
-        return;
       }
 
       setIsAdmin(data);
+      setIsLoading(false);
     };
 
     checkAdmin();
@@ -71,6 +75,7 @@ const Admin = () => {
       if (error) throw error;
       return data[0] as DailyStats;
     },
+    enabled: isAdmin, // Only fetch if user is admin
   });
 
   // Fetch recent submissions
@@ -86,6 +91,7 @@ const Admin = () => {
       if (error) throw error;
       return data as Submission[];
     },
+    enabled: isAdmin, // Only fetch if user is admin
   });
 
   const handleApprove = async (submissionId: string) => {
@@ -118,13 +124,13 @@ const Admin = () => {
     refetchSubmissions();
   };
 
+  if (isLoading) {
+    return null; // Don't show anything while checking admin status
+  }
+
   if (!isAdmin) {
-    return (
-      <div className="container py-10">
-        <h1 className="text-2xl font-bold">Access Denied</h1>
-        <p>You do not have permission to view this page.</p>
-      </div>
-    );
+    window.location.href = '/'; // Redirect non-admin users to home
+    return null;
   }
 
   return (
