@@ -9,6 +9,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Submission } from "@/types/admin";
@@ -21,34 +28,33 @@ interface SubmissionsTableProps {
 const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
   const queryClient = useQueryClient();
 
-  const handleApprove = async (submissionId: string) => {
+  const handleStatusChange = async (submissionId: string, newStatus: string) => {
+    console.log(`Updating submission ${submissionId} to status: ${newStatus}`);
+    
     const { error } = await supabase
       .from('submissions')
-      .update({ status: 'approved' })
+      .update({ status: newStatus })
       .eq('id', submissionId);
 
     if (error) {
-      toast.error('Failed to approve submission');
+      console.error('Error updating submission status:', error);
+      toast.error('Failed to update submission status');
       return;
     }
 
-    toast.success('Submission approved');
+    toast.success(`Submission ${newStatus}`);
     queryClient.invalidateQueries({ queryKey: ['recentSubmissions'] });
   };
 
-  const handleReject = async (submissionId: string) => {
-    const { error } = await supabase
-      .from('submissions')
-      .update({ status: 'rejected' })
-      .eq('id', submissionId);
-
-    if (error) {
-      toast.error('Failed to reject submission');
-      return;
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'secondary';
+      case 'rejected':
+        return 'destructive';
+      default:
+        return 'default';
     }
-
-    toast.success('Submission rejected');
-    queryClient.invalidateQueries({ queryKey: ['recentSubmissions'] });
   };
 
   return (
@@ -71,37 +77,24 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
               {format(new Date(submission.created_at), 'MM/dd/yyyy')}
             </TableCell>
             <TableCell>
-              <Badge
-                variant={
-                  submission.status === 'pending'
-                    ? 'default'
-                    : submission.status === 'approved'
-                    ? 'secondary'
-                    : 'destructive'
-                }
-              >
+              <Badge variant={getStatusBadgeVariant(submission.status)}>
                 {submission.status}
               </Badge>
             </TableCell>
             <TableCell>
-              {submission.status === 'pending' && (
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => handleApprove(submission.id)}
-                    className="bg-green-500 hover:bg-green-600"
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleReject(submission.id)}
-                  >
-                    Reject
-                  </Button>
-                </div>
-              )}
+              <Select
+                value={submission.status}
+                onValueChange={(value) => handleStatusChange(submission.id, value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Change status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approve</SelectItem>
+                  <SelectItem value="rejected">Reject</SelectItem>
+                </SelectContent>
+              </Select>
             </TableCell>
           </TableRow>
         ))}

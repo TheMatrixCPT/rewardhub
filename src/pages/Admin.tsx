@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import StatsCards from "@/components/admin/StatsCards";
 import SubmissionManagement from "@/components/admin/SubmissionManagement";
-import PrizeManagement from "@/components/admin/PrizeManagement";
 import type { DailyStats } from "@/types/admin";
 
 const Admin = () => {
@@ -85,13 +84,13 @@ const Admin = () => {
     <div className="container py-10">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+          <h1 className="text-2xl font-bold">Submission Management</h1>
           <p className="text-muted-foreground">
-            Manage submissions, prizes, and user activities
+            Review and manage user submissions
           </p>
         </div>
-        <Button onClick={() => {}} className="bg-primary">
-          Export Reports
+        <Button onClick={() => navigate("/prizes")} className="bg-primary">
+          Manage Prizes
         </Button>
       </div>
 
@@ -99,13 +98,7 @@ const Admin = () => {
 
       <div className="grid grid-cols-1 gap-8 mt-8">
         <section>
-          <h2 className="text-xl font-semibold mb-4">Submission Management</h2>
           <SubmissionManagement />
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Prize Management</h2>
-          <PrizeManagement />
         </section>
       </div>
     </div>
