@@ -59,6 +59,19 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
     }
   };
 
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100 text-green-800 border border-green-300';
+      case 'rejected':
+        return 'bg-red-100 text-red-800 border border-red-300';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+      default:
+        return '';
+    }
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -79,7 +92,10 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
               {format(new Date(submission.created_at), 'MM/dd/yyyy')}
             </TableCell>
             <TableCell>
-              <Badge variant={getStatusBadgeVariant(submission.status)}>
+              <Badge 
+                variant={getStatusBadgeVariant(submission.status)}
+                className={getStatusBadgeClass(submission.status)}
+              >
                 {submission.status}
               </Badge>
             </TableCell>
