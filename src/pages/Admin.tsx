@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import StatsCards from "@/components/admin/StatsCards";
 import SubmissionsTable from "@/components/admin/SubmissionsTable";
+import PrizeManagement from "@/components/admin/PrizeManagement";
 import type { DailyStats, Submission } from "@/types/admin";
 
 const Admin = () => {
@@ -105,7 +106,7 @@ const Admin = () => {
         <div>
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
           <p className="text-muted-foreground">
-            Manage submissions and user activities
+            Manage submissions, prizes, and user activities
           </p>
         </div>
         <Button onClick={() => {}} className="bg-primary">
@@ -115,12 +116,18 @@ const Admin = () => {
 
       <StatsCards stats={stats} />
 
-      <Card>
-        <div className="p-4 border-b">
-          <h2 className="text-xl font-semibold">Recent Submissions</h2>
-        </div>
-        <SubmissionsTable submissions={submissions} />
-      </Card>
+      <div className="space-y-8 mt-8">
+        <Card>
+          <div className="p-4 border-b">
+            <h2 className="text-xl font-semibold">Recent Submissions</h2>
+          </div>
+          <SubmissionsTable submissions={submissions} />
+        </Card>
+
+        <Card className="p-6">
+          <PrizeManagement />
+        </Card>
+      </div>
     </div>
   );
 };
