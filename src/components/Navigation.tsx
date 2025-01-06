@@ -3,6 +3,7 @@ import { Menu, X, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,20 +13,47 @@ const Navigation = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdmin(session.user.id);
-      } else {
+    // Initial session check
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Initial session check:", session ? "Session found" : "No session");
+        
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          checkAdmin(session.user.id);
+        } else {
+          setIsLoading(false);
+          // If no session, redirect to auth page
+          navigate("/auth");
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
         setIsLoading(false);
+        toast.error("Authentication error. Please try logging in again.");
+        navigate("/auth");
       }
-    });
+    };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
+    checkSession();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change:", event, session ? "Session exists" : "No session");
+      
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        setUser(null);
+        setIsAdmin(false);
+        setIsLoading(false);
+        navigate("/auth");
+        return;
+      }
+
       if (session?.user) {
+        setUser(session.user);
         checkAdmin(session.user.id);
       } else {
+        setUser(null);
         setIsLoading(false);
         setIsAdmin(false);
       }
@@ -34,21 +62,38 @@ const Navigation = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const checkAdmin = async (userId: string) => {
-    const { data, error } = await supabase.rpc('is_admin', {
-      user_id: userId
-    });
-    if (!error) {
-      setIsAdmin(data);
+    try {
+      const { data, error } = await supabase.rpc('is_admin', {
+        user_id: userId
+      });
+      
+      if (error) {
+        console.error('Error checking admin status:', error);
+        toast.error("Error checking permissions");
+      } else {
+        console.log("Admin status check result:", data);
+        setIsAdmin(data);
+      }
+    } catch (error) {
+      console.error('Admin check error:', error);
+      toast.error("Error checking permissions");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      navigate("/auth");
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error("Error logging out");
+    }
   };
 
   const navigation = [
@@ -58,13 +103,12 @@ const Navigation = () => {
     { name: "Leaderboard", href: "/leaderboard" },
   ];
 
-  // Only add Admin link if user is confirmed as admin
   if (isAdmin) {
     navigation.push({ name: "Admin", href: "/admin" });
   }
 
   if (isLoading) {
-    return null; // Don't render navigation while checking admin status
+    return null;
   }
 
   return (
