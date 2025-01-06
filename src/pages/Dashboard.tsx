@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Card from "@/components/Card";
+import { Card } from "@/components/ui/card";
 import {
   Award,
   BookOpen,

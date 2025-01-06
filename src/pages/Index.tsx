@@ -1,6 +1,6 @@
 import { ArrowRight, Award, Users, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
-import Card from "@/components/Card";
+import { Card } from "@/components/ui/card";
 
 const Index = () => {
   const features = [
