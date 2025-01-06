@@ -92,7 +92,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
           <Input
             required
             value={newPrize.name}
-            onChange={(e) => setNewPrize({ ...newPrize, name: e.target.value })}
+            onChange={(e) => setNewPrize({ ...prev, name: e.target.value })}
             placeholder="Enter prize name"
           />
         </div>
@@ -102,7 +102,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
           <Textarea
             required
             value={newPrize.description}
-            onChange={(e) => setNewPrize({ ...newPrize, description: e.target.value })}
+            onChange={(e) => setNewPrize({ ...prev, description: e.target.value })}
             placeholder="Describe the prize"
           />
         </div>
@@ -113,7 +113,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
             required
             type="number"
             value={newPrize.points_required}
-            onChange={(e) => setNewPrize({ ...newPrize, points_required: e.target.value })}
+            onChange={(e) => setNewPrize({ ...prev, points_required: e.target.value })}
             placeholder="Enter required points"
           />
         </div>
