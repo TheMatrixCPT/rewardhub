@@ -147,7 +147,7 @@ const PrizeBanner = () => {
                     {registration ? (
                       <div className="mt-4">
                         <div className="flex items-center justify-between mb-2">
-                          <Badge variant="success">Enrolled</Badge>
+                          <Badge variant="secondary">Enrolled</Badge>
                           <p className="text-sm text-muted-foreground">
                             Competition Points: {registration.points}
                           </p>
