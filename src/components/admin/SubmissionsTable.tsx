@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
 import { format } from "date-fns";
 import {
@@ -34,7 +33,7 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  const handleStatusChange = async (submissionId: string, newStatus: string) => {
+  const handleStatusChange = async (submissionId: string, newStatus: "pending" | "approved" | "rejected") => {
     if (newStatus === 'rejected') {
       setSelectedSubmissionId(submissionId);
       setIsRejectDialogOpen(true);
@@ -116,8 +115,9 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
                   <td>
                     <Select
                       value={submission.status}
-                      onValueChange={(value) => handleStatusChange(submission.id, value)}
-                      disabled={submission.status !== 'pending'}
+                      onValueChange={(value: "pending" | "approved" | "rejected") => 
+                        handleStatusChange(submission.id, value)
+                      }
                     >
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Change status" />

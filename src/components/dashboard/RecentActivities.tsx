@@ -22,7 +22,6 @@ const RecentActivities = () => {
           )
         `)
         .eq("user_id", user.id)
-        .eq("status", "approved")
         .order("created_at", { ascending: false })
         .limit(5);
 
@@ -63,27 +62,42 @@ const RecentActivities = () => {
           </Card>
         ) : (
           submissions?.map((submission) => {
-            const Icon = getActivityIcon(submission.activities.type);
+            const Icon = getActivityIcon(submission.activities?.type || "");
             return (
               <Card
                 key={submission.id}
-                className="p-4 flex items-center justify-between animate-fade-in"
+                className="p-4"
               >
-                <div className="flex items-center">
-                  <Icon className="h-6 w-6 text-primary mr-3" />
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {submission.activities.name}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {format(new Date(submission.created_at), "PPP")}
-                    </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Icon className="h-6 w-6 text-primary mr-3" />
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {submission.activities?.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {format(new Date(submission.created_at), "PPP")}
+                      </p>
+                      {submission.status === "rejected" && submission.admin_comment && (
+                        <p className="text-sm text-red-600 mt-1">
+                          Rejection reason: {submission.admin_comment}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-semibold text-primary">
-                    +{submission.activities.points + (submission.bonus_points || 0)} pts
-                  </span>
+                  <div className="flex items-center">
+                    {submission.status === "approved" ? (
+                      <span className="font-semibold text-primary">
+                        +{submission.activities?.points + (submission.bonus_points || 0)} pts
+                      </span>
+                    ) : (
+                      <span className={`text-sm ${
+                        submission.status === "pending" ? "text-yellow-500" : "text-red-500"
+                      }`}>
+                        {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </Card>
             );
