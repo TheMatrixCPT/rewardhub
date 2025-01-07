@@ -12,7 +12,7 @@ type PrizeLeaderboardEntry = {
   points: number;
   user_id: string;
   profiles: {
-    email: string;
+    email: string | null;
   } | null;
 };
 
@@ -47,7 +47,6 @@ const Leaderboard = () => {
           setPrizes(prizesData);
           setActiveTab(prizesData[0].id);
           
-          // Fetch leaderboard data for each prize
           const leaderboardsData: Record<string, PrizeLeaderboardEntry[]> = {};
           
           for (const prize of prizesData) {
@@ -57,9 +56,7 @@ const Leaderboard = () => {
               .select(`
                 points,
                 user_id,
-                profiles (
-                  email
-                )
+                user:profiles!inner(email)
               `)
               .eq('prize_id', prize.id)
               .order('points', { ascending: false });
@@ -71,7 +68,14 @@ const Leaderboard = () => {
 
             if (registrations) {
               console.log(`Registrations fetched for prize ${prize.id}:`, registrations);
-              leaderboardsData[prize.id] = registrations;
+              const formattedRegistrations: PrizeLeaderboardEntry[] = registrations.map(reg => ({
+                points: reg.points || 0,
+                user_id: reg.user_id,
+                profiles: {
+                  email: reg.user?.email
+                }
+              }));
+              leaderboardsData[prize.id] = formattedRegistrations;
             }
           }
           
