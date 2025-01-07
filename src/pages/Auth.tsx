@@ -4,7 +4,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { AuthError, AuthResponse } from "@supabase/supabase-js";
+import { AuthError } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -13,9 +13,19 @@ const Auth = () => {
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Session check error:", error);
+          return;
+        }
+        
+        if (session) {
+          console.log("User already logged in, redirecting to dashboard");
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
       }
     };
 
@@ -28,6 +38,9 @@ const Auth = () => {
         
         if (event === "SIGNED_IN" && session) {
           console.log("User signed in:", session.user.email);
+          // Clear any existing tokens from localStorage
+          localStorage.removeItem('supabase.auth.token');
+          
           toast({
             title: "Welcome to RewardHub!",
             description: "You have successfully signed in.",
@@ -35,22 +48,22 @@ const Auth = () => {
           navigate("/dashboard");
         } else if (event === "SIGNED_OUT") {
           console.log("User signed out");
+          // Clear any existing tokens
+          localStorage.removeItem('supabase.auth.token');
+          
           toast({
             title: "Signed out",
             description: "You have been signed out successfully.",
           });
           navigate("/auth");
-        } else if (session) {
-          // Handle other auth events with session
-          if (event === "TOKEN_REFRESHED") {
-            console.log("Token refreshed for user:", session.user.email);
-          } else if (event === "USER_UPDATED") {
-            console.log("User updated:", session.user.email);
-            toast({
-              title: "Profile Updated",
-              description: "Your profile has been updated successfully.",
-            });
-          }
+        } else if (event === "TOKEN_REFRESHED") {
+          console.log("Token refreshed successfully");
+        } else if (event === "USER_UPDATED" && session) {
+          console.log("User updated:", session.user.email);
+          toast({
+            title: "Profile Updated",
+            description: "Your profile has been updated successfully.",
+          });
         }
       }
     );
