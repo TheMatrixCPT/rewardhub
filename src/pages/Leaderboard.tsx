@@ -55,7 +55,9 @@ const Leaderboard = () => {
               .select(`
                 points,
                 user_id,
-                user:profiles!prize_registrations_user_id_fkey(email)
+                profiles!prize_registrations_user_id_fkey (
+                  email
+                )
               `)
               .eq('prize_id', prize.id)
               .order('points', { ascending: false });
@@ -70,7 +72,7 @@ const Leaderboard = () => {
               const formattedRegistrations = registrations.map(reg => ({
                 points: reg.points || 0,
                 user_id: reg.user_id,
-                email: reg.user?.email || 'Unknown'
+                email: reg.profiles?.email || 'Unknown'
               }));
               leaderboardsData[prize.id] = formattedRegistrations;
             }
