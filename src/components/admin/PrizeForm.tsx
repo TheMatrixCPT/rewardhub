@@ -22,6 +22,8 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     points_required: "",
     image_url: "",
     deadline: "",
+    registration_start: "",
+    registration_end: "",
   });
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,6 +67,8 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
             ...newPrize,
             points_required: parseInt(newPrize.points_required),
             deadline: newPrize.deadline ? new Date(newPrize.deadline).toISOString() : null,
+            registration_start: newPrize.registration_start ? new Date(newPrize.registration_start).toISOString() : null,
+            registration_end: newPrize.registration_end ? new Date(newPrize.registration_end).toISOString() : null,
           },
         ]);
 
@@ -77,6 +81,8 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
         points_required: "",
         image_url: "",
         deadline: "",
+        registration_start: "",
+        registration_end: "",
       });
       onPrizeAdded();
     } catch (error: any) {
@@ -122,12 +128,32 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Deadline</label>
+          <label className="block text-sm font-medium mb-2">Registration Start</label>
+          <Input
+            type="datetime-local"
+            value={newPrize.registration_start}
+            onChange={(e) => setNewPrize({ ...newPrize, registration_start: e.target.value })}
+            placeholder="Set registration start date"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Registration End</label>
+          <Input
+            type="datetime-local"
+            value={newPrize.registration_end}
+            onChange={(e) => setNewPrize({ ...newPrize, registration_end: e.target.value })}
+            placeholder="Set registration end date"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Competition Deadline</label>
           <Input
             type="datetime-local"
             value={newPrize.deadline}
             onChange={(e) => setNewPrize({ ...newPrize, deadline: e.target.value })}
-            placeholder="Set deadline"
+            placeholder="Set competition deadline"
           />
         </div>
 
