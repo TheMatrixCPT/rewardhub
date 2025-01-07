@@ -9,9 +9,10 @@ import { Trophy } from "lucide-react";
 import { format } from "date-fns";
 
 type PrizeLeaderboardEntry = {
-  user_email: string;
   points: number;
-  rank: number;
+  user: {
+    email: string;
+  };
 };
 
 type Prize = {
@@ -51,22 +52,18 @@ const Leaderboard = () => {
               .from('prize_registrations')
               .select(`
                 points,
-                profiles:user_id (
-                  email
-                )
+                user:profiles!prize_registrations_user_id_fkey(email)
               `)
               .eq('prize_id', prize.id)
               .order('points', { ascending: false });
 
-            if (registrationsError) throw registrationsError;
+            if (registrationsError) {
+              console.error("Error fetching registrations:", registrationsError);
+              continue;
+            }
 
             if (registrations) {
-              leaderboardsData[prize.id] = registrations
-                .map((reg, index) => ({
-                  user_email: reg.profiles.email || 'Unknown',
-                  points: reg.points || 0,
-                  rank: index + 1
-                }));
+              leaderboardsData[prize.id] = registrations as PrizeLeaderboardEntry[];
             }
           }
           
@@ -146,10 +143,10 @@ const Leaderboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {leaderboards[prize.id]?.map((entry) => (
-                      <TableRow key={`${prize.id}-${entry.rank}`}>
-                        <TableCell className="font-medium">{entry.rank}</TableCell>
-                        <TableCell>{entry.user_email}</TableCell>
+                    {leaderboards[prize.id]?.map((entry, index) => (
+                      <TableRow key={`${prize.id}-${index}`}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>{entry.user.email}</TableCell>
                         <TableCell className="text-right">{entry.points}</TableCell>
                       </TableRow>
                     ))}
