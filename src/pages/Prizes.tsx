@@ -6,15 +6,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const Prizes = () => {
   const [activeTab, setActiveTab] = useState("prizes");
 
+  const getHeading = () => {
+    switch (activeTab) {
+      case "prizes":
+        return {
+          title: "Prize Management",
+          description: "Create and manage competition prizes"
+        };
+      case "submissions":
+        return {
+          title: "Submission Management",
+          description: "Review and manage user submissions"
+        };
+      default:
+        return {
+          title: "Administration",
+          description: "Manage your platform"
+        };
+    }
+  };
+
+  const { title, description } = getHeading();
+
   return (
     <div className="container py-10">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold">Administration</h1>
-          <p className="text-muted-foreground">
-            Manage prizes and submissions
-          </p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold">{title}</h1>
+        <p className="text-muted-foreground">{description}</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
