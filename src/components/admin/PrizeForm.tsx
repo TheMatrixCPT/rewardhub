@@ -21,6 +21,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     description: "",
     points_required: "",
     image_url: "",
+    deadline: "",
   });
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,6 +64,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
           {
             ...newPrize,
             points_required: parseInt(newPrize.points_required),
+            deadline: newPrize.deadline ? new Date(newPrize.deadline).toISOString() : null,
           },
         ]);
 
@@ -74,6 +76,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
         description: "",
         points_required: "",
         image_url: "",
+        deadline: "",
       });
       onPrizeAdded();
     } catch (error: any) {
@@ -115,6 +118,16 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
             value={newPrize.points_required}
             onChange={(e) => setNewPrize({ ...newPrize, points_required: e.target.value })}
             placeholder="Enter required points"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Deadline</label>
+          <Input
+            type="datetime-local"
+            value={newPrize.deadline}
+            onChange={(e) => setNewPrize({ ...newPrize, deadline: e.target.value })}
+            placeholder="Set deadline"
           />
         </div>
 

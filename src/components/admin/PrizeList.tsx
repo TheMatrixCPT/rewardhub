@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { format } from "date-fns";
 
 type Prize = Tables<"prizes">
 
@@ -57,12 +58,18 @@ const PrizeList = ({ prizes, onPrizeUpdated }: PrizeListProps) => {
               <img
                 src={prize.image_url}
                 alt={prize.name}
-                className="w-full h-40 object-cover rounded-md"
+                className="w-full h-32 object-cover rounded-md"
               />
             )}
             <h3 className="font-semibold">{prize.name}</h3>
             <p className="text-sm text-gray-600">{prize.description}</p>
             <p className="text-sm font-medium">{prize.points_required} points required</p>
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>Created: {format(new Date(prize.created_at), 'PPP')}</p>
+              {prize.deadline && (
+                <p>Deadline: {format(new Date(prize.deadline), 'PPP')}</p>
+              )}
+            </div>
             <div className="flex gap-2">
               <Button
                 variant={prize.active ? "destructive" : "default"}
