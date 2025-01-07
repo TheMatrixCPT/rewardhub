@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
@@ -66,30 +66,41 @@ const Submit = () => {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
+      console.log("Starting submission process...");
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         throw new Error("No user found");
       }
 
+      console.log("Checking prize registration for user:", user.id, "prize:", data.prizeId);
+      
       // First check if user is registered for the selected prize
       const { data: registration, error: registrationError } = await supabase
         .from("prize_registrations")
         .select("*")
         .eq('user_id', user.id)
         .eq('prize_id', data.prizeId)
-        .single();
+        .maybeSingle();
+
+      if (registrationError) {
+        console.error("Error checking prize registration:", registrationError);
+        throw new Error("Failed to check prize registration");
+      }
 
       if (!registration) {
+        console.log("No registration found for prize");
         toast({
-          title: "Error",
-          description: "You must be registered for this prize to submit activities for it",
+          title: "Registration Required",
+          description: "You must be registered for this prize to submit activities for it. Please register for the prize first.",
           variant: "destructive",
         });
         return;
       }
 
-      const { error } = await supabase
+      console.log("Registration found, proceeding with submission");
+
+      const { error: submissionError } = await supabase
         .from("submissions")
         .insert({
           activity_id: data.activityId,
@@ -101,8 +112,12 @@ const Submit = () => {
           user_id: user.id
         });
 
-      if (error) throw error;
+      if (submissionError) {
+        console.error("Error creating submission:", submissionError);
+        throw submissionError;
+      }
 
+      console.log("Submission created successfully");
       toast({
         title: "Success!",
         description: "Your activity has been submitted for review.",
@@ -113,7 +128,7 @@ const Submit = () => {
       console.error("Error submitting activity:", error);
       toast({
         title: "Error",
-        description: "Failed to submit activity",
+        description: "Failed to submit activity. Please try again.",
         variant: "destructive",
       });
     } finally {
