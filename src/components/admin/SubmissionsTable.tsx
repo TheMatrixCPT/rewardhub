@@ -1,39 +1,17 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
 import { format } from "date-fns";
+import type { Submission } from "@/types/admin";
 
-const SubmissionsTable = () => {
-  const [submissions, setSubmissions] = useState([]);
-  const [loading, setLoading] = useState(true);
+interface SubmissionsTableProps {
+  submissions: Submission[];
+}
 
-  const fetchSubmissions = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("submissions")
-        .select(`
-          *,
-          activities (
-            name
-          )
-        `);
-
-      if (error) throw error;
-      setSubmissions(data);
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSubmissions();
-  }, []);
+const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
+  const [loading, setLoading] = useState(false);
 
   const handleReject = async (submissionId: string) => {
     const reason = prompt("Please provide a reason for rejection:");
@@ -51,7 +29,6 @@ const SubmissionsTable = () => {
       if (error) throw error;
       
       toast.success("Submission rejected");
-      fetchSubmissions();
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -81,7 +58,7 @@ const SubmissionsTable = () => {
           ) : (
             submissions.map((submission) => (
               <tr key={submission.id}>
-                <td>{submission.activities.name}</td>
+                <td>{submission.activities?.name}</td>
                 <td>{submission.user_id}</td>
                 <td>{submission.status}</td>
                 <td>{format(new Date(submission.created_at), "PPP")}</td>
