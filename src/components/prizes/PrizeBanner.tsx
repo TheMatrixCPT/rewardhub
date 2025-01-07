@@ -66,15 +66,17 @@ const PrizeBanner = () => {
         throw new Error("User not authenticated");
       }
 
-      // Check if user is already registered
+      // Check if user is already registered using maybeSingle() instead of single()
       const { data: existingReg, error: checkError } = await supabase
         .from("prize_registrations")
         .select("id")
         .eq("prize_id", prizeId)
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (checkError && checkError.code !== "PGRST116") {
+      // Only throw if it's not a "no rows returned" error
+      if (checkError) {
+        console.error("Error checking registration:", checkError);
         throw checkError;
       }
 
@@ -83,7 +85,7 @@ const PrizeBanner = () => {
         return;
       }
 
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from("prize_registrations")
         .insert([{ 
           prize_id: prizeId,
@@ -91,7 +93,10 @@ const PrizeBanner = () => {
           points: 0 // Start with 0 points for the competition
         }]);
 
-      if (error) throw error;
+      if (insertError) {
+        console.error("Error inserting registration:", insertError);
+        throw insertError;
+      }
       
       toast.success("Successfully registered for the prize!");
       refetchRegistrations();

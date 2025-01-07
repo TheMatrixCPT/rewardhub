@@ -140,6 +140,8 @@ export type Database = {
           image_url: string | null
           name: string
           points_required: number
+          registration_end: string | null
+          registration_start: string | null
           updated_at: string
         }
         Insert: {
@@ -151,6 +153,8 @@ export type Database = {
           image_url?: string | null
           name: string
           points_required: number
+          registration_end?: string | null
+          registration_start?: string | null
           updated_at?: string
         }
         Update: {
@@ -162,6 +166,8 @@ export type Database = {
           image_url?: string | null
           name?: string
           points_required?: number
+          registration_end?: string | null
+          registration_start?: string | null
           updated_at?: string
         }
         Relationships: []
