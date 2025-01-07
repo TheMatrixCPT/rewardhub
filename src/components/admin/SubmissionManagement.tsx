@@ -76,11 +76,6 @@ const SubmissionManagement = () => {
 
   const getHeading = () => {
     switch (activeTab) {
-      case "submissions":
-        return {
-          title: "Submission Management",
-          description: "Review and manage user submissions"
-        };
       case "prizes":
         return {
           title: "Prize Management",
@@ -98,15 +93,8 @@ const SubmissionManagement = () => {
 
   return (
     <Card>
-      <div className="p-6 border-b">
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold">{title}</h2>
-          <p className="text-muted-foreground">{description}</p>
-        </div>
-      </div>
-
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <div className="px-6">
+        <div className="px-6 pt-6">
           <div className="flex justify-between items-center">
             <TabsList className="bg-muted/50">
               <TabsTrigger value="submissions">Submissions</TabsTrigger>
