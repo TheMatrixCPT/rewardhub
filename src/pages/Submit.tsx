@@ -3,13 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { Database } from "@/integrations/supabase/types";
-
-type ActivityType = Database["public"]["Enums"]["activity_type"];
+import { SubmissionForm } from "@/components/submissions/SubmissionForm";
+import type { Tables } from "@/integrations/supabase/types";
 
 type FormData = {
   activityId: string;
@@ -21,17 +18,15 @@ type FormData = {
 };
 
 const Submit = () => {
-  const [activities, setActivities] = useState<any[]>([]);
-  const [prizes, setPrizes] = useState<any[]>([]);
+  const [activities, setActivities] = useState<Tables<"activities">[]>([]);
+  const [prizes, setPrizes] = useState<Tables<"prizes">[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const form = useForm<FormData>();
 
-  // Fetch activities and prizes on component mount
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch activities
       const { data: activitiesData, error: activitiesError } = await supabase
         .from("activities")
         .select("*");
@@ -46,7 +41,6 @@ const Submit = () => {
         return;
       }
 
-      // Fetch active prizes
       const { data: prizesData, error: prizesError } = await supabase
         .from("prizes")
         .select("*")
@@ -62,17 +56,16 @@ const Submit = () => {
         return;
       }
 
-      setActivities(activitiesData);
-      setPrizes(prizesData);
+      setActivities(activitiesData || []);
+      setPrizes(prizesData || []);
     };
 
     fetchData();
-  }, []);
+  }, [toast]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      // Get the current user's ID
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -139,120 +132,13 @@ const Submit = () => {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="prizeId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select Prize</FormLabel>
-                    <select
-                      {...field}
-                      className="w-full p-2 border rounded-md"
-                    >
-                      <option value="">Select a prize</option>
-                      {prizes.map((prize) => (
-                        <option key={prize.id} value={prize.id}>
-                          {prize.name}
-                        </option>
-                      ))}
-                    </select>
-                    <FormDescription>
-                      Select the prize you want to earn points for
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="activityId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Activity Type</FormLabel>
-                    <select
-                      {...field}
-                      className="w-full p-2 border rounded-md"
-                    >
-                      <option value="">Select an activity</option>
-                      {activities.map((activity) => (
-                        <option key={activity.id} value={activity.id}>
-                          {activity.name} ({activity.points} points)
-                        </option>
-                      ))}
-                    </select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="linkedinUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>LinkedIn Post URL (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://linkedin.com/post/..." {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Link to your LinkedIn post if applicable
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="proofUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Proof URL (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://..." {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Link to any proof of completion
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="companyTag"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Company Tag (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Company name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="mentorTag"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mentor Tag (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Mentor name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button type="submit" disabled={loading}>
-                {loading ? "Submitting..." : "Submit Activity"}
-              </Button>
-            </form>
+            <SubmissionForm
+              control={form.control}
+              activities={activities}
+              prizes={prizes}
+              onSubmit={form.handleSubmit(onSubmit)}
+              loading={loading}
+            />
           </Form>
         </CardContent>
       </Card>
