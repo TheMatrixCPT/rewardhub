@@ -57,6 +57,14 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!newPrize.name || !newPrize.points_required || !newPrize.registration_start || 
+        !newPrize.registration_end || !newPrize.deadline) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -97,7 +105,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
       <h2 className="text-xl font-semibold mb-4">Add New Prize</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Prize Name</label>
+          <label className="block text-sm font-medium mb-2">Prize Name *</label>
           <Input
             required
             value={newPrize.name}
@@ -109,7 +117,6 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
         <div>
           <label className="block text-sm font-medium mb-2">Description</label>
           <Textarea
-            required
             value={newPrize.description}
             onChange={(e) => setNewPrize({ ...newPrize, description: e.target.value })}
             placeholder="Describe the prize"
@@ -117,7 +124,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Points Required</label>
+          <label className="block text-sm font-medium mb-2">Points Required *</label>
           <Input
             required
             type="number"
@@ -128,8 +135,9 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Registration Start</label>
+          <label className="block text-sm font-medium mb-2">Registration Start *</label>
           <Input
+            required
             type="datetime-local"
             value={newPrize.registration_start}
             onChange={(e) => setNewPrize({ ...newPrize, registration_start: e.target.value })}
@@ -138,8 +146,9 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Registration End</label>
+          <label className="block text-sm font-medium mb-2">Registration End *</label>
           <Input
+            required
             type="datetime-local"
             value={newPrize.registration_end}
             onChange={(e) => setNewPrize({ ...newPrize, registration_end: e.target.value })}
@@ -148,8 +157,9 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Competition Deadline</label>
+          <label className="block text-sm font-medium mb-2">Competition Deadline *</label>
           <Input
+            required
             type="datetime-local"
             value={newPrize.deadline}
             onChange={(e) => setNewPrize({ ...newPrize, deadline: e.target.value })}
