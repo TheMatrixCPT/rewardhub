@@ -11,7 +11,9 @@ import { format } from "date-fns";
 type PrizeLeaderboardEntry = {
   points: number;
   user_id: string;
-  email: string;
+  profiles: {
+    email: string;
+  } | null;
 };
 
 type Prize = {
@@ -55,7 +57,7 @@ const Leaderboard = () => {
               .select(`
                 points,
                 user_id,
-                profiles!prize_registrations_user_id_fkey (
+                profiles (
                   email
                 )
               `)
@@ -69,12 +71,7 @@ const Leaderboard = () => {
 
             if (registrations) {
               console.log(`Registrations fetched for prize ${prize.id}:`, registrations);
-              const formattedRegistrations = registrations.map(reg => ({
-                points: reg.points || 0,
-                user_id: reg.user_id,
-                email: reg.profiles?.email || 'Unknown'
-              }));
-              leaderboardsData[prize.id] = formattedRegistrations;
+              leaderboardsData[prize.id] = registrations;
             }
           }
           
@@ -157,7 +154,7 @@ const Leaderboard = () => {
                     {leaderboards[prize.id]?.map((entry, index) => (
                       <TableRow key={`${prize.id}-${index}`}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
-                        <TableCell>{entry.email}</TableCell>
+                        <TableCell>{entry.profiles?.email || 'Unknown'}</TableCell>
                         <TableCell className="text-right">{entry.points}</TableCell>
                       </TableRow>
                     ))}
