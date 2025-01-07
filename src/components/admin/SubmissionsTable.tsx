@@ -83,6 +83,19 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'text-yellow-500';
+      case 'approved':
+        return 'text-green-500';
+      case 'rejected':
+        return 'text-red-500';
+      default:
+        return '';
+    }
+  };
+
   return (
     <>
       <div className="overflow-x-auto">
@@ -110,7 +123,9 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
                 <tr key={submission.id}>
                   <td>{submission.activities?.name}</td>
                   <td>{submission.user_id}</td>
-                  <td>{submission.status}</td>
+                  <td className={getStatusColor(submission.status)}>
+                    {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                  </td>
                   <td>{format(new Date(submission.created_at), "PPP")}</td>
                   <td>
                     <Select
@@ -119,13 +134,19 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
                         handleStatusChange(submission.id, value)
                       }
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-[180px] bg-white border-gray-200">
                         <SelectValue placeholder="Change status" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending" className="text-yellow-500">Pending</SelectItem>
-                        <SelectItem value="approved" className="text-green-500">Approve</SelectItem>
-                        <SelectItem value="rejected" className="text-red-500">Reject</SelectItem>
+                      <SelectContent className="bg-white border-gray-200">
+                        <SelectItem value="pending" className="text-yellow-500 hover:bg-gray-100">
+                          Pending
+                        </SelectItem>
+                        <SelectItem value="approved" className="text-green-500 hover:bg-gray-100">
+                          Approve
+                        </SelectItem>
+                        <SelectItem value="rejected" className="text-red-500 hover:bg-gray-100">
+                          Reject
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </td>
