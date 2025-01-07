@@ -13,23 +13,14 @@ const Dashboard = () => {
       if (!user) throw new Error("No user found");
 
       // Get all points from approved submissions
-      const { data: submissions, error: submissionsError } = await supabase
-        .from("submissions")
-        .select(`
-          id,
-          bonus_points,
-          activities (
-            points
-          )
-        `)
-        .eq("user_id", user.id)
-        .eq("status", "approved");
+      const { data: points, error: pointsError } = await supabase
+        .from("points")
+        .select("points")
+        .eq("user_id", user.id);
 
-      if (submissionsError) throw submissionsError;
+      if (pointsError) throw pointsError;
 
-      const totalPoints = submissions?.reduce((sum, submission) => {
-        return sum + (submission.activities?.points || 0) + (submission.bonus_points || 0);
-      }, 0) || 0;
+      const totalPoints = points?.reduce((sum, point) => sum + point.points, 0) || 0;
 
       const { count: activitiesCount, error: activitiesError } = await supabase
         .from("submissions")
@@ -52,25 +43,17 @@ const Dashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      // Get all approved submissions and their points
-      const { data: submissions, error } = await supabase
-        .from("submissions")
-        .select(`
-          user_id,
-          bonus_points,
-          activities (
-            points
-          )
-        `)
-        .eq("status", "approved");
+      // Get all points per user
+      const { data: points, error } = await supabase
+        .from("points")
+        .select("user_id, points");
 
       if (error) throw error;
 
       // Calculate total points per user
-      const userTotals = submissions.reduce((acc, submission) => {
-        const userId = submission.user_id;
-        const points = (submission.activities?.points || 0) + (submission.bonus_points || 0);
-        acc[userId] = (acc[userId] || 0) + points;
+      const userTotals = points.reduce((acc, point) => {
+        const userId = point.user_id;
+        acc[userId] = (acc[userId] || 0) + point.points;
         return acc;
       }, {} as Record<string, number>);
 

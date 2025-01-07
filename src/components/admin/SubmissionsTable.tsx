@@ -1,123 +1,101 @@
-import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Submission } from "@/types/admin";
-import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Table } from "@/components/ui/table";
+import { format } from "date-fns";
 
-interface SubmissionsTableProps {
-  submissions: Submission[] | undefined;
-}
+const SubmissionsTable = () => {
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-type SubmissionStatus = "pending" | "approved" | "rejected";
+  const fetchSubmissions = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("submissions")
+        .select(`
+          *,
+          activities (
+            name
+          )
+        `);
 
-const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
-  const queryClient = useQueryClient();
-
-  const handleStatusChange = async (submissionId: string, newStatus: SubmissionStatus) => {
-    console.log(`Updating submission ${submissionId} to status: ${newStatus}`);
-    
-    const { error } = await supabase
-      .from('submissions')
-      .update({ status: newStatus })
-      .eq('id', submissionId);
-
-    if (error) {
-      console.error('Error updating submission status:', error);
-      toast.error('Failed to update submission status');
-      return;
-    }
-
-    toast.success(`Submission ${newStatus}`);
-    queryClient.invalidateQueries({ queryKey: ['recentSubmissions'] });
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'secondary';
-      case 'rejected':
-        return 'destructive';
-      default:
-        return 'default';
+      if (error) throw error;
+      setSubmissions(data);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800 border border-green-300';
-      case 'rejected':
-        return 'bg-red-100 text-red-800 border border-red-300';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
-      default:
-        return '';
+  useEffect(() => {
+    fetchSubmissions();
+  }, []);
+
+  const handleReject = async (submissionId: string) => {
+    const reason = prompt("Please provide a reason for rejection:");
+    if (reason === null) return; // User cancelled
+
+    try {
+      const { error } = await supabase
+        .from('submissions')
+        .update({ 
+          status: 'rejected',
+          admin_comment: reason || 'No reason provided'
+        })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+      
+      toast.success("Submission rejected");
+      fetchSubmissions();
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>User</TableHead>
-          <TableHead>Activity</TableHead>
-          <TableHead>Date</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {submissions?.map((submission) => (
-          <TableRow key={submission.id}>
-            <TableCell>{submission.user_id}</TableCell>
-            <TableCell>{submission.activity_id}</TableCell>
-            <TableCell>
-              {format(new Date(submission.created_at), 'MM/dd/yyyy')}
-            </TableCell>
-            <TableCell>
-              <Badge 
-                variant={getStatusBadgeVariant(submission.status)}
-                className={getStatusBadgeClass(submission.status)}
-              >
-                {submission.status}
-              </Badge>
-            </TableCell>
-            <TableCell>
-              <Select
-                value={submission.status}
-                onValueChange={(value: SubmissionStatus) => handleStatusChange(submission.id, value)}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Change status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approved">Approve</SelectItem>
-                  <SelectItem value="rejected">Reject</SelectItem>
-                </SelectContent>
-              </Select>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="overflow-x-auto">
+      <Table>
+        <thead>
+          <tr>
+            <th>Activity</th>
+            <th>User</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
+            <tr>
+              <td colSpan={5} className="text-center">Loading...</td>
+            </tr>
+          ) : submissions.length === 0 ? (
+            <tr>
+              <td colSpan={5} className="text-center">No submissions found</td>
+            </tr>
+          ) : (
+            submissions.map((submission) => (
+              <tr key={submission.id}>
+                <td>{submission.activities.name}</td>
+                <td>{submission.user_id}</td>
+                <td>{submission.status}</td>
+                <td>{format(new Date(submission.created_at), "PPP")}</td>
+                <td>
+                  <Button onClick={() => handleReject(submission.id)} variant="destructive">
+                    Reject
+                  </Button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </Table>
+    </div>
   );
 };
 

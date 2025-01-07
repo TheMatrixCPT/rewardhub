@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, isPast, isFuture } from "date-fns";
 import { Trophy } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -15,15 +15,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Prize {
-  id: string;
-  name: string;
-  description: string;
-  points_required: number;
-  deadline: string | null;
-  image_url: string | null;
-}
-
 const PrizeBanner = () => {
   const [registering, setRegistering] = useState(false);
 
@@ -37,7 +28,7 @@ const PrizeBanner = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Prize[];
+      return data;
     },
   });
 
@@ -66,7 +57,6 @@ const PrizeBanner = () => {
         throw new Error("User not authenticated");
       }
 
-      // Check if user is already registered using maybeSingle() instead of single()
       const { data: existingReg, error: checkError } = await supabase
         .from("prize_registrations")
         .select("id")
@@ -74,7 +64,6 @@ const PrizeBanner = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      // Only throw if it's not a "no rows returned" error
       if (checkError) {
         console.error("Error checking registration:", checkError);
         throw checkError;
@@ -90,7 +79,7 @@ const PrizeBanner = () => {
         .insert([{ 
           prize_id: prizeId,
           user_id: user.id,
-          points: 0 // Start with 0 points for the competition
+          points: 0
         }]);
 
       if (insertError) {
@@ -108,6 +97,15 @@ const PrizeBanner = () => {
     }
   };
 
+  const isRegistrationOpen = (prize: any) => {
+    const now = new Date();
+    const start = prize.registration_start ? new Date(prize.registration_start) : null;
+    const end = prize.registration_end ? new Date(prize.registration_end) : null;
+    
+    if (!start || !end) return true; // If no dates set, registration is open
+    return !isPast(end) && !isFuture(start);
+  };
+
   if (!prizes?.length) return null;
 
   return (
@@ -123,6 +121,7 @@ const PrizeBanner = () => {
             const registration = registrations?.find(
               (r) => r.prize_id === prize.id
             );
+            const registrationOpen = isRegistrationOpen(prize);
             
             return (
               <CarouselItem key={prize.id} className="md:basis-1/2 lg:basis-1/3">
@@ -145,10 +144,16 @@ const PrizeBanner = () => {
                       </Badge>
                       {prize.deadline && (
                         <Badge variant="outline">
-                          Ends {format(new Date(prize.deadline), "MMM d, yyyy")}
+                          Competition ends {format(new Date(prize.deadline), "MMM d, yyyy")}
                         </Badge>
                       )}
                     </div>
+                    {prize.registration_start && prize.registration_end && (
+                      <div className="text-sm text-muted-foreground mt-2">
+                        <p>Registration period:</p>
+                        <p>{format(new Date(prize.registration_start), "MMM d, yyyy")} - {format(new Date(prize.registration_end), "MMM d, yyyy")}</p>
+                      </div>
+                    )}
                     {registration ? (
                       <div className="mt-4">
                         <div className="flex items-center justify-between mb-2">
@@ -169,7 +174,7 @@ const PrizeBanner = () => {
                           />
                         </div>
                       </div>
-                    ) : (
+                    ) : registrationOpen ? (
                       <Button
                         className="w-full mt-4"
                         onClick={() => handleRegister(prize.id)}
@@ -177,6 +182,10 @@ const PrizeBanner = () => {
                       >
                         Register to Compete
                       </Button>
+                    ) : (
+                      <Badge variant="secondary" className="w-full mt-4">
+                        Registration {isPast(new Date(prize.registration_end || '')) ? 'Closed' : 'Not Started'}
+                      </Badge>
                     )}
                   </div>
                 </Card>
