@@ -21,17 +21,64 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 import type { Submission } from "@/types/admin";
 
 interface SubmissionsTableProps {
   submissions: Submission[];
 }
 
-const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
+const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableProps) => {
   const [loading, setLoading] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [filteredSubmissions, setFilteredSubmissions] = useState(initialSubmissions);
+
+  const applyFilters = () => {
+    let filtered = [...initialSubmissions];
+
+    // Apply status filters
+    if (activeFilters.includes("pending")) {
+      filtered = filtered.filter(s => s.status === "pending");
+    }
+    if (activeFilters.includes("approved")) {
+      filtered = filtered.filter(s => s.status === "approved");
+    }
+    if (activeFilters.includes("rejected")) {
+      filtered = filtered.filter(s => s.status === "rejected");
+    }
+
+    // Apply date filter
+    if (activeFilters.includes("today")) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      filtered = filtered.filter(s => new Date(s.created_at) >= today);
+    }
+
+    // Apply sort order
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    });
+
+    setFilteredSubmissions(filtered);
+  };
+
+  const handleFilterChange = (value: string) => {
+    let newFilters: string[];
+    if (activeFilters.includes(value)) {
+      newFilters = activeFilters.filter(f => f !== value);
+    } else {
+      newFilters = [...activeFilters, value];
+    }
+    setActiveFilters(newFilters);
+    setTimeout(applyFilters, 0);
+  };
 
   const handleStatusChange = async (submissionId: string, newStatus: "pending" | "approved" | "rejected") => {
     if (newStatus === 'rejected') {
@@ -50,6 +97,11 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
       if (error) throw error;
       
       toast.success(`Submission ${newStatus}`);
+      // Refresh the data after status change
+      const updatedSubmission = filteredSubmissions.map(s => 
+        s.id === submissionId ? { ...s, status: newStatus } : s
+      );
+      setFilteredSubmissions(updatedSubmission);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -73,6 +125,13 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
       if (error) throw error;
       
       toast.success("Submission rejected");
+      // Update the local state
+      const updatedSubmissions = filteredSubmissions.map(s =>
+        s.id === selectedSubmissionId 
+          ? { ...s, status: 'rejected', admin_comment: rejectionReason.trim() }
+          : s
+      );
+      setFilteredSubmissions(updatedSubmissions);
       setIsRejectDialogOpen(false);
       setRejectionReason("");
       setSelectedSubmissionId(null);
@@ -98,6 +157,40 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
 
   return (
     <>
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Select value={sortOrder} onValueChange={(value: "asc" | "desc") => {
+          setSortOrder(value);
+          setTimeout(applyFilters, 0);
+        }}>
+          <SelectTrigger className="w-[180px] bg-white border-gray-200">
+            <SelectValue placeholder="Sort order" />
+          </SelectTrigger>
+          <SelectContent className="bg-white border-gray-200">
+            <SelectItem value="desc">Newest First</SelectItem>
+            <SelectItem value="asc">Oldest First</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="flex flex-wrap gap-2 items-center">
+          {["pending", "approved", "rejected", "today"].map((filter) => (
+            <Badge
+              key={filter}
+              variant={activeFilters.includes(filter) ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => handleFilterChange(filter)}
+            >
+              {filter.charAt(0).toUpperCase() + filter.slice(1)}
+              {activeFilters.includes(filter) && (
+                <X className="ml-1 h-3 w-3" onClick={(e) => {
+                  e.stopPropagation();
+                  handleFilterChange(filter);
+                }} />
+              )}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
       <div className="overflow-x-auto">
         <Table>
           <thead>
@@ -114,12 +207,12 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
               <tr>
                 <td colSpan={5} className="text-center">Loading...</td>
               </tr>
-            ) : submissions.length === 0 ? (
+            ) : filteredSubmissions.length === 0 ? (
               <tr>
                 <td colSpan={5} className="text-center">No submissions found</td>
               </tr>
             ) : (
-              submissions.map((submission) => (
+              filteredSubmissions.map((submission) => (
                 <tr key={submission.id}>
                   <td>{submission.activities?.name}</td>
                   <td>{submission.user_id}</td>
@@ -134,10 +227,10 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
                         handleStatusChange(submission.id, value)
                       }
                     >
-                      <SelectTrigger className="w-[180px] bg-white border-gray-200">
+                      <SelectTrigger className="w-[180px] bg-white border-gray-200 shadow-sm">
                         <SelectValue placeholder="Change status" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
+                      <SelectContent className="bg-white border-gray-200 shadow-lg">
                         <SelectItem value="pending" className="text-yellow-500 hover:bg-gray-100">
                           Pending
                         </SelectItem>
