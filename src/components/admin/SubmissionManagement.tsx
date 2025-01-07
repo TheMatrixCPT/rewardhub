@@ -103,32 +103,35 @@ const SubmissionManagement = () => {
           <h2 className="text-2xl font-bold">{title}</h2>
           <p className="text-muted-foreground">{description}</p>
         </div>
-        <div className="flex justify-between items-center">
-          <TabsList className="bg-muted/50">
-            <TabsTrigger value="submissions">Submissions</TabsTrigger>
-            <TabsTrigger value="prizes">Prize Management</TabsTrigger>
-          </TabsList>
-          {activeTab === "submissions" && (
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={filter} onValueChange={setFilter}>
-                <SelectTrigger className="w-[180px] bg-background">
-                  <SelectValue placeholder="Filter submissions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Submissions</SelectItem>
-                  <SelectItem value="pending">Pending Only</SelectItem>
-                  <SelectItem value="approved">Approved Only</SelectItem>
-                  <SelectItem value="rejected">Rejected Only</SelectItem>
-                  <SelectItem value="today">Today's Submissions</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <div className="px-6">
+          <div className="flex justify-between items-center">
+            <TabsList className="bg-muted/50">
+              <TabsTrigger value="submissions">Submissions</TabsTrigger>
+              <TabsTrigger value="prizes">Prize Management</TabsTrigger>
+            </TabsList>
+            {activeTab === "submissions" && (
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={filter} onValueChange={setFilter}>
+                  <SelectTrigger className="w-[180px] bg-background">
+                    <SelectValue placeholder="Filter submissions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Submissions</SelectItem>
+                    <SelectItem value="pending">Pending Only</SelectItem>
+                    <SelectItem value="approved">Approved Only</SelectItem>
+                    <SelectItem value="rejected">Rejected Only</SelectItem>
+                    <SelectItem value="today">Today's Submissions</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        </div>
+
         <TabsContent value="submissions" className="m-0">
           <SubmissionsTable submissions={submissions} />
         </TabsContent>
