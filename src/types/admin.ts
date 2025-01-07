@@ -5,6 +5,11 @@ export interface DailyStats {
   active_users: number;
 }
 
+interface Activity {
+  name: string;
+  points: number;
+}
+
 export interface Submission {
   id: string;
   user_id: string;
@@ -15,4 +20,5 @@ export interface Submission {
   proof_url: string | null;
   company_tag: string | null;
   mentor_tag: string | null;
+  activities?: Activity;
 }
