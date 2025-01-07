@@ -215,6 +215,7 @@ export type Database = {
           id: string
           linkedin_url: string | null
           mentor_tag: string | null
+          prize_id: string | null
           proof_url: string | null
           status: Database["public"]["Enums"]["submission_status"] | null
           updated_at: string
@@ -229,6 +230,7 @@ export type Database = {
           id?: string
           linkedin_url?: string | null
           mentor_tag?: string | null
+          prize_id?: string | null
           proof_url?: string | null
           status?: Database["public"]["Enums"]["submission_status"] | null
           updated_at?: string
@@ -243,6 +245,7 @@ export type Database = {
           id?: string
           linkedin_url?: string | null
           mentor_tag?: string | null
+          prize_id?: string | null
           proof_url?: string | null
           status?: Database["public"]["Enums"]["submission_status"] | null
           updated_at?: string
@@ -254,6 +257,13 @@ export type Database = {
             columns: ["activity_id"]
             isOneToOne: false
             referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
             referencedColumns: ["id"]
           },
         ]
