@@ -11,6 +11,9 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Clear any existing tokens from localStorage on component mount
+    localStorage.removeItem('supabase.auth.token');
+    
     // Check if user is already logged in
     const checkUser = async () => {
       try {
