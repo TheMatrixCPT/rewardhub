@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -10,7 +10,7 @@ import { format } from "date-fns";
 
 type PrizeLeaderboardEntry = {
   points: number;
-  user: {
+  profiles: {
     email: string;
   };
 };
@@ -32,6 +32,7 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchPrizes = async () => {
       try {
+        console.log("Fetching prizes...");
         const { data: prizesData, error: prizesError } = await supabase
           .from('prizes')
           .select('id, name, points_required, deadline')
@@ -41,6 +42,7 @@ const Leaderboard = () => {
         if (prizesError) throw prizesError;
         
         if (prizesData && prizesData.length > 0) {
+          console.log("Prizes fetched successfully:", prizesData);
           setPrizes(prizesData);
           setActiveTab(prizesData[0].id);
           
@@ -48,11 +50,14 @@ const Leaderboard = () => {
           const leaderboardsData: Record<string, PrizeLeaderboardEntry[]> = {};
           
           for (const prize of prizesData) {
+            console.log(`Fetching registrations for prize ${prize.id}...`);
             const { data: registrations, error: registrationsError } = await supabase
               .from('prize_registrations')
               .select(`
                 points,
-                user:profiles!prize_registrations_user_id_fkey(email)
+                profiles!prize_registrations_user_id_fkey (
+                  email
+                )
               `)
               .eq('prize_id', prize.id)
               .order('points', { ascending: false });
@@ -63,6 +68,7 @@ const Leaderboard = () => {
             }
 
             if (registrations) {
+              console.log(`Registrations fetched for prize ${prize.id}:`, registrations);
               leaderboardsData[prize.id] = registrations as PrizeLeaderboardEntry[];
             }
           }
@@ -146,7 +152,7 @@ const Leaderboard = () => {
                     {leaderboards[prize.id]?.map((entry, index) => (
                       <TableRow key={`${prize.id}-${index}`}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
-                        <TableCell>{entry.user.email}</TableCell>
+                        <TableCell>{entry.profiles.email}</TableCell>
                         <TableCell className="text-right">{entry.points}</TableCell>
                       </TableRow>
                     ))}
