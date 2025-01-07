@@ -15,6 +15,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Submission } from "@/types/admin";
 
 interface SubmissionsTableProps {
@@ -26,6 +33,30 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+
+  const handleStatusChange = async (submissionId: string, newStatus: string) => {
+    if (newStatus === 'rejected') {
+      setSelectedSubmissionId(submissionId);
+      setIsRejectDialogOpen(true);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('submissions')
+        .update({ status: newStatus })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+      
+      toast.success(`Submission ${newStatus}`);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleReject = async () => {
     if (!selectedSubmissionId || !rejectionReason.trim()) return;
@@ -51,11 +82,6 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const openRejectDialog = (submissionId: string) => {
-    setSelectedSubmissionId(submissionId);
-    setIsRejectDialogOpen(true);
   };
 
   return (
@@ -88,13 +114,20 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
                   <td>{submission.status}</td>
                   <td>{format(new Date(submission.created_at), "PPP")}</td>
                   <td>
-                    <Button 
-                      onClick={() => openRejectDialog(submission.id)} 
-                      variant="destructive"
+                    <Select
+                      value={submission.status}
+                      onValueChange={(value) => handleStatusChange(submission.id, value)}
                       disabled={submission.status !== 'pending'}
                     >
-                      Reject
-                    </Button>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Change status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending" className="text-yellow-500">Pending</SelectItem>
+                        <SelectItem value="approved" className="text-green-500">Approve</SelectItem>
+                        <SelectItem value="rejected" className="text-red-500">Reject</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </td>
                 </tr>
               ))
