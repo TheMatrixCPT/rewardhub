@@ -8,6 +8,7 @@ import {
   Users,
   ChartLine,
 } from "lucide-react";
+import PrizeBanner from "@/components/prizes/PrizeBanner";
 
 interface Activity {
   id: number;
@@ -80,6 +81,8 @@ const Dashboard = () => {
           Track your progress and recent activities
         </p>
       </div>
+
+      <PrizeBanner />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

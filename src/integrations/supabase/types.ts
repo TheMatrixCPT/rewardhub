@@ -98,6 +98,38 @@ export type Database = {
           },
         ]
       }
+      prize_registrations: {
+        Row: {
+          id: string
+          points: number | null
+          prize_id: string
+          registered_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          points?: number | null
+          prize_id: string
+          registered_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          points?: number | null
+          prize_id?: string
+          registered_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prize_registrations_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prizes: {
         Row: {
           active: boolean | null
