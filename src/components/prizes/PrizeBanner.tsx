@@ -56,9 +56,18 @@ const PrizeBanner = () => {
   const handleRegister = async (prizeId: string) => {
     setRegistering(true);
     try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        throw new Error("User not authenticated");
+      }
+
       const { error } = await supabase
         .from("prize_registrations")
-        .insert([{ prize_id: prizeId }]);
+        .insert([{ 
+          prize_id: prizeId,
+          user_id: user.id
+        }]);
 
       if (error) throw error;
       toast.success("Successfully registered for the prize!");
