@@ -86,10 +86,11 @@ const RecentActivities = () => {
                   </span>
                 </div>
               </Card>
-            ))
-          }
-        </div>
+            );
+          })
+        )}
       </div>
+    </div>
   );
 };
 
