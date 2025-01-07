@@ -8,6 +8,8 @@ import {
   Users,
   ChartLine,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import PrizeBanner from "@/components/prizes/PrizeBanner";
 
 interface Activity {
@@ -21,6 +23,62 @@ interface Activity {
 const Dashboard = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch total points and activities count
+  const { data: userStats } = useQuery({
+    queryKey: ["user-stats"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      const { data: points, error: pointsError } = await supabase
+        .from("points")
+        .select("points")
+        .eq("user_id", user.id);
+
+      const { count: activitiesCount, error: activitiesError } = await supabase
+        .from("submissions")
+        .select("*", { count: 'exact', head: true })
+        .eq("user_id", user.id);
+
+      if (pointsError || activitiesError) throw new Error("Failed to fetch stats");
+
+      const totalPoints = points?.reduce((sum, p) => sum + p.points, 0) || 0;
+
+      return {
+        totalPoints,
+        activitiesCount: activitiesCount || 0,
+      };
+    },
+  });
+
+  // Fetch user rank
+  const { data: userRank } = useQuery({
+    queryKey: ["user-rank"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      // Get all users' total points
+      const { data: allPoints, error } = await supabase
+        .from("points")
+        .select("user_id, points");
+
+      if (error) throw error;
+
+      // Calculate total points per user and sort
+      const userTotals = allPoints.reduce((acc, curr) => {
+        acc[curr.user_id] = (acc[curr.user_id] || 0) + curr.points;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const sortedUsers = Object.entries(userTotals)
+        .sort(([, a], [, b]) => b - a);
+
+      const rank = sortedUsers.findIndex(([id]) => id === user.id) + 1;
+      return rank > 0 ? rank : "N/A";
+    },
+  });
 
   useEffect(() => {
     // Simulate API call
@@ -55,19 +113,19 @@ const Dashboard = () => {
   const stats = [
     {
       title: "Total Points",
-      value: "725",
+      value: userStats?.totalPoints.toString() || "0",
       icon: Trophy,
       color: "text-primary",
     },
     {
       title: "Activities",
-      value: "12",
+      value: userStats?.activitiesCount.toString() || "0",
       icon: ChartLine,
       color: "text-secondary",
     },
     {
       title: "Rank",
-      value: "#5",
+      value: `#${userRank || "N/A"}`,
       icon: Award,
       color: "text-accent",
     },
@@ -81,8 +139,6 @@ const Dashboard = () => {
           Track your progress and recent activities
         </p>
       </div>
-
-      <PrizeBanner />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -100,6 +156,8 @@ const Dashboard = () => {
           </Card>
         ))}
       </div>
+
+      <PrizeBanner />
 
       {/* Recent Activities */}
       <div className="mb-8">

@@ -41,12 +41,16 @@ const PrizeBanner = () => {
     },
   });
 
-  const { data: registrations } = useQuery({
+  const { data: registrations, refetch: refetchRegistrations } = useQuery({
     queryKey: ["prize-registrations"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       const { data, error } = await supabase
         .from("prize_registrations")
-        .select("prize_id, points");
+        .select("prize_id, points")
+        .eq("user_id", user.id);
 
       if (error) throw error;
       return data;
@@ -62,15 +66,35 @@ const PrizeBanner = () => {
         throw new Error("User not authenticated");
       }
 
+      // Check if user is already registered
+      const { data: existingReg, error: checkError } = await supabase
+        .from("prize_registrations")
+        .select("id")
+        .eq("prize_id", prizeId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (checkError && checkError.code !== "PGRST116") {
+        throw checkError;
+      }
+
+      if (existingReg) {
+        toast.error("You are already registered for this prize");
+        return;
+      }
+
       const { error } = await supabase
         .from("prize_registrations")
         .insert([{ 
           prize_id: prizeId,
-          user_id: user.id
+          user_id: user.id,
+          points: 0 // Start with 0 points for the competition
         }]);
 
       if (error) throw error;
+      
       toast.success("Successfully registered for the prize!");
+      refetchRegistrations();
     } catch (error) {
       console.error("Error registering for prize:", error);
       toast.error("Failed to register for the prize");
@@ -110,7 +134,7 @@ const PrizeBanner = () => {
                     <p className="text-sm text-muted-foreground">
                       {prize.description}
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="secondary">
                         {prize.points_required} points required
                       </Badge>
@@ -122,10 +146,12 @@ const PrizeBanner = () => {
                     </div>
                     {registration ? (
                       <div className="mt-4">
-                        <p className="text-sm font-medium">
-                          Your progress: {registration.points} /{" "}
-                          {prize.points_required} points
-                        </p>
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="success">Enrolled</Badge>
+                          <p className="text-sm text-muted-foreground">
+                            Competition Points: {registration.points}
+                          </p>
+                        </div>
                         <div className="w-full bg-secondary h-2 rounded-full mt-1">
                           <div
                             className="bg-primary h-2 rounded-full transition-all"
