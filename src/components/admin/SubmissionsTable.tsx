@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
-import type { Submission } from "@/types/admin";
+import type { Submission, SubmissionStatus } from "@/types/admin";
 
 interface SubmissionsTableProps {
   submissions: Submission[];
@@ -36,12 +36,11 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
   const [rejectionReason, setRejectionReason] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [filteredSubmissions, setFilteredSubmissions] = useState(initialSubmissions);
+  const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>(initialSubmissions);
 
   const applyFilters = () => {
     let filtered = [...initialSubmissions];
 
-    // Apply status filters
     if (activeFilters.includes("pending")) {
       filtered = filtered.filter(s => s.status === "pending");
     }
@@ -52,14 +51,12 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
       filtered = filtered.filter(s => s.status === "rejected");
     }
 
-    // Apply date filter
     if (activeFilters.includes("today")) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       filtered = filtered.filter(s => new Date(s.created_at) >= today);
     }
 
-    // Apply sort order
     filtered.sort((a, b) => {
       const dateA = new Date(a.created_at).getTime();
       const dateB = new Date(b.created_at).getTime();
@@ -80,7 +77,7 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
     setTimeout(applyFilters, 0);
   };
 
-  const handleStatusChange = async (submissionId: string, newStatus: "pending" | "approved" | "rejected") => {
+  const handleStatusChange = async (submissionId: string, newStatus: SubmissionStatus) => {
     if (newStatus === 'rejected') {
       setSelectedSubmissionId(submissionId);
       setIsRejectDialogOpen(true);
@@ -97,11 +94,10 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
       if (error) throw error;
       
       toast.success(`Submission ${newStatus}`);
-      // Refresh the data after status change
-      const updatedSubmission = filteredSubmissions.map(s => 
+      const updatedSubmissions = filteredSubmissions.map(s => 
         s.id === submissionId ? { ...s, status: newStatus } : s
       );
-      setFilteredSubmissions(updatedSubmission);
+      setFilteredSubmissions(updatedSubmissions);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -117,7 +113,7 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
       const { error } = await supabase
         .from('submissions')
         .update({ 
-          status: 'rejected',
+          status: 'rejected' as SubmissionStatus,
           admin_comment: rejectionReason.trim()
         })
         .eq('id', selectedSubmissionId);
@@ -125,10 +121,9 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
       if (error) throw error;
       
       toast.success("Submission rejected");
-      // Update the local state
       const updatedSubmissions = filteredSubmissions.map(s =>
         s.id === selectedSubmissionId 
-          ? { ...s, status: 'rejected', admin_comment: rejectionReason.trim() }
+          ? { ...s, status: 'rejected' as SubmissionStatus, admin_comment: rejectionReason.trim() }
           : s
       );
       setFilteredSubmissions(updatedSubmissions);
@@ -142,7 +137,7 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: SubmissionStatus) => {
     switch (status) {
       case 'pending':
         return 'text-yellow-500';
@@ -223,7 +218,7 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
                   <td>
                     <Select
                       value={submission.status}
-                      onValueChange={(value: "pending" | "approved" | "rejected") => 
+                      onValueChange={(value: SubmissionStatus) => 
                         handleStatusChange(submission.id, value)
                       }
                     >
