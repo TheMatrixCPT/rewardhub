@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Trophy } from "lucide-react";
+import { Trophy, Calendar, Users } from "lucide-react";
 import { format } from "date-fns";
 
 type PrizeLeaderboardEntry = {
@@ -19,6 +19,8 @@ type Prize = {
   name: string;
   points_required: number;
   deadline: string | null;
+  registration_start: string | null;
+  registration_end: string | null;
 };
 
 const Leaderboard = () => {
@@ -34,7 +36,7 @@ const Leaderboard = () => {
         console.log("Fetching prizes...");
         const { data: prizesData, error: prizesError } = await supabase
           .from('prizes')
-          .select('id, name, points_required, deadline')
+          .select('id, name, points_required, deadline, registration_start, registration_end')
           .eq('active', true)
           .order('created_at', { ascending: false });
 
@@ -54,7 +56,7 @@ const Leaderboard = () => {
               .select(`
                 points,
                 user_id,
-                user_email:profiles!prize_registrations_user_id_fkey(email)
+                profiles!prize_registrations_user_id_fkey(email)
               `)
               .eq('prize_id', prize.id)
               .order('points', { ascending: false });
@@ -69,7 +71,7 @@ const Leaderboard = () => {
               const formattedRegistrations: PrizeLeaderboardEntry[] = registrations.map(reg => ({
                 points: reg.points || 0,
                 user_id: reg.user_id,
-                user_email: reg.user_email?.[0]?.email
+                user_email: reg.profiles?.email
               }));
               leaderboardsData[prize.id] = formattedRegistrations;
             }
@@ -93,7 +95,15 @@ const Leaderboard = () => {
   }, [toast]);
 
   if (loading) {
-    return <div className="container py-10">Loading...</div>;
+    return (
+      <div className="container py-10">
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            Loading leaderboards...
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (!prizes.length) {
@@ -108,13 +118,34 @@ const Leaderboard = () => {
     );
   }
 
+  const getRegistrationStatus = (prize: Prize) => {
+    const now = new Date();
+    const registrationStart = prize.registration_start ? new Date(prize.registration_start) : null;
+    const registrationEnd = prize.registration_end ? new Date(prize.registration_end) : null;
+    const deadline = prize.deadline ? new Date(prize.deadline) : null;
+
+    if (deadline && now > deadline) {
+      return "Competition ended";
+    }
+    if (!registrationStart || !registrationEnd) {
+      return "Registration open";
+    }
+    if (now < registrationStart) {
+      return "Registration not started";
+    }
+    if (now > registrationEnd) {
+      return "Registration closed";
+    }
+    return "Registration open";
+  };
+
   return (
     <div className="container py-10">
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-primary" />
-            <CardTitle>Prize Competitions</CardTitle>
+            <CardTitle>Prize Competition Rankings</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
@@ -129,16 +160,25 @@ const Leaderboard = () => {
             
             {prizes.map((prize) => (
               <TabsContent key={prize.id} value={prize.id}>
-                <div className="mb-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">
+                <div className="mb-6 space-y-4">
+                  <div className="flex flex-wrap gap-3">
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Trophy className="h-4 w-4" />
                       {prize.points_required} points required
                     </Badge>
                     {prize.deadline && (
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
                         Ends {format(new Date(prize.deadline), "MMM d, yyyy")}
                       </Badge>
                     )}
+                    <Badge 
+                      variant={getRegistrationStatus(prize).includes("open") ? "success" : "secondary"}
+                      className="flex items-center gap-1"
+                    >
+                      <Users className="h-4 w-4" />
+                      {getRegistrationStatus(prize)}
+                    </Badge>
                   </div>
                 </div>
                 
@@ -148,19 +188,28 @@ const Leaderboard = () => {
                       <TableHead className="w-24">Rank</TableHead>
                       <TableHead>Participant</TableHead>
                       <TableHead className="text-right">Points</TableHead>
+                      <TableHead className="text-right">Progress</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {leaderboards[prize.id]?.map((entry, index) => (
                       <TableRow key={`${prize.id}-${index}`}>
-                        <TableCell className="font-medium">{index + 1}</TableCell>
-                        <TableCell>{entry.user_email || 'Unknown'}</TableCell>
+                        <TableCell className="font-medium">
+                          {index + 1}
+                          {index === 0 && " 🏆"}
+                          {index === 1 && " 🥈"}
+                          {index === 2 && " 🥉"}
+                        </TableCell>
+                        <TableCell>{entry.user_email || 'Anonymous'}</TableCell>
                         <TableCell className="text-right">{entry.points}</TableCell>
+                        <TableCell className="text-right">
+                          {Math.min(100, Math.round((entry.points / prize.points_required) * 100))}%
+                        </TableCell>
                       </TableRow>
                     ))}
                     {(!leaderboards[prize.id] || leaderboards[prize.id].length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center text-muted-foreground">
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">
                           No participants yet
                         </TableCell>
                       </TableRow>
