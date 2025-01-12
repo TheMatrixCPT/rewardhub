@@ -2,12 +2,6 @@ import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import type { NavigationItem } from "./types";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface DesktopMenuProps {
   navigation: NavigationItem[];
@@ -34,24 +28,12 @@ const DesktopMenu = ({ navigation, user, handleLogout, isAdmin }: DesktopMenuPro
       ))}
       
       {isAdmin && adminNavItems.length > 0 && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">Admin</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {adminNavItems.map((item) => (
-              <DropdownMenuItem key={item.name} asChild>
-                <Link
-                  to={item.href}
-                  className="flex items-center gap-2 w-full"
-                >
-                  {item.icon && <item.icon className="h-4 w-4" />}
-                  {item.name}
-                </Link>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Link
+          to="/admin/prizes"
+          className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+        >
+          Admin
+        </Link>
       )}
 
       {user ? (
