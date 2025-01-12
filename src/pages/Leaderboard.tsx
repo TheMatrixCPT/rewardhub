@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy } from "lucide-react";
 import { PrizeLeaderboard } from "@/components/leaderboard/PrizeLeaderboard";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type PrizeLeaderboardEntry = {
   points: number;
@@ -56,7 +56,7 @@ const Leaderboard = () => {
               .select(`
                 points,
                 user_id,
-                user:profiles!inner (
+                profiles!inner (
                   email
                 )
               `)
@@ -73,7 +73,9 @@ const Leaderboard = () => {
               leaderboardsData[prize.id] = registrations.map(reg => ({
                 points: reg.points || 0,
                 user_id: reg.user_id,
-                profile: reg.user
+                profile: {
+                  email: reg.profiles?.email
+                }
               }));
             }
           }
@@ -129,23 +131,30 @@ const Leaderboard = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              {prizes.map((prize) => (
-                <TabsTrigger key={prize.id} value={prize.id}>
-                  {prize.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          <div className="space-y-6">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full md:w-[300px]">
+                <SelectValue placeholder="Select a prize competition" />
+              </SelectTrigger>
+              <SelectContent>
+                {prizes.map((prize) => (
+                  <SelectItem key={prize.id} value={prize.id}>
+                    {prize.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             
             {prizes.map((prize) => (
-              <PrizeLeaderboard
-                key={prize.id}
-                prize={prize}
-                entries={leaderboards[prize.id] || []}
-              />
+              prize.id === activeTab && (
+                <PrizeLeaderboard
+                  key={prize.id}
+                  prize={prize}
+                  entries={leaderboards[prize.id] || []}
+                />
+              )
             ))}
-          </Tabs>
+          </div>
         </CardContent>
       </Card>
     </div>
