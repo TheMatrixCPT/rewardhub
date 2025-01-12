@@ -2,7 +2,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import StatsGrid from "@/components/dashboard/StatsGrid";
-import RecentActivities from "@/components/dashboard/RecentActivities";
 
 const Home = () => {
   const { user } = useAuth();
@@ -61,7 +60,6 @@ const Home = () => {
         activitiesCount={stats?.activitiesCount || 0}
         userRank={stats?.userRank || '-'}
       />
-      <RecentActivities />
     </div>
   );
 };
