@@ -1,6 +1,7 @@
 import { FormField, FormItem, FormLabel, FormDescription, FormMessage } from "@/components/ui/form";
 import { Control } from "react-hook-form";
 import type { Tables } from "@/integrations/supabase/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface PrizeSelectProps {
   control: Control<any>;
@@ -32,17 +33,22 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
       render={({ field }) => (
         <FormItem>
           <FormLabel>Select Prize</FormLabel>
-          <select
-            {...field}
-            className="w-full p-2 border rounded-md"
-          >
-            <option value="">Select a prize</option>
-            {availablePrizes.map((prize) => (
-              <option key={prize.id} value={prize.id}>
-                {prize.name}
-              </option>
-            ))}
-          </select>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <SelectTrigger className="w-full bg-background border-input">
+              <SelectValue placeholder="Select a prize" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border shadow-lg">
+              {availablePrizes.map((prize) => (
+                <SelectItem 
+                  key={prize.id} 
+                  value={prize.id}
+                  className="hover:bg-muted focus:bg-muted"
+                >
+                  {prize.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <FormDescription>
             Select the prize you want to earn points for
           </FormDescription>

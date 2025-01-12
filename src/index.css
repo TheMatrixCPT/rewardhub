@@ -77,9 +77,24 @@
 
 /* Enhanced dropdown styles */
 [data-radix-select-content] {
-  @apply bg-background border shadow-lg;
+  @apply bg-background border shadow-lg z-50;
 }
 
 [data-radix-select-item] {
-  @apply hover:bg-muted/50 cursor-pointer;
+  @apply hover:bg-muted/50 cursor-pointer bg-background;
+}
+
+.select-content {
+  background-color: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.select-item {
+  background-color: hsl(var(--background));
+}
+
+.select-item:hover {
+  background-color: hsl(var(--muted));
 }
