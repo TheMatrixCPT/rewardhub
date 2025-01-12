@@ -178,10 +178,15 @@ export type Database = {
           bio: string | null
           company: string | null
           created_at: string
+          date_of_birth: string | null
           email: string | null
+          first_name: string | null
+          gender: string | null
           id: string
           job_title: string | null
+          last_name: string | null
           linkedin_profile: string | null
+          phone_number: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string
         }
@@ -190,10 +195,15 @@ export type Database = {
           bio?: string | null
           company?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
+          first_name?: string | null
+          gender?: string | null
           id: string
           job_title?: string | null
+          last_name?: string | null
           linkedin_profile?: string | null
+          phone_number?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
@@ -202,10 +212,15 @@ export type Database = {
           bio?: string | null
           company?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
+          first_name?: string | null
+          gender?: string | null
           id?: string
           job_title?: string | null
+          last_name?: string | null
           linkedin_profile?: string | null
+          phone_number?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
