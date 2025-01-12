@@ -34,35 +34,21 @@ const Register = () => {
             variables: {
               default: {
                 colors: {
-                  brand: '#9b87f5',
-                  brandAccent: '#D6BCFA',
+                  brand: '#2DD4BF',
+                  brandAccent: '#14B8A6',
                   brandButtonText: 'white',
-                  defaultButtonBackground: '#F1F0FB',
-                  defaultButtonBackgroundHover: '#E5DEFF',
-                  defaultButtonBorder: '#D6BCFA',
-                  defaultButtonText: '#8E9196',
-                  dividerBackground: '#C8C8C9',
+                  defaultButtonBackground: '#F1F5F9',
+                  defaultButtonBackgroundHover: '#E2E8F0',
+                  defaultButtonBorder: '#CBD5E1',
+                  defaultButtonText: '#64748B',
                   inputBackground: 'white',
-                  inputBorder: '#C8C8C9',
-                  inputBorderHover: '#9b87f5',
-                  inputBorderFocus: '#9b87f5',
+                  inputBorder: '#E2E8F0',
+                  inputBorderHover: '#2DD4BF',
+                  inputBorderFocus: '#2DD4BF',
                   inputText: '#222222',
-                  inputLabelText: '#8E9196',
+                  inputLabelText: '#64748B',
                   inputPlaceholder: '#C8C8C9',
-                },
-                borderWidths: {
-                  buttonBorderWidth: '1px',
-                  inputBorderWidth: '1px',
-                },
-                borderStyles: {
-                  buttonBorderStyle: 'solid',
-                  inputBorderStyle: 'solid',
-                },
-                radii: {
-                  borderRadiusButton: '8px',
-                  buttonBorderRadius: '8px',
-                  inputBorderRadius: '8px',
-                },
+                }
               },
             },
             className: {
