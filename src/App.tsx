@@ -13,6 +13,7 @@ import UserPrizes from "@/pages/UserPrizes";
 import Leaderboard from "@/pages/Leaderboard";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import Submit from "@/pages/Submit";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <Activities />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/submit"
+              element={
+                <ProtectedRoute>
+                  <Submit />
                 </ProtectedRoute>
               }
             />

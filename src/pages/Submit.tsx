@@ -89,7 +89,7 @@ const Submit = () => {
 
       console.log("Submission created successfully");
       toast.success("Your activity has been submitted for review");
-      navigate("/dashboard");
+      navigate("/");
     } catch (error: any) {
       console.error("Error submitting activity:", error);
       toast.error(error.message || "Failed to submit activity");
