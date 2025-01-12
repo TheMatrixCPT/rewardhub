@@ -2,11 +2,9 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Trophy, Calendar, Users } from "lucide-react";
-import { format } from "date-fns";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trophy } from "lucide-react";
+import { PrizeLeaderboard } from "@/components/leaderboard/PrizeLeaderboard";
 
 type PrizeLeaderboardEntry = {
   points: number;
@@ -121,27 +119,6 @@ const Leaderboard = () => {
     );
   }
 
-  const getRegistrationStatus = (prize: Prize) => {
-    const now = new Date();
-    const registrationStart = prize.registration_start ? new Date(prize.registration_start) : null;
-    const registrationEnd = prize.registration_end ? new Date(prize.registration_end) : null;
-    const deadline = prize.deadline ? new Date(prize.deadline) : null;
-
-    if (deadline && now > deadline) {
-      return "Competition ended";
-    }
-    if (!registrationStart || !registrationEnd) {
-      return "Registration open";
-    }
-    if (now < registrationStart) {
-      return "Registration not started";
-    }
-    if (now > registrationEnd) {
-      return "Registration closed";
-    }
-    return "Registration open";
-  };
-
   return (
     <div className="container py-10">
       <Card>
@@ -162,64 +139,11 @@ const Leaderboard = () => {
             </TabsList>
             
             {prizes.map((prize) => (
-              <TabsContent key={prize.id} value={prize.id}>
-                <div className="mb-6 space-y-4">
-                  <div className="flex flex-wrap gap-3">
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <Trophy className="h-4 w-4" />
-                      {prize.points_required} points required
-                    </Badge>
-                    {prize.deadline && (
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        Ends {format(new Date(prize.deadline), "MMM d, yyyy")}
-                      </Badge>
-                    )}
-                    <Badge 
-                      variant="secondary"
-                      className="flex items-center gap-1"
-                    >
-                      <Users className="h-4 w-4" />
-                      {getRegistrationStatus(prize)}
-                    </Badge>
-                  </div>
-                </div>
-                
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-24">Rank</TableHead>
-                      <TableHead>Participant</TableHead>
-                      <TableHead className="text-right">Points</TableHead>
-                      <TableHead className="text-right">Progress</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {leaderboards[prize.id]?.map((entry, index) => (
-                      <TableRow key={`${prize.id}-${index}`}>
-                        <TableCell className="font-medium">
-                          {index + 1}
-                          {index === 0 && " 🏆"}
-                          {index === 1 && " 🥈"}
-                          {index === 2 && " 🥉"}
-                        </TableCell>
-                        <TableCell>{entry.profile?.email || 'Anonymous'}</TableCell>
-                        <TableCell className="text-right">{entry.points}</TableCell>
-                        <TableCell className="text-right">
-                          {Math.min(100, Math.round((entry.points / prize.points_required) * 100))}%
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {(!leaderboards[prize.id] || leaderboards[prize.id].length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground">
-                          No participants yet
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TabsContent>
+              <PrizeLeaderboard
+                key={prize.id}
+                prize={prize}
+                entries={leaderboards[prize.id] || []}
+              />
             ))}
           </Tabs>
         </CardContent>
