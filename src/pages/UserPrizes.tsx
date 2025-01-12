@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Trophy } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import PrizeBanner from "@/components/prizes/PrizeBanner";
 
@@ -80,17 +81,25 @@ const UserPrizes = () => {
                   <h3 className="text-xl font-semibold">{prize.name}</h3>
                   <p className="text-muted-foreground">{prize.description}</p>
                   <div className="flex flex-wrap gap-2">
-                    <div className="text-sm">
-                      <span className="font-medium">Registration opens: </span>
-                      {format(new Date(prize.registration_start!), "MMM d, yyyy")}
-                    </div>
-                    {prize.deadline && (
-                      <div className="text-sm">
-                        <span className="font-medium">Competition ends: </span>
-                        {format(new Date(prize.deadline), "MMM d, yyyy")}
-                      </div>
-                    )}
+                    <Badge variant="secondary">
+                      {prize.points_required} points required
+                    </Badge>
                   </div>
+                  {prize.registration_start && prize.registration_end && (
+                    <div className="text-sm text-muted-foreground mt-2">
+                      <p>Registration period:</p>
+                      <p>
+                        {format(new Date(prize.registration_start), "MMM d, yyyy")} -{" "}
+                        {format(new Date(prize.registration_end), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                  )}
+                  {prize.deadline && (
+                    <div className="text-sm text-muted-foreground">
+                      <p>Competition ends:</p>
+                      <p>{format(new Date(prize.deadline), "MMM d, yyyy")}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -112,13 +121,25 @@ const UserPrizes = () => {
                   <h3 className="text-xl font-semibold">{prize.name}</h3>
                   <p className="text-muted-foreground">{prize.description}</p>
                   <div className="flex flex-wrap gap-2">
-                    {prize.deadline && (
-                      <div className="text-sm">
-                        <span className="font-medium">Ended: </span>
-                        {format(new Date(prize.deadline), "MMM d, yyyy")}
-                      </div>
-                    )}
+                    <Badge variant="secondary">
+                      {prize.points_required} points required
+                    </Badge>
                   </div>
+                  {prize.registration_start && prize.registration_end && (
+                    <div className="text-sm text-muted-foreground mt-2">
+                      <p>Registration period:</p>
+                      <p>
+                        {format(new Date(prize.registration_start), "MMM d, yyyy")} -{" "}
+                        {format(new Date(prize.registration_end), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                  )}
+                  {prize.deadline && (
+                    <div className="text-sm text-muted-foreground">
+                      <p>Competition ended:</p>
+                      <p>{format(new Date(prize.deadline), "MMM d, yyyy")}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
