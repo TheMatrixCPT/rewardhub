@@ -62,54 +62,55 @@ const Register = () => {
           providers={[]}
           redirectTo={window.location.origin}
           view="sign_up"
-          options={{
-            emailRedirectTo: window.location.origin,
-            data: {
-              first_name: '',
-              last_name: '',
-              phone_number: '',
-              date_of_birth: '',
-              gender: '',
-            },
-            additionalFields: [
-              {
-                key: 'first_name',
-                label: 'First Name',
-                type: 'text',
-                required: true,
-              },
-              {
-                key: 'last_name',
-                label: 'Last Name',
-                type: 'text',
-                required: true,
-              },
-              {
-                key: 'phone_number',
-                label: 'Phone Number',
-                type: 'tel',
-                required: true,
-              },
-              {
-                key: 'date_of_birth',
-                label: 'Date of Birth',
-                type: 'date',
-                required: true,
-              },
-              {
-                key: 'gender',
-                label: 'Gender',
-                type: 'select',
-                options: [
-                  { value: 'male', label: 'Male' },
-                  { value: 'female', label: 'Female' },
-                  { value: 'other', label: 'Other' },
-                  { value: 'prefer_not_to_say', label: 'Prefer not to say' }
-                ],
-                required: true,
+          localization={{
+            variables: {
+              sign_up: {
+                email_label: "Email",
+                password_label: "Password",
+                button_label: "Sign up",
+                email_input_placeholder: "Your email address",
+                password_input_placeholder: "Your password"
               }
-            ],
+            }
           }}
+          additionalFields={[
+            {
+              key: 'first_name',
+              label: 'First Name',
+              type: 'text',
+              required: true,
+            },
+            {
+              key: 'last_name',
+              label: 'Last Name',
+              type: 'text',
+              required: true,
+            },
+            {
+              key: 'phone_number',
+              label: 'Phone Number',
+              type: 'tel',
+              required: true,
+            },
+            {
+              key: 'date_of_birth',
+              label: 'Date of Birth',
+              type: 'date',
+              required: true,
+            },
+            {
+              key: 'gender',
+              label: 'Gender',
+              type: 'select',
+              options: [
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+                { value: 'other', label: 'Other' },
+                { value: 'prefer_not_to_say', label: 'Prefer not to say' }
+              ],
+              required: true,
+            }
+          ]}
         />
       </div>
     </div>
