@@ -77,24 +77,28 @@
 
 /* Enhanced dropdown styles */
 [data-radix-select-content] {
-  @apply bg-background border shadow-lg z-50;
+  @apply bg-white dark:bg-gray-800 border shadow-lg z-50;
 }
 
 [data-radix-select-item] {
-  @apply hover:bg-muted/50 cursor-pointer bg-background;
+  @apply hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer;
 }
 
 .select-content {
-  background-color: hsl(var(--background));
+  background-color: white;
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
+.dark .select-content {
+  background-color: hsl(var(--card));
+}
+
 .select-item {
-  background-color: hsl(var(--background));
+  @apply bg-white dark:bg-gray-800;
 }
 
 .select-item:hover {
-  background-color: hsl(var(--muted));
+  @apply bg-gray-100 dark:bg-gray-700;
 }

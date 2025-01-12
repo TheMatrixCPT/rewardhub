@@ -37,12 +37,12 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
             <SelectTrigger className="w-full bg-background border-input">
               <SelectValue placeholder="Select a prize" />
             </SelectTrigger>
-            <SelectContent className="select-content">
+            <SelectContent className="select-content z-50 bg-white dark:bg-gray-800 shadow-lg">
               {availablePrizes.map((prize) => (
                 <SelectItem 
                   key={prize.id} 
                   value={prize.id}
-                  className="select-item"
+                  className="select-item hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   {prize.name}
                 </SelectItem>
