@@ -8,13 +8,21 @@ const Register = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("Register component mounted");
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change:", event, session ? "Session exists" : "No session");
+      
       if (event === "SIGNED_IN") {
+        console.log("User signed in, redirecting to home");
         navigate("/");
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("Register component unmounting, cleaning up subscription");
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (
@@ -59,9 +67,8 @@ const Register = () => {
               anchor: 'auth-anchor',
             },
           }}
-          providers={[]}
-          redirectTo={window.location.origin}
           view="sign_up"
+          redirectTo={window.location.origin}
           options={{
             emailRedirectTo: window.location.origin,
             data: {
@@ -70,45 +77,7 @@ const Register = () => {
               phone_number: '',
               date_of_birth: '',
               gender: ''
-            },
-            signUpFields: [
-              {
-                name: 'first_name',
-                label: 'First Name',
-                type: 'text',
-                required: true,
-              },
-              {
-                name: 'last_name',
-                label: 'Last Name',
-                type: 'text',
-                required: true,
-              },
-              {
-                name: 'phone_number',
-                label: 'Phone Number',
-                type: 'tel',
-                required: true,
-              },
-              {
-                name: 'date_of_birth',
-                label: 'Date of Birth',
-                type: 'date',
-                required: true,
-              },
-              {
-                name: 'gender',
-                label: 'Gender',
-                type: 'select',
-                options: [
-                  { value: 'male', label: 'Male' },
-                  { value: 'female', label: 'Female' },
-                  { value: 'other', label: 'Other' },
-                  { value: 'prefer_not_to_say', label: 'Prefer not to say' }
-                ],
-                required: true,
-              }
-            ]
+            }
           }}
         />
       </div>

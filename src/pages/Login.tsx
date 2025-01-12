@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { AuthError } from "@supabase/supabase-js";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,10 +10,13 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
+    console.log("Login component mounted");
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state change:", event, session ? "Session exists" : "No session");
       
       if (event === "SIGNED_IN") {
+        console.log("User signed in, redirecting to home");
         navigate("/");
       }
 
@@ -22,29 +24,23 @@ const Login = () => {
       if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
         setErrorMessage("");
       }
-
-      // Handle auth errors
-      if (event === "USER_UPDATED" && !session) {
-        handleAuthError();
-      }
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const handleAuthError = async () => {
-    const { error } = await supabase.auth.getSession();
-    if (error) {
-      console.error("Auth error:", error);
-      if (error.message.includes("Email not confirmed")) {
-        setErrorMessage("Please verify your email address before signing in.");
-      } else if (error.message.includes("Invalid login credentials")) {
-        setErrorMessage("Invalid email or password. Please check your credentials and try again.");
-      } else {
-        setErrorMessage(error.message);
+    // Check if user is already signed in
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        console.log("User already signed in, redirecting to home");
+        navigate("/");
       }
-    }
-  };
+    };
+    checkUser();
+
+    return () => {
+      console.log("Login component unmounting, cleaning up subscription");
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F1F0FB] px-4">
@@ -94,7 +90,7 @@ const Login = () => {
               anchor: 'auth-anchor',
             },
           }}
-          providers={[]}
+          view="sign_in"
           redirectTo={window.location.origin}
         />
       </div>
