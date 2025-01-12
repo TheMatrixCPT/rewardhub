@@ -11,7 +11,7 @@ import { format } from "date-fns";
 type PrizeLeaderboardEntry = {
   points: number;
   user_id: string;
-  profiles?: {
+  profile?: {
     email: string | null;
   } | null;
 };
@@ -58,7 +58,7 @@ const Leaderboard = () => {
               .select(`
                 points,
                 user_id,
-                profiles!prize_registrations_user_id_fkey(email)
+                profile:profiles(email)
               `)
               .eq('prize_id', prize.id)
               .order('points', { ascending: false });
@@ -70,12 +70,7 @@ const Leaderboard = () => {
 
             if (registrations) {
               console.log(`Registrations fetched for prize ${prize.id}:`, registrations);
-              const formattedRegistrations: PrizeLeaderboardEntry[] = registrations.map(reg => ({
-                points: reg.points || 0,
-                user_id: reg.user_id,
-                profiles: reg.profiles
-              }));
-              leaderboardsData[prize.id] = formattedRegistrations;
+              leaderboardsData[prize.id] = registrations;
             }
           }
           
@@ -175,7 +170,7 @@ const Leaderboard = () => {
                       </Badge>
                     )}
                     <Badge 
-                      variant={getRegistrationStatus(prize).includes("open") ? "secondary" : "outline"}
+                      variant="secondary"
                       className="flex items-center gap-1"
                     >
                       <Users className="h-4 w-4" />
@@ -202,7 +197,7 @@ const Leaderboard = () => {
                           {index === 1 && " 🥈"}
                           {index === 2 && " 🥉"}
                         </TableCell>
-                        <TableCell>{entry.profiles?.email || 'Anonymous'}</TableCell>
+                        <TableCell>{entry.profile?.email || 'Anonymous'}</TableCell>
                         <TableCell className="text-right">{entry.points}</TableCell>
                         <TableCell className="text-right">
                           {Math.min(100, Math.round((entry.points / prize.points_required) * 100))}%
