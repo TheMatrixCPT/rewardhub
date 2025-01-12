@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import {
@@ -11,22 +10,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Filter } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubmissionsTable from "./SubmissionsTable";
-import PrizeManagement from "./PrizeManagement";
 import type { Submission } from "@/types/admin";
 
 const SubmissionManagement = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [filter, setFilter] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "submissions");
-
-  useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab) {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
 
   const { data: submissions, isLoading } = useQuery({
     queryKey: ['recentSubmissions', filter],
@@ -65,69 +53,33 @@ const SubmissionManagement = () => {
     },
   });
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setSearchParams({ tab: value });
-  };
-
   if (isLoading) {
     return <div>Loading submissions...</div>;
   }
 
-  const getHeading = () => {
-    switch (activeTab) {
-      case "prizes":
-        return {
-          title: "Prize Management",
-          description: "Create and manage competition prizes"
-        };
-      default:
-        return {
-          title: "Administration",
-          description: "Manage your platform"
-        };
-    }
-  };
-
-  const { title, description } = getHeading();
-
   return (
     <Card>
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <div className="px-6 pt-6">
-          <div className="flex justify-between items-center">
-            <TabsList className="bg-muted/50">
-              <TabsTrigger value="submissions">Submissions</TabsTrigger>
-              <TabsTrigger value="prizes">Prize Management</TabsTrigger>
-            </TabsList>
-            {activeTab === "submissions" && (
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <Select value={filter} onValueChange={setFilter}>
-                  <SelectTrigger className="w-[180px] bg-background">
-                    <SelectValue placeholder="Filter submissions" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Submissions</SelectItem>
-                    <SelectItem value="pending">Pending Only</SelectItem>
-                    <SelectItem value="approved">Approved Only</SelectItem>
-                    <SelectItem value="rejected">Rejected Only</SelectItem>
-                    <SelectItem value="today">Today's Submissions</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+      <div className="px-6 pt-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Submission Management</h2>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue placeholder="Filter submissions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Submissions</SelectItem>
+                <SelectItem value="pending">Pending Only</SelectItem>
+                <SelectItem value="approved">Approved Only</SelectItem>
+                <SelectItem value="rejected">Rejected Only</SelectItem>
+                <SelectItem value="today">Today's Submissions</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-
-        <TabsContent value="submissions" className="m-0">
-          <SubmissionsTable submissions={submissions} />
-        </TabsContent>
-        
-        <TabsContent value="prizes" className="m-0 p-6">
-          <PrizeManagement />
-        </TabsContent>
-      </Tabs>
+      </div>
+      <SubmissionsTable submissions={submissions} />
     </Card>
   );
 };
