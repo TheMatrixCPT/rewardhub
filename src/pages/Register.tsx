@@ -62,63 +62,53 @@ const Register = () => {
           providers={[]}
           redirectTo={window.location.origin}
           view="sign_up"
-          magicLink={false}
-          showLinks={false}
-          localization={{
-            variables: {
-              sign_up: {
-                email_label: "Email",
-                password_label: "Password",
-                button_label: "Sign up",
-              }
-            }
-          }}
-          additionalData={{
-            first_name: undefined,
-            last_name: undefined,
-            phone_number: undefined,
-            date_of_birth: undefined,
-            gender: undefined,
-          }}
-          extendedSignUp={{
-            fields: [
+          options={{
+            emailRedirectTo: window.location.origin,
+            data: {
+              first_name: '',
+              last_name: '',
+              phone_number: '',
+              date_of_birth: '',
+              gender: '',
+            },
+            additionalFields: [
               {
-                name: 'first_name',
-                type: 'text',
+                key: 'first_name',
                 label: 'First Name',
-                required: true,
-              },
-              {
-                name: 'last_name',
                 type: 'text',
+                required: true,
+              },
+              {
+                key: 'last_name',
                 label: 'Last Name',
+                type: 'text',
                 required: true,
               },
               {
-                name: 'phone_number',
-                type: 'tel',
+                key: 'phone_number',
                 label: 'Phone Number',
+                type: 'tel',
                 required: true,
               },
               {
-                name: 'date_of_birth',
-                type: 'date',
+                key: 'date_of_birth',
                 label: 'Date of Birth',
+                type: 'date',
                 required: true,
               },
               {
-                name: 'gender',
-                type: 'select',
+                key: 'gender',
                 label: 'Gender',
-                required: true,
+                type: 'select',
                 options: [
                   { value: 'male', label: 'Male' },
                   { value: 'female', label: 'Female' },
                   { value: 'other', label: 'Other' },
                   { value: 'prefer_not_to_say', label: 'Prefer not to say' }
                 ],
+                required: true,
               }
-            ]
+            ],
           }}
         />
       </div>
