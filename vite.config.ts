@@ -19,6 +19,5 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Add base URL configuration for production
-  base: "/",
+  base: "",  // Updated for custom domain support
 }));
