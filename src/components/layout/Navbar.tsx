@@ -15,15 +15,14 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <div className="flex items-center space-x-1 group cursor-pointer">
-              <span className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent transform transition-transform duration-200 group-hover:scale-105">
-                R
-              </span>
-              <div className="w-0.5 h-6 bg-primary transform -skew-x-12 mx-0.5 opacity-70" />
-              <span className="text-3xl font-bold bg-gradient-to-r from-primary-hover to-primary bg-clip-text text-transparent transform transition-transform duration-200 group-hover:scale-105">
-                H
-              </span>
-              <span className="text-xs text-muted-foreground ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="relative group cursor-pointer">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-primary/10 to-primary-hover/10 transform transition-all duration-200 group-hover:scale-105">
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">R</span>
+                  <span className="text-2xl font-bold bg-gradient-to-r from-primary-hover to-primary bg-clip-text text-transparent">H</span>
+                </div>
+              </div>
+              <span className="absolute left-full ml-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                 RewardHub
               </span>
             </div>
