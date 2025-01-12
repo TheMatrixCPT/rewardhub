@@ -56,7 +56,7 @@ const Leaderboard = () => {
               .select(`
                 points,
                 user_id,
-                profiles!inner (
+                profile:profiles (
                   email
                 )
               `)
@@ -73,9 +73,7 @@ const Leaderboard = () => {
               leaderboardsData[prize.id] = registrations.map(reg => ({
                 points: reg.points || 0,
                 user_id: reg.user_id,
-                profile: {
-                  email: reg.profiles?.email
-                }
+                profile: reg.profile
               }));
             }
           }
