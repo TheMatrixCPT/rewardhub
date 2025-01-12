@@ -11,7 +11,9 @@ import { format } from "date-fns";
 type PrizeLeaderboardEntry = {
   points: number;
   user_id: string;
-  user_email: string | null;
+  profiles?: {
+    email: string | null;
+  } | null;
 };
 
 type Prize = {
@@ -71,7 +73,7 @@ const Leaderboard = () => {
               const formattedRegistrations: PrizeLeaderboardEntry[] = registrations.map(reg => ({
                 points: reg.points || 0,
                 user_id: reg.user_id,
-                user_email: reg.profiles?.email
+                profiles: reg.profiles
               }));
               leaderboardsData[prize.id] = formattedRegistrations;
             }
@@ -173,7 +175,7 @@ const Leaderboard = () => {
                       </Badge>
                     )}
                     <Badge 
-                      variant={getRegistrationStatus(prize).includes("open") ? "success" : "secondary"}
+                      variant={getRegistrationStatus(prize).includes("open") ? "secondary" : "outline"}
                       className="flex items-center gap-1"
                     >
                       <Users className="h-4 w-4" />
@@ -200,7 +202,7 @@ const Leaderboard = () => {
                           {index === 1 && " 🥈"}
                           {index === 2 && " 🥉"}
                         </TableCell>
-                        <TableCell>{entry.user_email || 'Anonymous'}</TableCell>
+                        <TableCell>{entry.profiles?.email || 'Anonymous'}</TableCell>
                         <TableCell className="text-right">{entry.points}</TableCell>
                         <TableCell className="text-right">
                           {Math.min(100, Math.round((entry.points / prize.points_required) * 100))}%
