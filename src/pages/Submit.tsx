@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
@@ -22,22 +22,18 @@ const Submit = () => {
   const [prizes, setPrizes] = useState<Tables<"prizes">[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
   const form = useForm<FormData>();
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log("Fetching activities and prizes...");
       const { data: activitiesData, error: activitiesError } = await supabase
         .from("activities")
         .select("*");
       
       if (activitiesError) {
         console.error("Error fetching activities:", activitiesError);
-        toast({
-          title: "Error",
-          description: "Failed to load activities",
-          variant: "destructive",
-        });
+        toast.error("Failed to load activities");
         return;
       }
 
@@ -48,58 +44,31 @@ const Submit = () => {
 
       if (prizesError) {
         console.error("Error fetching prizes:", prizesError);
-        toast({
-          title: "Error",
-          description: "Failed to load prizes",
-          variant: "destructive",
-        });
+        toast.error("Failed to load prizes");
         return;
       }
 
+      console.log("Fetched activities:", activitiesData);
+      console.log("Fetched prizes:", prizesData);
       setActivities(activitiesData || []);
       setPrizes(prizesData || []);
     };
 
     fetchData();
-  }, [toast]);
+  }, []);
 
   const onSubmit = async (data: FormData) => {
+    console.log("Submitting form data:", data);
     setLoading(true);
     try {
-      console.log("Starting submission process...");
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         throw new Error("No user found");
       }
 
-      console.log("Checking prize registration for user:", user.id, "prize:", data.prizeId);
+      console.log("Creating submission for user:", user.id);
       
-      // First check if user is registered for the selected prize
-      const { data: registration, error: registrationError } = await supabase
-        .from("prize_registrations")
-        .select("*")
-        .eq('user_id', user.id)
-        .eq('prize_id', data.prizeId)
-        .maybeSingle();
-
-      if (registrationError) {
-        console.error("Error checking prize registration:", registrationError);
-        throw new Error("Failed to check prize registration");
-      }
-
-      if (!registration) {
-        console.log("No registration found for prize");
-        toast({
-          title: "Registration Required",
-          description: "You must be registered for this prize to submit activities for it. Please register for the prize first.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log("Registration found, proceeding with submission");
-
       const { error: submissionError } = await supabase
         .from("submissions")
         .insert({
@@ -109,7 +78,8 @@ const Submit = () => {
           proof_url: data.proofUrl,
           company_tag: data.companyTag,
           mentor_tag: data.mentorTag,
-          user_id: user.id
+          user_id: user.id,
+          status: 'pending'
         });
 
       if (submissionError) {
@@ -118,19 +88,11 @@ const Submit = () => {
       }
 
       console.log("Submission created successfully");
-      toast({
-        title: "Success!",
-        description: "Your activity has been submitted for review.",
-      });
-      
+      toast.success("Your activity has been submitted for review");
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting activity:", error);
-      toast({
-        title: "Error",
-        description: "Failed to submit activity. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to submit activity");
     } finally {
       setLoading(false);
     }

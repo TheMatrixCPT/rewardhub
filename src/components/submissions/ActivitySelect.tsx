@@ -1,4 +1,5 @@
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Control } from "react-hook-form";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -15,17 +16,22 @@ export const ActivitySelect = ({ control, activities }: ActivitySelectProps) => 
       render={({ field }) => (
         <FormItem>
           <FormLabel>Activity Type</FormLabel>
-          <select
-            {...field}
-            className="w-full p-2 border rounded-md"
-          >
-            <option value="">Select an activity</option>
-            {activities.map((activity) => (
-              <option key={activity.id} value={activity.id}>
-                {activity.name} ({activity.points} points)
-              </option>
-            ))}
-          </select>
+          <Select onValueChange={field.onChange} value={field.value}>
+            <SelectTrigger className="w-full bg-white dark:bg-gray-800">
+              <SelectValue placeholder="Select an activity" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-gray-800">
+              {activities.map((activity) => (
+                <SelectItem 
+                  key={activity.id} 
+                  value={activity.id}
+                  className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  {activity.name} ({activity.points} points)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <FormMessage />
         </FormItem>
       )}

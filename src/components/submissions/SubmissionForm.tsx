@@ -17,8 +17,8 @@ interface SubmissionFormProps {
 export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading }: SubmissionFormProps) => {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
-      <PrizeSelect control={control} prizes={prizes} />
       <ActivitySelect control={control} activities={activities} />
+      <PrizeSelect control={control} prizes={prizes} />
 
       <FormField
         control={control}
@@ -82,7 +82,7 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
         )}
       />
 
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading} className="w-full bg-emerald-500 hover:bg-emerald-600">
         {loading ? "Submitting..." : "Submit Activity"}
       </Button>
     </form>
