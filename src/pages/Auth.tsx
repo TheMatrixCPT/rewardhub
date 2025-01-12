@@ -4,7 +4,6 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { AuthError } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -109,8 +108,20 @@ const Auth = () => {
             variables: {
               default: {
                 colors: {
-                  brand: 'rgb(20 184 166)',
-                  brandAccent: 'rgb(13 148 136)',
+                  brand: '#2DD4BF',
+                  brandAccent: '#14B8A6',
+                  brandButtonText: 'white',
+                  defaultButtonBackground: '#F1F5F9',
+                  defaultButtonBackgroundHover: '#E2E8F0',
+                  defaultButtonBorder: '#CBD5E1',
+                  defaultButtonText: '#64748B',
+                  inputBackground: 'white',
+                  inputBorder: '#E2E8F0',
+                  inputBorderHover: '#2DD4BF',
+                  inputBorderFocus: '#2DD4BF',
+                  inputText: '#1E293B',
+                  inputLabelText: '#64748B',
+                  inputPlaceholder: '#94A3B8',
                 }
               }
             },
