@@ -41,13 +41,13 @@ export const useAuth = () => {
           checkAdmin(session.user.id);
         } else {
           setIsLoading(false);
-          navigate("/auth");
+          navigate("/login");
         }
       } catch (error) {
         console.error("Session check error:", error);
         setIsLoading(false);
         toast.error("Authentication error. Please try logging in again.");
-        navigate("/auth");
+        navigate("/login");
       }
     };
 
@@ -60,7 +60,8 @@ export const useAuth = () => {
         setUser(null);
         setIsAdmin(false);
         setIsLoading(false);
-        navigate("/auth");
+        navigate("/login");
+        toast.success("Logged out successfully");
         return;
       }
 
@@ -82,8 +83,7 @@ export const useAuth = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("Logged out successfully");
-      navigate("/auth");
+      // Navigation is handled in the onAuthStateChange listener
     } catch (error) {
       console.error('Logout error:', error);
       toast.error("Error logging out");
