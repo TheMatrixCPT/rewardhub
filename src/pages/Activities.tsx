@@ -5,25 +5,41 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmissionForm } from "@/components/submissions/SubmissionForm";
 import RecentActivities from "@/components/dashboard/RecentActivities";
 import type { Tables } from "@/integrations/supabase/types";
+import * as z from "zod";
 
-type FormData = {
-  activityId: string;
-  prizeId: string;
-  linkedinUrl?: string;
-  proofUrl?: string;
-  companyTag?: string;
-  mentorTag?: string;
-};
+// Define the form validation schema
+const formSchema = z.object({
+  activityId: z.string({
+    required_error: "Please select an activity type",
+  }),
+  prizeId: z.string({
+    required_error: "Please select a prize",
+  }),
+  linkedinUrl: z.string().url().optional(),
+  proofUrl: z.string().url().optional(),
+  companyTag: z.string().optional(),
+  mentorTag: z.string().optional(),
+}).refine((data) => {
+  return data.linkedinUrl || data.proofUrl;
+}, {
+  message: "Please provide either a LinkedIn URL or a proof URL",
+  path: ["proofUrl"],
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 const Activities = () => {
   const [activities, setActivities] = useState<Tables<"activities">[]>([]);
   const [prizes, setPrizes] = useState<Tables<"prizes">[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const form = useForm<FormData>();
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+  });
 
   useEffect(() => {
     const fetchData = async () => {

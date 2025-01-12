@@ -5,6 +5,27 @@ import { PrizeSelect } from "./PrizeSelect";
 import { ActivitySelect } from "./ActivitySelect";
 import { Button } from "@/components/ui/button";
 import type { Tables } from "@/integrations/supabase/types";
+import * as z from "zod";
+
+// Define the form validation schema
+const formSchema = z.object({
+  activityId: z.string({
+    required_error: "Please select an activity type",
+  }),
+  prizeId: z.string({
+    required_error: "Please select a prize",
+  }),
+  linkedinUrl: z.string().url().optional(),
+  proofUrl: z.string().url().optional(),
+  companyTag: z.string().optional(),
+  mentorTag: z.string().optional(),
+}).refine((data) => {
+  // Ensure at least one URL is provided
+  return data.linkedinUrl || data.proofUrl;
+}, {
+  message: "Please provide either a LinkedIn URL or a proof URL",
+  path: ["proofUrl"], // This will show the error under the proof URL field
+});
 
 interface SubmissionFormProps {
   control: Control<any>;
@@ -25,7 +46,7 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
         name="linkedinUrl"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>LinkedIn Post URL (Optional)</FormLabel>
+            <FormLabel>LinkedIn Post URL</FormLabel>
             <FormControl>
               <Input placeholder="https://linkedin.com/post/..." {...field} />
             </FormControl>
@@ -42,12 +63,12 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
         name="proofUrl"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Proof URL (Optional)</FormLabel>
+            <FormLabel>Proof URL</FormLabel>
             <FormControl>
               <Input placeholder="https://..." {...field} />
             </FormControl>
             <FormDescription>
-              Link to any proof of completion
+              Link to any proof of completion (required if no LinkedIn URL provided)
             </FormDescription>
             <FormMessage />
           </FormItem>
