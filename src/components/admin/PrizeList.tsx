@@ -48,33 +48,46 @@ const PrizeList = ({ prizes, onPrizeUpdated }: PrizeListProps) => {
   return (
     <Card className="p-6">
       <h2 className="text-xl font-semibold mb-4">Current Prizes</h2>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="space-y-2">
         {prizes?.map((prize) => (
-          <Card
+          <div
             key={prize.id}
-            className={`p-4 space-y-3 ${!prize.active ? 'opacity-75 bg-muted' : ''}`}
+            className={`flex items-center gap-4 p-3 rounded-lg border ${
+              !prize.active ? 'bg-muted' : 'bg-card'
+            }`}
           >
             {prize.image_url && (
               <img
                 src={prize.image_url}
                 alt={prize.name}
-                className="w-full h-32 object-cover rounded-md"
+                className="w-12 h-12 object-cover rounded-md flex-shrink-0"
               />
             )}
-            <h3 className="font-semibold">{prize.name}</h3>
-            <p className="text-sm text-gray-600">{prize.description}</p>
-            <p className="text-sm font-medium">{prize.points_required} points required</p>
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>Created: {format(new Date(prize.created_at), 'PPP')}</p>
-              {prize.deadline && (
-                <p>Deadline: {format(new Date(prize.deadline), 'PPP')}</p>
+            <div className="flex-grow min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold truncate">{prize.name}</h3>
+                <span className="text-sm text-muted-foreground">
+                  ({prize.points_required} points)
+                </span>
+              </div>
+              {prize.description && (
+                <p className="text-sm text-muted-foreground line-clamp-1">
+                  {prize.description}
+                </p>
               )}
+              <div className="flex gap-4 text-xs text-muted-foreground mt-1">
+                <span>Created: {format(new Date(prize.created_at), 'PP')}</span>
+                {prize.deadline && (
+                  <span>Deadline: {format(new Date(prize.deadline), 'PP')}</span>
+                )}
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-shrink-0">
               <Button
                 variant={prize.active ? "destructive" : "default"}
+                size="sm"
                 onClick={() => togglePrizeStatus(prize.id, prize.active)}
-                className={`flex-1 ${
+                className={`${
                   prize.active 
                     ? 'bg-red-500 hover:bg-red-600 text-white' 
                     : 'bg-green-500 hover:bg-green-600 text-white'
@@ -85,6 +98,7 @@ const PrizeList = ({ prizes, onPrizeUpdated }: PrizeListProps) => {
               {!prize.active && (
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => deletePrize(prize.id)}
                   className="bg-red-50 hover:bg-red-100 border-red-200 text-red-600 hover:text-red-700"
                 >
@@ -92,7 +106,7 @@ const PrizeList = ({ prizes, onPrizeUpdated }: PrizeListProps) => {
                 </Button>
               )}
             </div>
-          </Card>
+          </div>
         ))}
       </div>
     </Card>
