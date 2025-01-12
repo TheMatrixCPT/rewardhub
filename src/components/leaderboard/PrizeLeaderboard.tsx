@@ -1,4 +1,4 @@
-import { TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { PrizeInfo } from "./PrizeInfo";
 import { LeaderboardTable } from "./LeaderboardTable";
 
@@ -26,9 +26,11 @@ type PrizeLeaderboardProps = {
 
 export function PrizeLeaderboard({ prize, entries }: PrizeLeaderboardProps) {
   return (
-    <TabsContent value={prize.id}>
-      <PrizeInfo prize={prize} />
-      <LeaderboardTable entries={entries} pointsRequired={prize.points_required} />
-    </TabsContent>
+    <Tabs value={prize.id} defaultValue={prize.id}>
+      <TabsContent value={prize.id}>
+        <PrizeInfo prize={prize} />
+        <LeaderboardTable entries={entries} pointsRequired={prize.points_required} />
+      </TabsContent>
+    </Tabs>
   );
 }

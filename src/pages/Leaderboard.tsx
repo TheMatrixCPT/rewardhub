@@ -70,11 +70,7 @@ const Leaderboard = () => {
 
             if (registrations) {
               console.log(`Registrations fetched for prize ${prize.id}:`, registrations);
-              leaderboardsData[prize.id] = registrations.map(reg => ({
-                points: reg.points || 0,
-                user_id: reg.user_id,
-                profile: reg.profile
-              }));
+              leaderboardsData[prize.id] = registrations;
             }
           }
           
