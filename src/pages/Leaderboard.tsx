@@ -58,7 +58,9 @@ const Leaderboard = () => {
               .select(`
                 points,
                 user_id,
-                profile:profiles(email)
+                profiles!prize_registrations_user_id_fkey (
+                  email
+                )
               `)
               .eq('prize_id', prize.id)
               .order('points', { ascending: false });
@@ -70,7 +72,11 @@ const Leaderboard = () => {
 
             if (registrations) {
               console.log(`Registrations fetched for prize ${prize.id}:`, registrations);
-              leaderboardsData[prize.id] = registrations;
+              leaderboardsData[prize.id] = registrations.map(reg => ({
+                points: reg.points,
+                user_id: reg.user_id,
+                profile: reg.profiles
+              }));
             }
           }
           
