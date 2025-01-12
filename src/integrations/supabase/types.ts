@@ -303,6 +303,13 @@ export type Database = {
           average_points: number
         }[]
       }
+      get_user_rankings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          rank: number
+        }[]
+      }
       is_admin: {
         Args: {
           user_id: string

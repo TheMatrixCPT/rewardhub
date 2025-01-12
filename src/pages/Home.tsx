@@ -26,16 +26,27 @@ const Home = () => {
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id);
 
-      // Get user rank
-      const { data: rankings } = await supabase
-        .rpc('get_user_rankings');
+      // Get user rank from points table
+      const { data: allPoints } = await supabase
+        .from("points")
+        .select("user_id, points");
 
-      const userRanking = rankings?.find(r => r.user_id === user.id)?.rank || 0;
+      // Calculate user ranking
+      const userTotalPoints = new Map<string, number>();
+      allPoints?.forEach(point => {
+        const currentTotal = userTotalPoints.get(point.user_id) || 0;
+        userTotalPoints.set(point.user_id, currentTotal + point.points);
+      });
+
+      const sortedUsers = Array.from(userTotalPoints.entries())
+        .sort(([, a], [, b]) => b - a);
+
+      const userRanking = sortedUsers.findIndex(([id]) => id === user.id) + 1;
 
       return {
         totalPoints,
         activitiesCount: activitiesCount || 0,
-        userRank: userRanking
+        userRank: userRanking || '-'
       };
     },
     enabled: !!user
