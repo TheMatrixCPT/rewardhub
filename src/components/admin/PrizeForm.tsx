@@ -102,9 +102,9 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
 
   return (
     <Card className="p-6 bg-muted/50">
-      <div className="flex flex-col items-center mb-6">
-        <h2 className="text-2xl font-semibold text-center">Add New Prize</h2>
-        <p className="text-muted-foreground mt-2">Create a new prize for users to compete for</p>
+      <div className="space-y-2 border-b pb-4 mb-6">
+        <h2 className="text-2xl font-semibold">Add New Prize</h2>
+        <p className="text-muted-foreground">Create a new prize for users to compete for</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl mx-auto">
         <div>
