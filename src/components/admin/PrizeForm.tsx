@@ -104,7 +104,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     <Card className="p-6 bg-muted/50">
       <h2 className="text-2xl font-semibold mb-2">Add New Prize</h2>
       <p className="text-muted-foreground mb-6">Create a new prize for users to compete for</p>
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-2">Prize Name *</label>
           <Input
@@ -188,8 +188,8 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
           </div>
         </div>
 
-        <div className="flex justify-center mt-6">
-          <Button type="submit" disabled={loading || uploadingImage} className="w-full max-w-xs">
+        <div className="mt-6">
+          <Button type="submit" disabled={loading || uploadingImage} className="w-full">
             {loading ? "Adding..." : "Add Prize"}
           </Button>
         </div>
