@@ -187,6 +187,7 @@ export type Database = {
           last_name: string | null
           linkedin_profile: string | null
           phone_number: string | null
+          referral_source: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string
         }
@@ -204,6 +205,7 @@ export type Database = {
           last_name?: string | null
           linkedin_profile?: string | null
           phone_number?: string | null
+          referral_source?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
@@ -221,6 +223,7 @@ export type Database = {
           last_name?: string | null
           linkedin_profile?: string | null
           phone_number?: string | null
+          referral_source?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }

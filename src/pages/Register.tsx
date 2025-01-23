@@ -69,7 +69,7 @@ const Register = () => {
               last_name: '',
               phone_number: '',
               date_of_birth: '',
-              gender: ''
+              referral_source: ''
             },
             signUpFields: [
               {
@@ -97,14 +97,15 @@ const Register = () => {
                 required: true,
               },
               {
-                name: 'gender',
-                label: 'Gender',
+                name: 'referral_source',
+                label: 'Where did you hear about us?',
                 type: 'select',
                 options: [
-                  { value: 'male', label: 'Male' },
-                  { value: 'female', label: 'Female' },
-                  { value: 'other', label: 'Other' },
-                  { value: 'prefer_not_to_say', label: 'Prefer not to say' }
+                  { value: 'social_media', label: 'Social Media' },
+                  { value: 'friend', label: 'Friend or Family' },
+                  { value: 'search', label: 'Search Engine' },
+                  { value: 'advertisement', label: 'Advertisement' },
+                  { value: 'other', label: 'Other' }
                 ],
                 required: true,
               }
