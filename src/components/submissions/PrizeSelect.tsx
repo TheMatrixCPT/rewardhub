@@ -2,6 +2,8 @@ import { FormField, FormItem, FormLabel, FormDescription, FormMessage } from "@/
 import { Control } from "react-hook-form";
 import type { Tables } from "@/integrations/supabase/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PrizeSelectProps {
   control: Control<any>;
@@ -9,7 +11,27 @@ interface PrizeSelectProps {
 }
 
 export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
-  // Filter prizes based on registration period and deadline
+  const [registeredPrizes, setRegisteredPrizes] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchRegistrations = async () => {
+      const { data: registrations, error } = await supabase
+        .from('prize_registrations')
+        .select('prize_id')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) {
+        console.error("Error fetching prize registrations:", error);
+        return;
+      }
+
+      setRegisteredPrizes(registrations.map(reg => reg.prize_id));
+    };
+
+    fetchRegistrations();
+  }, []);
+
+  // Filter prizes based on registration period, deadline, and user registration
   const availablePrizes = prizes.filter(prize => {
     const now = new Date();
     
@@ -23,7 +45,8 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
       return false;
     }
 
-    return true;
+    // Only include prizes the user is registered for
+    return registeredPrizes.includes(prize.id);
   });
 
   return (
