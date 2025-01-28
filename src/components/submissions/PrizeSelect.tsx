@@ -40,12 +40,17 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
     fetchRegistrations();
   }, [prizes]);
 
-  // Filter prizes based on deadline and user registration
+  // Filter prizes based on registration end date and user registration
   const availablePrizes = prizes.filter(prize => {
     const now = new Date();
     
     // Skip if deadline has passed
     if (prize.deadline && new Date(prize.deadline) < now) {
+      return false;
+    }
+
+    // Skip if registration end date hasn't passed yet
+    if (!prize.registration_end || new Date(prize.registration_end) > now) {
       return false;
     }
 
@@ -67,7 +72,7 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
             <SelectContent className="select-content z-50 bg-white dark:bg-gray-800 shadow-lg">
               {availablePrizes.length === 0 ? (
                 <div className="p-2 text-sm text-muted-foreground">
-                  No prizes available. Make sure you're registered for a prize competition.
+                  No prizes available. Make sure you're registered for a prize competition and the registration period has ended.
                 </div>
               ) : (
                 availablePrizes.map((prize) => (
@@ -83,7 +88,7 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
             </SelectContent>
           </Select>
           <FormDescription>
-            Select the prize you want to earn points for. Only prizes you're registered for will appear here.
+            Select the prize you want to earn points for. Only prizes you're registered for and whose registration period has ended will appear here.
           </FormDescription>
           <FormMessage />
         </FormItem>
