@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RegisterFormData {
   email: string;
@@ -14,6 +15,9 @@ interface RegisterFormData {
   last_name: string;
   phone_number: string;
   address: string;
+  date_of_birth: string;
+  gender: string;
+  referral_source: string;
 }
 
 const Register = () => {
@@ -28,6 +32,9 @@ const Register = () => {
       last_name: "",
       phone_number: "",
       address: "",
+      date_of_birth: "",
+      gender: "",
+      referral_source: "",
     },
   });
 
@@ -53,6 +60,9 @@ const Register = () => {
             last_name: data.last_name,
             phone_number: data.phone_number,
             address: data.address,
+            date_of_birth: data.date_of_birth,
+            gender: data.gender,
+            referral_source: data.referral_source,
           },
         },
       });
@@ -131,6 +141,67 @@ const Register = () => {
                   <FormControl>
                     <Input placeholder="123 Main St, City" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="date_of_birth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date of Birth</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="gender"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gender</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your gender" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="referral_source"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>How did you hear about us?</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select referral source" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="social_media">Social Media</SelectItem>
+                      <SelectItem value="friend">Friend</SelectItem>
+                      <SelectItem value="search">Search Engine</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
