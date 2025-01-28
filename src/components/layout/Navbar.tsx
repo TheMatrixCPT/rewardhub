@@ -17,10 +17,11 @@ const Navbar = () => {
           <div className="flex items-center">
             <div className="relative group cursor-pointer">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-primary/10 to-primary-hover/10 transform transition-all duration-200 group-hover:scale-105">
-                <div className="flex items-center">
-                  <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">R</span>
-                  <span className="text-2xl font-bold bg-gradient-to-r from-primary-hover to-primary bg-clip-text text-transparent">H</span>
-                </div>
+                <img 
+                  src="/lovable-uploads/eb3389e6-5343-4e22-a451-0db6086151e7.png" 
+                  alt="RH Logo" 
+                  className="w-6 h-6"
+                />
               </div>
               <span className="absolute left-full ml-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                 RewardHub
