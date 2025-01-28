@@ -23,10 +23,13 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
         return;
       }
 
+      const now = new Date();
       const { data: registrations, error } = await supabase
         .from('prize_registrations')
         .select('prize_id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .gte('registered_at', prizes.map(p => p.registration_start || '1970-01-01'))
+        .lte('registered_at', prizes.map(p => p.registration_end || '2999-12-31'));
 
       if (error) {
         console.error("Error fetching prize registrations:", error);
@@ -38,14 +41,19 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
     };
 
     fetchRegistrations();
-  }, []);
+  }, [prizes]);
 
-  // Filter prizes based on registration period, deadline, and user registration
+  // Filter prizes based on registration period and user registration
   const availablePrizes = prizes.filter(prize => {
     const now = new Date();
     
-    // Skip if registration end date hasn't passed yet
-    if (prize.registration_end && new Date(prize.registration_end) > now) {
+    // Skip if registration hasn't started yet
+    if (prize.registration_start && new Date(prize.registration_start) > now) {
+      return false;
+    }
+
+    // Skip if registration end date has passed
+    if (prize.registration_end && new Date(prize.registration_end) < now) {
       return false;
     }
 
@@ -70,19 +78,25 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
               <SelectValue placeholder="Select a prize" />
             </SelectTrigger>
             <SelectContent className="select-content z-50 bg-white dark:bg-gray-800 shadow-lg">
-              {availablePrizes.map((prize) => (
-                <SelectItem 
-                  key={prize.id} 
-                  value={prize.id}
-                  className="select-item hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  {prize.name}
-                </SelectItem>
-              ))}
+              {availablePrizes.length === 0 ? (
+                <div className="p-2 text-sm text-muted-foreground">
+                  No prizes available. Make sure you're registered for a prize competition.
+                </div>
+              ) : (
+                availablePrizes.map((prize) => (
+                  <SelectItem 
+                    key={prize.id} 
+                    value={prize.id}
+                    className="select-item hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    {prize.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
           <FormDescription>
-            Select the prize you want to earn points for
+            Select the prize you want to earn points for. Only prizes you're registered for will appear here.
           </FormDescription>
           <FormMessage />
         </FormItem>
