@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 type PrizeLeaderboardEntry = {
   points: number;
   user_id: string;
-  profile?: {
+  profiles?: {
     email: string | null;
   } | null;
 };
@@ -36,19 +36,16 @@ export function PrizeLeaderboard({ prize }: PrizeLeaderboardProps) {
     queryFn: async () => {
       console.log("Fetching leaderboard entries for prize:", prize.id);
       
-      // Get registered users within the registration period
       const { data: registrations, error } = await supabase
         .from('prize_registrations')
         .select(`
           points,
           user_id,
-          profiles!prize_registrations_user_id_fkey (
+          profiles (
             email
           )
         `)
         .eq('prize_id', prize.id)
-        .gte('registered_at', prize.registration_start || '1970-01-01')
-        .lte('registered_at', prize.registration_end || '2999-12-31')
         .order('points', { ascending: false });
 
       if (error) {
