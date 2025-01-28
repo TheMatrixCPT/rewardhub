@@ -114,7 +114,16 @@ const Activities = () => {
 
       console.log("Submission created successfully");
       toast.success("Your activity has been submitted for review");
-      form.reset(); // Clear all form fields after successful submission
+      
+      // Reset form with default values
+      form.reset({
+        activityId: "",
+        prizeId: "",
+        linkedinUrl: "",
+        proofUrl: "",
+        companyTag: "",
+        mentorTag: "",
+      });
     } catch (error: any) {
       console.error("Error submitting activity:", error);
       toast.error(error.message || "Failed to submit activity");
