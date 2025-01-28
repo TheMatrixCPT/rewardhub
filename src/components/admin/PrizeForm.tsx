@@ -65,6 +65,27 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
       return;
     }
 
+    // Validate dates
+    const deadline = new Date(newPrize.deadline);
+    const regStart = new Date(newPrize.registration_start);
+    const regEnd = new Date(newPrize.registration_end);
+    const now = new Date();
+
+    if (deadline < now) {
+      toast.error("Competition end date must be in the future");
+      return;
+    }
+
+    if (regEnd > deadline) {
+      toast.error("Registration end date cannot be after the competition end date");
+      return;
+    }
+
+    if (regStart > regEnd) {
+      toast.error("Registration start date must be before registration end date");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -158,13 +179,13 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Competition Deadline *</label>
+          <label className="block text-sm font-medium mb-2">Competition End Date *</label>
           <Input
             required
             type="datetime-local"
             value={newPrize.deadline}
             onChange={(e) => setNewPrize({ ...newPrize, deadline: e.target.value })}
-            placeholder="Set competition deadline"
+            placeholder="Set competition end date"
           />
         </div>
 

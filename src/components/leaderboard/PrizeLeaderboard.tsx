@@ -3,6 +3,8 @@ import { PrizeInfo } from "./PrizeInfo";
 import { LeaderboardTable } from "./LeaderboardTable";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 type PrizeLeaderboardEntry = {
   points: number;
@@ -27,6 +29,8 @@ type PrizeLeaderboardProps = {
 };
 
 export function PrizeLeaderboard({ prize }: PrizeLeaderboardProps) {
+  const isCompetitionEnded = prize.deadline && new Date(prize.deadline) < new Date();
+
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['prize-leaderboard', prize.id],
     queryFn: async () => {
@@ -65,8 +69,22 @@ export function PrizeLeaderboard({ prize }: PrizeLeaderboardProps) {
   return (
     <Tabs value={prize.id} defaultValue={prize.id}>
       <TabsContent value={prize.id}>
+        {isCompetitionEnded && (
+          <Card className="mb-4 p-4 bg-yellow-50 border-yellow-200">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-yellow-200">Competition Ended</Badge>
+              <span className="text-sm text-yellow-800">
+                This competition has ended. Final rankings are displayed below.
+              </span>
+            </div>
+          </Card>
+        )}
         <PrizeInfo prize={prize} />
-        <LeaderboardTable entries={entries} pointsRequired={prize.points_required} />
+        <LeaderboardTable 
+          entries={entries} 
+          pointsRequired={prize.points_required}
+          isCompetitionEnded={isCompetitionEnded}
+        />
       </TabsContent>
     </Tabs>
   );

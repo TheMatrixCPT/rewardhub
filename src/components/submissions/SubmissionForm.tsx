@@ -36,10 +36,17 @@ interface SubmissionFormProps {
 }
 
 export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading }: SubmissionFormProps) => {
+  // Filter out prizes that have passed their deadline
+  const activePrizes = prizes.filter(prize => {
+    if (!prize.deadline) return true;
+    const deadline = new Date(prize.deadline);
+    return deadline > new Date();
+  });
+
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <ActivitySelect control={control} activities={activities} />
-      <PrizeSelect control={control} prizes={prizes} />
+      <PrizeSelect control={control} prizes={activePrizes} />
 
       <FormField
         control={control}
