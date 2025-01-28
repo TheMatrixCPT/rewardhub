@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme/theme-provider";
@@ -24,8 +24,11 @@ const App = () => {
         <Router>
           <Navbar />
           <Routes>
+            {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+
+            {/* Protected routes */}
             <Route
               path="/"
               element={
@@ -38,7 +41,7 @@ const App = () => {
               path="/home"
               element={
                 <ProtectedRoute>
-                  <Home />
+                  <Navigate to="/" replace />
                 </ProtectedRoute>
               }
             />
@@ -82,6 +85,9 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
+            {/* Catch all route - redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
       </ThemeProvider>
