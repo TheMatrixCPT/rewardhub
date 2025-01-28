@@ -23,22 +23,10 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
         return;
       }
 
-      const query = supabase
+      const { data: registrations, error } = await supabase
         .from('prize_registrations')
         .select('prize_id')
         .eq('user_id', user.id);
-
-      // Only add date filters if the prize has registration dates
-      for (const prize of prizes) {
-        if (prize.registration_start) {
-          query.gte('registered_at', prize.registration_start);
-        }
-        if (prize.registration_end) {
-          query.lte('registered_at', prize.registration_end);
-        }
-      }
-
-      const { data: registrations, error } = await query;
 
       if (error) {
         console.error("Error fetching prize registrations:", error);
@@ -52,20 +40,10 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
     fetchRegistrations();
   }, [prizes]);
 
-  // Filter prizes based on registration period and user registration
+  // Filter prizes based on deadline and user registration
   const availablePrizes = prizes.filter(prize => {
     const now = new Date();
     
-    // Skip if registration hasn't started yet
-    if (prize.registration_start && new Date(prize.registration_start) > now) {
-      return false;
-    }
-
-    // Skip if registration end date has passed
-    if (prize.registration_end && new Date(prize.registration_end) < now) {
-      return false;
-    }
-
     // Skip if deadline has passed
     if (prize.deadline && new Date(prize.deadline) < now) {
       return false;
