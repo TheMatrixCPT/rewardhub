@@ -15,16 +15,15 @@ const formSchema = z.object({
   prizeId: z.string({
     required_error: "Please select a prize",
   }),
-  linkedinUrl: z.string().url().optional(),
-  proofUrl: z.string().url().optional(),
+  linkedinUrl: z.string().url("Please enter a valid LinkedIn URL").optional(),
+  proofUrl: z.string().url("Please enter a valid URL").optional(),
   companyTag: z.string().optional(),
   mentorTag: z.string().optional(),
 }).refine((data) => {
-  // Ensure at least one URL is provided
   return data.linkedinUrl || data.proofUrl;
 }, {
   message: "Please provide either a LinkedIn URL or a proof URL",
-  path: ["proofUrl"], // This will show the error under the proof URL field
+  path: ["proofUrl"],
 });
 
 interface SubmissionFormProps {
@@ -55,12 +54,16 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
           <FormItem>
             <FormLabel>LinkedIn Post URL</FormLabel>
             <FormControl>
-              <Input placeholder="https://linkedin.com/post/..." {...field} />
+              <Input 
+                placeholder="https://linkedin.com/post/..." 
+                {...field} 
+                className="focus:ring-2 focus:ring-primary focus:border-primary invalid:border-red-500 invalid:ring-red-500"
+              />
             </FormControl>
             <FormDescription>
               Link to your LinkedIn post if applicable
             </FormDescription>
-            <FormMessage />
+            <FormMessage className="text-red-500" />
           </FormItem>
         )}
       />
@@ -72,12 +75,16 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
           <FormItem>
             <FormLabel>Proof URL</FormLabel>
             <FormControl>
-              <Input placeholder="https://..." {...field} />
+              <Input 
+                placeholder="https://..." 
+                {...field} 
+                className="focus:ring-2 focus:ring-primary focus:border-primary invalid:border-red-500 invalid:ring-red-500"
+              />
             </FormControl>
             <FormDescription>
               Link to any proof of completion (required if no LinkedIn URL provided)
             </FormDescription>
-            <FormMessage />
+            <FormMessage className="text-red-500" />
           </FormItem>
         )}
       />
@@ -89,7 +96,11 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
           <FormItem>
             <FormLabel>Company Tag (Optional)</FormLabel>
             <FormControl>
-              <Input placeholder="Company name" {...field} />
+              <Input 
+                placeholder="Company name" 
+                {...field} 
+                className="focus:ring-2 focus:ring-primary focus:border-primary"
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -103,7 +114,11 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
           <FormItem>
             <FormLabel>Mentor Tag (Optional)</FormLabel>
             <FormControl>
-              <Input placeholder="Mentor name" {...field} />
+              <Input 
+                placeholder="Mentor name" 
+                {...field} 
+                className="focus:ring-2 focus:ring-primary focus:border-primary"
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

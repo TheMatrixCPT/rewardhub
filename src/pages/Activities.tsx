@@ -19,8 +19,8 @@ const formSchema = z.object({
   prizeId: z.string({
     required_error: "Please select a prize",
   }),
-  linkedinUrl: z.string().url().optional(),
-  proofUrl: z.string().url().optional(),
+  linkedinUrl: z.string().url("Please enter a valid LinkedIn URL").optional(),
+  proofUrl: z.string().url("Please enter a valid URL").optional(),
   companyTag: z.string().optional(),
   mentorTag: z.string().optional(),
 }).refine((data) => {
@@ -39,6 +39,14 @@ const Activities = () => {
   const navigate = useNavigate();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      activityId: "",
+      prizeId: "",
+      linkedinUrl: "",
+      proofUrl: "",
+      companyTag: "",
+      mentorTag: "",
+    }
   });
 
   useEffect(() => {
@@ -106,7 +114,7 @@ const Activities = () => {
 
       console.log("Submission created successfully");
       toast.success("Your activity has been submitted for review");
-      form.reset();
+      form.reset(); // Clear all form fields after successful submission
     } catch (error: any) {
       console.error("Error submitting activity:", error);
       toast.error(error.message || "Failed to submit activity");
