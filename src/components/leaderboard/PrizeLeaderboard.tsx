@@ -36,14 +36,13 @@ export function PrizeLeaderboard({ prize }: PrizeLeaderboardProps) {
     queryFn: async () => {
       console.log("Fetching leaderboard entries for prize:", prize.id);
       
+      // Using the leaderboard_view which already has the correct joins
       const { data: registrations, error } = await supabase
-        .from('prize_registrations')
+        .from('leaderboard_view')
         .select(`
           points,
           user_id,
-          profiles (
-            email
-          )
+          email
         `)
         .eq('prize_id', prize.id)
         .order('points', { ascending: false });
@@ -53,8 +52,17 @@ export function PrizeLeaderboard({ prize }: PrizeLeaderboardProps) {
         throw error;
       }
 
-      console.log("Fetched leaderboard entries:", registrations);
-      return registrations as PrizeLeaderboardEntry[];
+      // Transform the data to match the expected type
+      const transformedData: PrizeLeaderboardEntry[] = registrations.map(reg => ({
+        points: reg.points || 0,
+        user_id: reg.user_id || '',
+        profiles: {
+          email: reg.email
+        }
+      }));
+
+      console.log("Fetched leaderboard entries:", transformedData);
+      return transformedData;
     },
     enabled: !!prize.id,
   });
