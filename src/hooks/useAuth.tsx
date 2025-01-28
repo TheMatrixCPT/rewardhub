@@ -82,11 +82,26 @@ export const useAuth = () => {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
-      // Navigation is handled in the onAuthStateChange listener
+      // First clear local state
+      setUser(null);
+      setIsAdmin(false);
+      
+      // Then attempt to sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Logout error:', error);
+        // Even if there's an error, we want to clear the local session
+        localStorage.removeItem('sb-' + supabase.supabaseUrl + '-auth-token');
+        navigate("/login");
+        toast.success("Logged out successfully");
+      }
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error("Error logging out");
+      // Even if there's an error, clear local session and redirect
+      localStorage.removeItem('sb-' + supabase.supabaseUrl + '-auth-token');
+      navigate("/login");
+      toast.success("Logged out successfully");
     }
   };
 
