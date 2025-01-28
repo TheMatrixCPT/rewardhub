@@ -56,9 +56,7 @@ const Leaderboard = () => {
               .select(`
                 points,
                 user_id,
-                profile:profiles (
-                  email
-                )
+                profile:profiles!prize_registrations_user_id_fkey(email)
               `)
               .eq('prize_id', prize.id)
               .order('points', { ascending: false });
