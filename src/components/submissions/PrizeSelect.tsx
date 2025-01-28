@@ -15,16 +15,25 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
 
   useEffect(() => {
     const fetchRegistrations = async () => {
+      console.log("Fetching prize registrations...");
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error("No user found");
+        return;
+      }
+
       const { data: registrations, error } = await supabase
         .from('prize_registrations')
         .select('prize_id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', user.id);
 
       if (error) {
         console.error("Error fetching prize registrations:", error);
         return;
       }
 
+      console.log("Fetched registrations:", registrations);
       setRegisteredPrizes(registrations.map(reg => reg.prize_id));
     };
 
