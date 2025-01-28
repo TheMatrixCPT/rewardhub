@@ -3,7 +3,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 type PrizeLeaderboardEntry = {
   points: number;
   user_id: string;
-  profile?: {
+  profiles?: {
     email: string | null;
   } | null;
 };
@@ -33,7 +33,7 @@ export function LeaderboardTable({ entries, pointsRequired }: LeaderboardTablePr
               {index === 1 && " 🥈"}
               {index === 2 && " 🥉"}
             </TableCell>
-            <TableCell>{entry.profile?.email || 'Anonymous'}</TableCell>
+            <TableCell>{entry.profiles?.email || 'Anonymous'}</TableCell>
             <TableCell className="text-right">{entry.points}</TableCell>
             <TableCell className="text-right">
               {Math.min(100, Math.round((entry.points / pointsRequired) * 100))}%
