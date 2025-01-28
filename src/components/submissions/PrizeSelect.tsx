@@ -23,13 +23,22 @@ export const PrizeSelect = ({ control, prizes }: PrizeSelectProps) => {
         return;
       }
 
-      const now = new Date();
-      const { data: registrations, error } = await supabase
+      const query = supabase
         .from('prize_registrations')
         .select('prize_id')
-        .eq('user_id', user.id)
-        .gte('registered_at', prizes.map(p => p.registration_start || '1970-01-01'))
-        .lte('registered_at', prizes.map(p => p.registration_end || '2999-12-31'));
+        .eq('user_id', user.id);
+
+      // Only add date filters if the prize has registration dates
+      for (const prize of prizes) {
+        if (prize.registration_start) {
+          query.gte('registered_at', prize.registration_start);
+        }
+        if (prize.registration_end) {
+          query.lte('registered_at', prize.registration_end);
+        }
+      }
+
+      const { data: registrations, error } = await query;
 
       if (error) {
         console.error("Error fetching prize registrations:", error);
