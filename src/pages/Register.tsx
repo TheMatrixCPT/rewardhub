@@ -62,55 +62,6 @@ const Register = () => {
           providers={[]}
           redirectTo={window.location.origin}
           view="sign_up"
-          options={{
-            emailRedirectTo: window.location.origin,
-            data: {
-              first_name: '',
-              last_name: '',
-              phone_number: '',
-              date_of_birth: '',
-              referral_source: ''
-            },
-            signUpFields: [
-              {
-                name: 'first_name',
-                label: 'First Name',
-                type: 'text',
-                required: true,
-              },
-              {
-                name: 'last_name',
-                label: 'Last Name',
-                type: 'text',
-                required: true,
-              },
-              {
-                name: 'phone_number',
-                label: 'Phone Number',
-                type: 'tel',
-                required: true,
-              },
-              {
-                name: 'date_of_birth',
-                label: 'Date of Birth',
-                type: 'date',
-                required: true,
-              },
-              {
-                name: 'referral_source',
-                label: 'Where did you hear about us?',
-                type: 'select',
-                options: [
-                  { value: 'social_media', label: 'Social Media' },
-                  { value: 'friend', label: 'Friend or Family' },
-                  { value: 'search', label: 'Search Engine' },
-                  { value: 'advertisement', label: 'Advertisement' },
-                  { value: 'other', label: 'Other' }
-                ],
-                required: true,
-              }
-            ]
-          }}
         />
       </div>
     </div>

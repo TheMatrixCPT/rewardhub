@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type PrizeLeaderboardEntry = {
   points: number;
   user_id: string;
-  profile?: {
+  profiles?: {
     email: string | null;
   } | null;
 };
@@ -50,25 +50,31 @@ const Leaderboard = () => {
           const leaderboardsData: Record<string, PrizeLeaderboardEntry[]> = {};
           
           for (const prize of prizesData) {
-            console.log(`Fetching registrations for prize ${prize.id}...`);
-            const { data: registrations, error: registrationsError } = await supabase
-              .from('prize_registrations')
+            console.log(`Fetching leaderboard data for prize ${prize.id}...`);
+            const { data: leaderboardData, error: leaderboardError } = await supabase
+              .from('leaderboard_view')
               .select(`
                 points,
                 user_id,
-                profile:profiles!prize_registrations_user_id_fkey(email)
+                email
               `)
               .eq('prize_id', prize.id)
               .order('points', { ascending: false });
 
-            if (registrationsError) {
-              console.error("Error fetching registrations:", registrationsError);
+            if (leaderboardError) {
+              console.error("Error fetching leaderboard:", leaderboardError);
               continue;
             }
 
-            if (registrations) {
-              console.log(`Registrations fetched for prize ${prize.id}:`, registrations);
-              leaderboardsData[prize.id] = registrations;
+            if (leaderboardData) {
+              console.log(`Leaderboard data fetched for prize ${prize.id}:`, leaderboardData);
+              leaderboardsData[prize.id] = leaderboardData.map(entry => ({
+                points: entry.points || 0,
+                user_id: entry.user_id || '',
+                profiles: {
+                  email: entry.email
+                }
+              }));
             }
           }
           
