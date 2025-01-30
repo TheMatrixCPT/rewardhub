@@ -2,13 +2,23 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { AuthError } from "@supabase/supabase-js";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { session } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string>("");
+
+  useEffect(() => {
+    console.log("Login component mounted, session:", session ? "exists" : "none");
+    
+    if (session) {
+      console.log("User is authenticated, redirecting to home");
+      navigate("/");
+    }
+  }, [session, navigate]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -47,11 +57,11 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F1F0FB] px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-sm">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="max-w-md w-full space-y-8 bg-card p-8 rounded-xl shadow-sm">
         <div className="text-center">
-          <h2 className="mt-2 text-3xl font-bold text-[#222222]">Welcome back</h2>
-          <p className="mt-2 text-sm text-[#8E9196]">
+          <h2 className="mt-2 text-3xl font-bold text-foreground">Welcome back</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
             Sign in to your account to continue
           </p>
         </div>
@@ -76,13 +86,13 @@ const Login = () => {
                   defaultButtonBackgroundHover: '#E2E8F0',
                   defaultButtonBorder: '#CBD5E1',
                   defaultButtonText: '#64748B',
-                  inputBackground: 'white',
+                  inputBackground: 'transparent',
                   inputBorder: '#E2E8F0',
                   inputBorderHover: '#2DD4BF',
                   inputBorderFocus: '#2DD4BF',
-                  inputText: '#222222',
+                  inputText: 'inherit',
                   inputLabelText: '#64748B',
-                  inputPlaceholder: '#C8C8C9',
+                  inputPlaceholder: '#94A3B8',
                 }
               },
             },
