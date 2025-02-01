@@ -10,101 +10,61 @@ const Login = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-  // Single useEffect for initial session check and navigation
   useEffect(() => {
-    const checkSession = async () => {
-      console.log("Checking session state");
-      try {
-        setIsCheckingSession(true);
-        
-        if (session) {
-          console.log("Session exists, redirecting to home");
-          navigate("/");
-          return;
-        }
-
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Session check error:", error);
-          if (error.message.includes("session_not_found")) {
-            console.log("Invalid session, signing out");
-            await supabase.auth.signOut();
-          }
-          handleAuthError(error);
-        } else if (initialSession) {
-          console.log("Initial session exists, redirecting to home");
-          navigate("/");
-        }
-      } catch (error) {
-        console.error("Session check failed:", error);
-        handleAuthError(error);
-      } finally {
-        setIsCheckingSession(false);
-      }
-    };
-
-    checkSession();
+    console.log("Login component mounted, session:", session ? "exists" : "none");
+    
+    if (session) {
+      console.log("User is authenticated, redirecting to home");
+      navigate("/");
+    }
   }, [session, navigate]);
 
-  // Separate useEffect for auth state changes
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log("Auth state change:", event, currentSession ? "Session exists" : "No session");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change:", event, session ? "Session exists" : "No session");
       
-      if (event === "SIGNED_IN" && currentSession) {
+      if (event === "SIGNED_IN") {
         navigate("/");
       }
 
+      // Clear error when auth state changes
       if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
         setErrorMessage("");
       }
+
+      // Handle auth errors
+      if (event === "USER_UPDATED" && !session) {
+        handleAuthError();
+      }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleAuthError = (error: any) => {
-    console.error("Auth error:", error);
-    
-    if (error.message.includes("session_not_found")) {
-      setErrorMessage("Your session has expired. Please sign in again.");
-    } else if (error.message.includes("Email not confirmed")) {
-      setErrorMessage("Please verify your email address before signing in. Check your inbox for the verification link.");
-    } else if (error.message.includes("Invalid login credentials")) {
-      setErrorMessage("The email or password you entered is incorrect. Please try again.");
-    } else if (error.message.includes("Email address is required")) {
-      setErrorMessage("Please enter your email address to continue.");
-    } else if (error.message.includes("Password is required")) {
-      setErrorMessage("Please enter your password to continue.");
-    } else if (error.message.includes("Invalid email")) {
-      setErrorMessage("Please enter a valid email address (e.g., name@example.com).");
-    } else if (error.message.includes("Password should be")) {
-      setErrorMessage("Your password must be at least 6 characters long.");
-    } else if (error.message.includes("Too many requests")) {
-      setErrorMessage("Too many login attempts. Please try again in a few minutes.");
-    } else if (error.message.includes("User not found")) {
-      setErrorMessage("We couldn't find an account with this email address. Please check your email or sign up for a new account.");
-    } else if (error.message.includes("Password recovery")) {
-      setErrorMessage("We've sent you a password reset link. Please check your email.");
-    } else {
-      setErrorMessage("An error occurred. Please try again or contact support if the problem persists.");
+  const handleAuthError = async () => {
+    const { error } = await supabase.auth.getSession();
+    if (error) {
+      console.error("Auth error:", error);
+      
+      // More user-friendly error messages
+      if (error.message.includes("Email not confirmed")) {
+        setErrorMessage("Please verify your email address before signing in.");
+      } else if (error.message.includes("Invalid login credentials")) {
+        setErrorMessage("The email or password you entered is incorrect. Please try again.");
+      } else if (error.message.includes("Email address is required")) {
+        setErrorMessage("Please enter your email address.");
+      } else if (error.message.includes("Password is required")) {
+        setErrorMessage("Please enter your password.");
+      } else if (error.message.includes("Invalid email")) {
+        setErrorMessage("Please enter a valid email address.");
+      } else if (error.message.includes("Password should be")) {
+        setErrorMessage("Your password must be at least 6 characters long.");
+      } else {
+        setErrorMessage("An error occurred. Please try again.");
+      }
     }
   };
-
-  if (isCheckingSession) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -152,38 +112,6 @@ const Login = () => {
               input: 'auth-input',
               label: 'auth-label',
               anchor: 'auth-anchor',
-            },
-          }}
-          localization={{
-            variables: {
-              sign_in: {
-                email_label: 'Email address',
-                password_label: 'Your password',
-                email_input_placeholder: 'name@example.com',
-                password_input_placeholder: 'Your secure password',
-                button_label: 'Sign in',
-                loading_button_label: 'Signing in...',
-                social_provider_text: 'Sign in with {{provider}}',
-                link_text: "Don't have an account? Sign up",
-              },
-              sign_up: {
-                email_label: 'Email address',
-                password_label: 'Create a password',
-                email_input_placeholder: 'name@example.com',
-                password_input_placeholder: 'Create a secure password',
-                button_label: 'Create account',
-                loading_button_label: 'Creating account...',
-                social_provider_text: 'Sign up with {{provider}}',
-                link_text: "Already have an account? Sign in",
-              },
-              forgotten_password: {
-                email_label: 'Email address',
-                password_label: 'Your password',
-                email_input_placeholder: 'name@example.com',
-                button_label: 'Send reset instructions',
-                loading_button_label: 'Sending reset instructions...',
-                link_text: 'Forgot your password?',
-              },
             },
           }}
           providers={[]}

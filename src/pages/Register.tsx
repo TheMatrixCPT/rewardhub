@@ -25,7 +25,6 @@ const Register = () => {
   console.log("Register component rendered");
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const { user } = useAuth();
 
   const form = useForm<RegisterFormData>({
@@ -50,30 +49,10 @@ const Register = () => {
     }
   }, [user, navigate]);
 
-  const handleAuthError = (error: any) => {
-    console.error("Registration error:", error);
-    
-    if (error.message.includes("Email already registered")) {
-      setErrorMessage("This email address is already registered. Please sign in or use a different email.");
-    } else if (error.message.includes("Password should be")) {
-      setErrorMessage("Please choose a password that is at least 6 characters long.");
-    } else if (error.message.includes("Invalid email")) {
-      setErrorMessage("Please enter a valid email address (e.g., name@example.com).");
-    } else if (error.message.includes("Missing data")) {
-      setErrorMessage("Please fill in all required fields to complete your registration.");
-    } else if (error.message.includes("Too many requests")) {
-      setErrorMessage("Too many registration attempts. Please try again in a few minutes.");
-    } else {
-      setErrorMessage("An error occurred during registration. Please try again or contact support.");
-    }
-  };
-
   const onSubmit = async (data: RegisterFormData) => {
     console.log("Register form submitted", data);
     try {
       setIsLoading(true);
-      setErrorMessage("");
-
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -91,15 +70,16 @@ const Register = () => {
       });
 
       if (error) {
-        handleAuthError(error);
-        return;
+        console.error("Registration error:", error);
+        throw error;
       }
 
       console.log("Registration successful");
       toast.success("Registration successful! Please check your email to verify your account.");
       navigate("/login");
     } catch (error: any) {
-      handleAuthError(error);
+      console.error("Registration error:", error);
+      toast.error(error.message || "An error occurred during registration");
     } finally {
       setIsLoading(false);
     }
