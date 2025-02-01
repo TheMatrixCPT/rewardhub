@@ -31,68 +31,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    let mounted = true;
-    console.log("AuthProvider mounted");
-
-    const initializeAuth = async () => {
-      try {
-        console.log("Fetching initial session");
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) throw error;
-        
-        console.log("Initial session:", session ? "exists" : "none");
-        
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (session?.user) {
-            console.log("Checking admin status for user:", session.user.id);
-            await checkAdminStatus(session.user.id);
-          } else {
-            setIsAdmin(false);
-            setIsLoading(false);
-          }
-        }
-      } catch (error) {
-        console.error("Error initializing auth:", error);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
-      
-      if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await checkAdminStatus(session.user.id);
-        } else {
-          setIsAdmin(false);
-          setIsLoading(false);
-        }
-      }
-    });
-
-    initializeAuth();
-
-    return () => {
-      console.log("Cleaning up auth subscription");
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
   const checkAdminStatus = async (userId: string) => {
-    console.log("Checking admin status for user:", userId);
-    
     try {
+      console.log("Checking admin status for user:", userId);
       const { data, error } = await supabase
         .from("profiles")
         .select("role")
@@ -111,8 +52,73 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  useEffect(() => {
+    let mounted = true;
+    console.log("AuthProvider mounted");
+
+    const initializeAuth = async () => {
+      try {
+        console.log("Fetching initial session");
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error fetching session:", error);
+          if (mounted) {
+            setIsLoading(false);
+          }
+          return;
+        }
+        
+        console.log("Initial session:", session ? "exists" : "none");
+        
+        if (!mounted) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          console.log("Checking admin status for user:", session.user.id);
+          await checkAdminStatus(session.user.id);
+        } else {
+          setIsAdmin(false);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
+      
+      if (!mounted) return;
+
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        await checkAdminStatus(session.user.id);
+      } else {
+        setIsAdmin(false);
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      console.log("Cleaning up auth subscription");
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      setIsLoading(true);
       console.log("Attempting sign in for:", email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -125,11 +131,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       console.error("Sign in error:", error);
       toast.error(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signUpWithEmail = async (email: string, password: string, metadata?: any) => {
     try {
+      setIsLoading(true);
       console.log("Attempting sign up for:", email);
       const { error } = await supabase.auth.signUp({
         email,
@@ -145,11 +154,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       console.error("Sign up error:", error);
       toast.error(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleLogout = async () => {
     try {
+      setIsLoading(true);
       console.log("Attempting logout");
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -158,6 +170,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       console.error("Logout error:", error);
       toast.error(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
