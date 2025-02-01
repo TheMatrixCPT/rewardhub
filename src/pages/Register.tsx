@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
 
 interface RegisterFormData {
   email: string;
@@ -21,8 +22,10 @@ interface RegisterFormData {
 }
 
 const Register = () => {
+  console.log("Register component rendered");
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<RegisterFormData>({
     defaultValues: {
@@ -39,16 +42,15 @@ const Register = () => {
   });
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
-        navigate("/");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    console.log("Register useEffect - Checking auth state");
+    if (user) {
+      console.log("User already authenticated, redirecting to home");
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const onSubmit = async (data: RegisterFormData) => {
+    console.log("Register form submitted", data);
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signUp({
@@ -67,23 +69,30 @@ const Register = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Registration error:", error);
+        throw error;
+      }
 
+      console.log("Registration successful");
       toast.success("Registration successful! Please check your email to verify your account.");
       navigate("/login");
     } catch (error: any) {
+      console.error("Registration error:", error);
       toast.error(error.message || "An error occurred during registration");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ... keep existing code (form JSX)
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F1F0FB] px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-sm">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="max-w-md w-full space-y-8 bg-card p-8 rounded-xl shadow-sm">
         <div className="text-center">
-          <h2 className="mt-2 text-3xl font-bold text-[#222222]">Create an account</h2>
-          <p className="mt-2 text-sm text-[#8E9196]">
+          <h2 className="mt-2 text-3xl font-bold text-foreground">Create an account</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
             Sign up to get started
           </p>
         </div>
@@ -237,7 +246,7 @@ const Register = () => {
 
             <Button
               type="submit"
-              className="w-full bg-[#2DD4BF] hover:bg-[#14B8A6] text-white"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={isLoading}
             >
               {isLoading ? "Creating account..." : "Create account"}
