@@ -32,31 +32,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("AuthProvider: Initial setup");
+    
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      checkAdminStatus(session?.user?.id);
-    });
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Initial session:", session);
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await checkAdminStatus(session.user.id);
+        } else {
+          setIsAdmin(false);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     // Listen for changes in auth state
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log("Auth state changed:", _event, session);
       setSession(session);
       setUser(session?.user ?? null);
-      checkAdminStatus(session?.user?.id);
+      if (session?.user) {
+        await checkAdminStatus(session.user.id);
+      } else {
+        setIsAdmin(false);
+        setIsLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminStatus = async (userId: string | undefined) => {
-    if (!userId) {
-      setIsAdmin(false);
-      return;
-    }
-
+  const checkAdminStatus = async (userId: string) => {
+    console.log("Checking admin status for user:", userId);
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -83,7 +101,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
 
-      const { origin } = new URL(window.location.href);
       navigate("/");
     } catch (error: any) {
       toast.error(error.message);
