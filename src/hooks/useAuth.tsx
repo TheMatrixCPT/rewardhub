@@ -32,31 +32,55 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log("AuthProvider mounted");
+    
+    const initializeAuth = async () => {
+      try {
+        console.log("Fetching initial session");
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Initial session:", session ? "exists" : "none");
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          console.log("Checking admin status for user:", session.user.id);
+          await checkAdminStatus(session.user.id);
+        } else {
+          setIsAdmin(false);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
+      
       setSession(session);
       setUser(session?.user ?? null);
-      checkAdminStatus(session?.user?.id);
+      
+      if (session?.user) {
+        await checkAdminStatus(session.user.id);
+      } else {
+        setIsAdmin(false);
+        setIsLoading(false);
+      }
     });
 
-    // Listen for changes in auth state
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      checkAdminStatus(session?.user?.id);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("Cleaning up auth subscription");
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const checkAdminStatus = async (userId: string | undefined) => {
-    if (!userId) {
-      setIsAdmin(false);
-      return;
-    }
-
+  const checkAdminStatus = async (userId: string) => {
+    console.log("Checking admin status for user:", userId);
+    
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -65,6 +89,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .single();
 
       if (error) throw error;
+      
+      console.log("Admin check result:", data);
       setIsAdmin(data.role === "admin");
     } catch (error) {
       console.error("Error checking admin status:", error);
@@ -76,6 +102,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign in for:", email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -83,15 +110,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
 
-      const { origin } = new URL(window.location.href);
       navigate("/");
     } catch (error: any) {
+      console.error("Sign in error:", error);
       toast.error(error.message);
     }
   };
 
   const signUpWithEmail = async (email: string, password: string, metadata?: any) => {
     try {
+      console.log("Attempting sign up for:", email);
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -104,16 +132,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       toast.success("Registration successful! Please check your email to verify your account.");
     } catch (error: any) {
+      console.error("Sign up error:", error);
       toast.error(error.message);
     }
   };
 
   const handleLogout = async () => {
     try {
+      console.log("Attempting logout");
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
       navigate("/login");
     } catch (error: any) {
+      console.error("Logout error:", error);
       toast.error(error.message);
     }
   };
