@@ -47,21 +47,27 @@ const Login = () => {
     if (error) {
       console.error("Auth error:", error);
       
-      // More user-friendly error messages
+      // User-friendly error messages
       if (error.message.includes("Email not confirmed")) {
-        setErrorMessage("Please verify your email address before signing in.");
+        setErrorMessage("Please verify your email address before signing in. Check your inbox for the verification link.");
       } else if (error.message.includes("Invalid login credentials")) {
         setErrorMessage("The email or password you entered is incorrect. Please try again.");
       } else if (error.message.includes("Email address is required")) {
-        setErrorMessage("Please enter your email address.");
+        setErrorMessage("Please enter your email address to continue.");
       } else if (error.message.includes("Password is required")) {
-        setErrorMessage("Please enter your password.");
+        setErrorMessage("Please enter your password to continue.");
       } else if (error.message.includes("Invalid email")) {
-        setErrorMessage("Please enter a valid email address.");
+        setErrorMessage("Please enter a valid email address (e.g., name@example.com).");
       } else if (error.message.includes("Password should be")) {
         setErrorMessage("Your password must be at least 6 characters long.");
+      } else if (error.message.includes("Too many requests")) {
+        setErrorMessage("Too many login attempts. Please try again in a few minutes.");
+      } else if (error.message.includes("User not found")) {
+        setErrorMessage("We couldn't find an account with this email address. Please check your email or sign up for a new account.");
+      } else if (error.message.includes("Password recovery")) {
+        setErrorMessage("We've sent you a password reset link. Please check your email.");
       } else {
-        setErrorMessage("An error occurred. Please try again.");
+        setErrorMessage("An error occurred. Please try again or contact support if the problem persists.");
       }
     }
   };
@@ -112,6 +118,38 @@ const Login = () => {
               input: 'auth-input',
               label: 'auth-label',
               anchor: 'auth-anchor',
+            },
+          }}
+          localization={{
+            variables: {
+              sign_in: {
+                email_label: 'Email address',
+                password_label: 'Your password',
+                email_input_placeholder: 'name@example.com',
+                password_input_placeholder: 'Your secure password',
+                button_label: 'Sign in',
+                loading_button_label: 'Signing in...',
+                social_provider_text: 'Sign in with {{provider}}',
+                link_text: "Don't have an account? Sign up",
+              },
+              sign_up: {
+                email_label: 'Email address',
+                password_label: 'Create a password',
+                email_input_placeholder: 'name@example.com',
+                password_input_placeholder: 'Create a secure password',
+                button_label: 'Create account',
+                loading_button_label: 'Creating account...',
+                social_provider_text: 'Sign up with {{provider}}',
+                link_text: "Already have an account? Sign in",
+              },
+              forgotten_password: {
+                email_label: 'Email address',
+                password_label: 'Your password',
+                email_input_placeholder: 'name@example.com',
+                button_label: 'Send reset instructions',
+                loading_button_label: 'Sending reset instructions...',
+                link_text: 'Forgot your password?',
+              },
             },
           }}
           providers={[]}
