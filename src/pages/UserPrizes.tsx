@@ -25,13 +25,14 @@ const UserPrizes = () => {
 
   const now = new Date();
 
-  // Only consider deadline for completed prizes
+  // Active prizes are those within their competition period and not past deadline
   const activePrizes = prizes?.filter(
     (prize) =>
       prize.active &&
       (!prize.deadline || new Date(prize.deadline) > now)
   );
 
+  // Upcoming prizes are those where registration hasn't started yet
   const upcomingPrizes = prizes?.filter(
     (prize) =>
       prize.active &&
