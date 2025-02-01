@@ -46,12 +46,22 @@ const Login = () => {
     const { error } = await supabase.auth.getSession();
     if (error) {
       console.error("Auth error:", error);
+      
+      // More user-friendly error messages
       if (error.message.includes("Email not confirmed")) {
         setErrorMessage("Please verify your email address before signing in.");
       } else if (error.message.includes("Invalid login credentials")) {
-        setErrorMessage("Invalid email or password. Please check your credentials and try again.");
+        setErrorMessage("The email or password you entered is incorrect. Please try again.");
+      } else if (error.message.includes("Email address is required")) {
+        setErrorMessage("Please enter your email address.");
+      } else if (error.message.includes("Password is required")) {
+        setErrorMessage("Please enter your password.");
+      } else if (error.message.includes("Invalid email")) {
+        setErrorMessage("Please enter a valid email address.");
+      } else if (error.message.includes("Password should be")) {
+        setErrorMessage("Your password must be at least 6 characters long.");
       } else {
-        setErrorMessage(error.message);
+        setErrorMessage("An error occurred. Please try again.");
       }
     }
   };
