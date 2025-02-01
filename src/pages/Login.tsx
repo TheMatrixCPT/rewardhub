@@ -21,10 +21,12 @@ const Login = () => {
   }, [session, navigate]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state change:", event, session ? "Session exists" : "No session");
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log("Auth state change:", event, currentSession ? "Session exists" : "No session");
       
-      if (event === "SIGNED_IN") {
+      if (event === "SIGNED_IN" && currentSession) {
         navigate("/");
       }
 
@@ -33,42 +35,64 @@ const Login = () => {
         setErrorMessage("");
       }
 
-      // Handle auth errors
-      if (event === "USER_UPDATED" && !session) {
-        handleAuthError();
+      // Handle specific auth errors
+      if (event === "USER_UPDATED" && !currentSession) {
+        const { error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Session error:", error);
+          handleAuthError(error);
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Initial session check
+    checkInitialSession();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
-  const handleAuthError = async () => {
-    const { error } = await supabase.auth.getSession();
+  const checkInitialSession = async () => {
+    const { data: { session: initialSession }, error } = await supabase.auth.getSession();
     if (error) {
-      console.error("Auth error:", error);
-      
-      // User-friendly error messages
-      if (error.message.includes("Email not confirmed")) {
-        setErrorMessage("Please verify your email address before signing in. Check your inbox for the verification link.");
-      } else if (error.message.includes("Invalid login credentials")) {
-        setErrorMessage("The email or password you entered is incorrect. Please try again.");
-      } else if (error.message.includes("Email address is required")) {
-        setErrorMessage("Please enter your email address to continue.");
-      } else if (error.message.includes("Password is required")) {
-        setErrorMessage("Please enter your password to continue.");
-      } else if (error.message.includes("Invalid email")) {
-        setErrorMessage("Please enter a valid email address (e.g., name@example.com).");
-      } else if (error.message.includes("Password should be")) {
-        setErrorMessage("Your password must be at least 6 characters long.");
-      } else if (error.message.includes("Too many requests")) {
-        setErrorMessage("Too many login attempts. Please try again in a few minutes.");
-      } else if (error.message.includes("User not found")) {
-        setErrorMessage("We couldn't find an account with this email address. Please check your email or sign up for a new account.");
-      } else if (error.message.includes("Password recovery")) {
-        setErrorMessage("We've sent you a password reset link. Please check your email.");
-      } else {
-        setErrorMessage("An error occurred. Please try again or contact support if the problem persists.");
-      }
+      console.error("Initial session check error:", error);
+      handleAuthError(error);
+    } else if (initialSession) {
+      console.log("Initial session exists, redirecting to home");
+      navigate("/");
+    }
+  };
+
+  const handleAuthError = (error: any) => {
+    console.error("Auth error:", error);
+    
+    // User-friendly error messages
+    if (error.message.includes("Email not confirmed")) {
+      setErrorMessage("Please verify your email address before signing in. Check your inbox for the verification link.");
+    } else if (error.message.includes("Invalid login credentials")) {
+      setErrorMessage("The email or password you entered is incorrect. Please try again.");
+    } else if (error.message.includes("Email address is required")) {
+      setErrorMessage("Please enter your email address to continue.");
+    } else if (error.message.includes("Password is required")) {
+      setErrorMessage("Please enter your password to continue.");
+    } else if (error.message.includes("Invalid email")) {
+      setErrorMessage("Please enter a valid email address (e.g., name@example.com).");
+    } else if (error.message.includes("Password should be")) {
+      setErrorMessage("Your password must be at least 6 characters long.");
+    } else if (error.message.includes("Too many requests")) {
+      setErrorMessage("Too many login attempts. Please try again in a few minutes.");
+    } else if (error.message.includes("User not found")) {
+      setErrorMessage("We couldn't find an account with this email address. Please check your email or sign up for a new account.");
+    } else if (error.message.includes("Password recovery")) {
+      setErrorMessage("We've sent you a password reset link. Please check your email.");
+    } else if (error.message.includes("session_not_found")) {
+      // Handle the specific session not found error
+      console.log("Session not found, clearing session");
+      supabase.auth.signOut(); // Clear any invalid session data
+      setErrorMessage("Your session has expired. Please sign in again.");
+    } else {
+      setErrorMessage("An error occurred. Please try again or contact support if the problem persists.");
     }
   };
 
