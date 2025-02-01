@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [profile, setProfile] = useState({
     first_name: "",
     last_name: "",
@@ -74,6 +75,39 @@ const Profile = () => {
       });
     }
   }, [userProfile]);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploadingImage(true);
+      
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('You must select an image to upload.');
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${session?.user?.id}/${Math.random()}.${fileExt}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('profile-pictures')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(filePath);
+
+      setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+      toast.success('Profile picture uploaded successfully!');
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,13 +212,35 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Profile Picture URL</Label>
-                <Input
-                  type="url"
-                  value={profile.avatar_url}
-                  onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })}
-                  placeholder="https://example.com/profile-picture.jpg"
-                />
+                <Label>Profile Picture</Label>
+                <div className="space-y-2">
+                  {profile.avatar_url && (
+                    <img
+                      src={profile.avatar_url}
+                      alt="Profile"
+                      className="w-32 h-32 rounded-full object-cover"
+                    />
+                  )}
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploadingImage}
+                      className="hidden"
+                      id="profile-picture"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('profile-picture')?.click()}
+                      disabled={uploadingImage}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {uploadingImage ? 'Uploading...' : 'Upload Picture'}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
 
