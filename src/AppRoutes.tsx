@@ -13,8 +13,8 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 
 const AppRoutes = () => {
-  const { isLoading, user } = useAuth();
-  console.log("AppRoutes rendered, isLoading:", isLoading, "user:", user);
+  const { isLoading } = useAuth();
+  console.log("AppRoutes rendered, isLoading:", isLoading);
 
   if (isLoading) {
     console.log("Auth is loading, showing loading state");
