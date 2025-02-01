@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAdminStatus } from "./useAdminStatus";
+import { authService } from "@/services/authService";
 
 interface AuthContextType {
   user: User | null;
@@ -27,30 +29,9 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-
-  const checkAdminStatus = async (userId: string) => {
-    try {
-      console.log("Checking admin status for user:", userId);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
-
-      if (error) throw error;
-      
-      console.log("Admin check result:", data);
-      setIsAdmin(data.role === "admin");
-    } catch (error) {
-      console.error("Error checking admin status:", error);
-      setIsAdmin(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { isAdmin, checkAdminStatus } = useAdminStatus(user?.id);
 
   useEffect(() => {
     let mounted = true;
@@ -58,36 +39,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const initializeAuth = async () => {
       try {
-        console.log("Fetching initial session");
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await authService.getSession();
         
         if (error) {
           console.error("Error fetching session:", error);
-          if (mounted) {
-            setIsLoading(false);
-          }
+          if (mounted) setIsLoading(false);
           return;
         }
         
         console.log("Initial session:", session ? "exists" : "none");
-        
         if (!mounted) return;
 
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log("Checking admin status for user:", session.user.id);
           await checkAdminStatus(session.user.id);
-        } else {
-          setIsAdmin(false);
-          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
-        if (mounted) {
-          setIsLoading(false);
-        }
+      } finally {
+        if (mounted) setIsLoading(false);
       }
     };
 
@@ -103,10 +75,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (session?.user) {
         await checkAdminStatus(session.user.id);
-      } else {
-        setIsAdmin(false);
-        setIsLoading(false);
       }
+      
+      setIsLoading(false);
     });
 
     return () => {
@@ -119,14 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInWithEmail = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log("Attempting sign in for:", email);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
+      await authService.signInWithEmail(email, password);
       navigate("/");
     } catch (error: any) {
       console.error("Sign in error:", error);
@@ -139,18 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUpWithEmail = async (email: string, password: string, metadata?: any) => {
     try {
       setIsLoading(true);
-      console.log("Attempting sign up for:", email);
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: metadata,
-        },
-      });
-
-      if (error) throw error;
-
-      toast.success("Registration successful! Please check your email to verify your account.");
+      await authService.signUpWithEmail(email, password, metadata);
     } catch (error: any) {
       console.error("Sign up error:", error);
       toast.error(error.message);
@@ -162,10 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const handleLogout = async () => {
     try {
       setIsLoading(true);
-      console.log("Attempting logout");
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      await authService.handleLogout();
       navigate("/login");
     } catch (error: any) {
       console.error("Logout error:", error);
