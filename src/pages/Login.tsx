@@ -12,18 +12,44 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
+  // Single useEffect for initial session check and navigation
   useEffect(() => {
-    console.log("Login component mounted, session:", session ? "exists" : "none");
-    
-    if (session) {
-      console.log("User is authenticated, redirecting to home");
-      navigate("/");
-    }
-    
-    // Initial session check
-    checkInitialSession();
+    const checkSession = async () => {
+      console.log("Checking session state");
+      try {
+        setIsCheckingSession(true);
+        
+        if (session) {
+          console.log("Session exists, redirecting to home");
+          navigate("/");
+          return;
+        }
+
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session check error:", error);
+          if (error.message.includes("session_not_found")) {
+            console.log("Invalid session, signing out");
+            await supabase.auth.signOut();
+          }
+          handleAuthError(error);
+        } else if (initialSession) {
+          console.log("Initial session exists, redirecting to home");
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Session check failed:", error);
+        handleAuthError(error);
+      } finally {
+        setIsCheckingSession(false);
+      }
+    };
+
+    checkSession();
   }, [session, navigate]);
 
+  // Separate useEffect for auth state changes
   useEffect(() => {
     const {
       data: { subscription },
@@ -34,7 +60,6 @@ const Login = () => {
         navigate("/");
       }
 
-      // Clear error when auth state changes
       if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
         setErrorMessage("");
       }
@@ -45,37 +70,11 @@ const Login = () => {
     };
   }, [navigate]);
 
-  const checkInitialSession = async () => {
-    console.log("Checking initial session");
-    try {
-      setIsCheckingSession(true);
-      const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Initial session check error:", error);
-        if (error.message.includes("session_not_found")) {
-          console.log("Session not found, clearing session data");
-          await supabase.auth.signOut();
-        }
-        handleAuthError(error);
-      } else if (initialSession) {
-        console.log("Initial session exists, redirecting to home");
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Session check failed:", error);
-      handleAuthError(error);
-    } finally {
-      setIsCheckingSession(false);
-    }
-  };
-
   const handleAuthError = (error: any) => {
     console.error("Auth error:", error);
     
     if (error.message.includes("session_not_found")) {
       setErrorMessage("Your session has expired. Please sign in again.");
-      supabase.auth.signOut();
     } else if (error.message.includes("Email not confirmed")) {
       setErrorMessage("Please verify your email address before signing in. Check your inbox for the verification link.");
     } else if (error.message.includes("Invalid login credentials")) {
