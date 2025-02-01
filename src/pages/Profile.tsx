@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Upload } from "lucide-react";
+import { CalendarIcon, Pencil, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
     first_name: "",
     last_name: "",
@@ -121,6 +122,7 @@ const Profile = () => {
 
       if (error) throw error;
       toast.success("Profile updated successfully!");
+      setIsEditing(false);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -135,8 +137,27 @@ const Profile = () => {
   return (
     <div className="container max-w-3xl py-10">
       <Card>
-        <CardHeader>
-          <CardTitle>Edit Profile</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Profile Information</CardTitle>
+          <div className="flex items-center gap-2">
+            {isEditing ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsEditing(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsEditing(true)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -147,6 +168,7 @@ const Profile = () => {
                   value={profile.first_name}
                   onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
                   placeholder="Enter your first name"
+                  disabled={!isEditing}
                 />
               </div>
 
@@ -156,6 +178,7 @@ const Profile = () => {
                   value={profile.last_name}
                   onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
                   placeholder="Enter your last name"
+                  disabled={!isEditing}
                 />
               </div>
 
@@ -166,6 +189,7 @@ const Profile = () => {
                   value={profile.phone_number}
                   onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
                   placeholder="Enter your phone number"
+                  disabled={!isEditing}
                 />
               </div>
 
@@ -179,6 +203,7 @@ const Profile = () => {
                         "w-full justify-start text-left font-normal",
                         !profile.date_of_birth && "text-muted-foreground"
                       )}
+                      disabled={!isEditing}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {profile.date_of_birth ? format(new Date(profile.date_of_birth), "PPP") : <span>Pick a date</span>}
@@ -190,6 +215,7 @@ const Profile = () => {
                       selected={profile.date_of_birth ? new Date(profile.date_of_birth) : undefined}
                       onSelect={(date) => setProfile({ ...profile, date_of_birth: date ? date.toISOString().split('T')[0] : "" })}
                       initialFocus
+                      disabled={!isEditing}
                     />
                   </PopoverContent>
                 </Popover>
@@ -200,6 +226,7 @@ const Profile = () => {
                 <Select 
                   value={profile.gender} 
                   onValueChange={(value) => setProfile({ ...profile, gender: value })}
+                  disabled={!isEditing}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select gender" />
@@ -226,7 +253,7 @@ const Profile = () => {
                       type="file"
                       accept="image/*"
                       onChange={handleImageUpload}
-                      disabled={uploadingImage}
+                      disabled={uploadingImage || !isEditing}
                       className="hidden"
                       id="profile-picture"
                     />
@@ -234,7 +261,7 @@ const Profile = () => {
                       type="button"
                       variant="outline"
                       onClick={() => document.getElementById('profile-picture')?.click()}
-                      disabled={uploadingImage}
+                      disabled={uploadingImage || !isEditing}
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       {uploadingImage ? 'Uploading...' : 'Upload Picture'}
@@ -251,6 +278,7 @@ const Profile = () => {
                 onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                 placeholder="Tell us about yourself..."
                 className="min-h-[100px]"
+                disabled={!isEditing}
               />
             </div>
 
@@ -261,6 +289,7 @@ const Profile = () => {
                 onChange={(e) => setProfile({ ...profile, address: e.target.value })}
                 placeholder="Enter your address"
                 className="min-h-[80px]"
+                disabled={!isEditing}
               />
             </div>
 
@@ -271,6 +300,7 @@ const Profile = () => {
                 value={profile.linkedin_profile}
                 onChange={(e) => setProfile({ ...profile, linkedin_profile: e.target.value })}
                 placeholder="https://linkedin.com/in/username"
+                disabled={!isEditing}
               />
             </div>
 
@@ -281,6 +311,7 @@ const Profile = () => {
                   value={profile.company}
                   onChange={(e) => setProfile({ ...profile, company: e.target.value })}
                   placeholder="Your company name"
+                  disabled={!isEditing}
                 />
               </div>
 
@@ -290,6 +321,7 @@ const Profile = () => {
                   value={profile.job_title}
                   onChange={(e) => setProfile({ ...profile, job_title: e.target.value })}
                   placeholder="Your job title"
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -300,6 +332,7 @@ const Profile = () => {
                 value={profile.referral_source}
                 onChange={(e) => setProfile({ ...profile, referral_source: e.target.value })}
                 placeholder="Enter referral source"
+                disabled={!isEditing}
               />
             </div>
 
@@ -311,9 +344,11 @@ const Profile = () => {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : "Save Profile"}
-              </Button>
+              {isEditing && (
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Saving..." : "Save Profile"}
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
