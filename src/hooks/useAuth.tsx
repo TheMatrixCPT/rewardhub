@@ -32,48 +32,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let mounted = true;
     console.log("AuthProvider mounted");
-    
+
     const initializeAuth = async () => {
       try {
         console.log("Fetching initial session");
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+        
         console.log("Initial session:", session ? "exists" : "none");
         
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            console.log("Checking admin status for user:", session.user.id);
+            await checkAdminStatus(session.user.id);
+          } else {
+            setIsAdmin(false);
+            setIsLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
+      
+      if (mounted) {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log("Checking admin status for user:", session.user.id);
           await checkAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
           setIsLoading(false);
         }
-      } catch (error) {
-        console.error("Error initializing auth:", error);
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await checkAdminStatus(session.user.id);
-      } else {
-        setIsAdmin(false);
-        setIsLoading(false);
       }
     });
 
+    initializeAuth();
+
     return () => {
       console.log("Cleaning up auth subscription");
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
