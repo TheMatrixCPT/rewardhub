@@ -10,22 +10,19 @@ const Login = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   useEffect(() => {
     console.log("Login component mounted, session:", session ? "exists" : "none");
-    
-    // Clear any existing invalid sessions
-    if (errorMessage.includes("session_not_found")) {
-      console.log("Invalid session detected, clearing session data");
-      supabase.auth.signOut();
-      setErrorMessage("");
-    }
     
     if (session) {
       console.log("User is authenticated, redirecting to home");
       navigate("/");
     }
-  }, [session, navigate, errorMessage]);
+    
+    // Initial session check
+    checkInitialSession();
+  }, [session, navigate]);
 
   useEffect(() => {
     const {
@@ -41,20 +38,7 @@ const Login = () => {
       if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
         setErrorMessage("");
       }
-
-      // Handle session errors
-      if (event === "TOKEN_REFRESHED" && !currentSession) {
-        console.log("Token refresh failed, checking session");
-        const { error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Session error:", error);
-          handleAuthError(error);
-        }
-      }
     });
-
-    // Initial session check
-    checkInitialSession();
 
     return () => {
       subscription.unsubscribe();
@@ -64,6 +48,7 @@ const Login = () => {
   const checkInitialSession = async () => {
     console.log("Checking initial session");
     try {
+      setIsCheckingSession(true);
       const { data: { session: initialSession }, error } = await supabase.auth.getSession();
       
       if (error) {
@@ -80,6 +65,8 @@ const Login = () => {
     } catch (error) {
       console.error("Session check failed:", error);
       handleAuthError(error);
+    } finally {
+      setIsCheckingSession(false);
     }
   };
 
@@ -111,6 +98,14 @@ const Login = () => {
       setErrorMessage("An error occurred. Please try again or contact support if the problem persists.");
     }
   };
+
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
