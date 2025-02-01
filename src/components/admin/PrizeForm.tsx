@@ -55,6 +55,39 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     }
   };
 
+  const validateDates = () => {
+    const regStart = new Date(newPrize.registration_start);
+    const regEnd = new Date(newPrize.registration_end);
+    const deadline = new Date(newPrize.deadline);
+    const now = new Date();
+
+    // Check if dates are valid
+    if (isNaN(regStart.getTime()) || isNaN(regEnd.getTime()) || isNaN(deadline.getTime())) {
+      toast.error("Please enter valid dates");
+      return false;
+    }
+
+    // Check if registration start is before registration end
+    if (regStart >= regEnd) {
+      toast.error("Registration start date must be before registration end date");
+      return false;
+    }
+
+    // Check if registration end is before competition end
+    if (regEnd >= deadline) {
+      toast.error("Registration end date must be before competition end date");
+      return false;
+    }
+
+    // Check if all dates are in the future
+    if (regStart < now) {
+      toast.error("Registration start date must be in the future");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -66,23 +99,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     }
 
     // Validate dates
-    const deadline = new Date(newPrize.deadline);
-    const regStart = new Date(newPrize.registration_start);
-    const regEnd = new Date(newPrize.registration_end);
-    const now = new Date();
-
-    if (deadline < now) {
-      toast.error("Competition end date must be in the future");
-      return;
-    }
-
-    if (regEnd > deadline) {
-      toast.error("Registration end date cannot be after the competition end date");
-      return;
-    }
-
-    if (regStart > regEnd) {
-      toast.error("Registration start date must be before registration end date");
+    if (!validateDates()) {
       return;
     }
 
