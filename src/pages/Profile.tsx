@@ -8,6 +8,12 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -131,28 +137,53 @@ const Profile = () => {
 
               <div className="space-y-2">
                 <Label>Date of Birth</Label>
-                <Input
-                  type="date"
-                  value={profile.date_of_birth}
-                  onChange={(e) => setProfile({ ...profile, date_of_birth: e.target.value })}
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !profile.date_of_birth && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {profile.date_of_birth ? format(new Date(profile.date_of_birth), "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={profile.date_of_birth ? new Date(profile.date_of_birth) : undefined}
+                      onSelect={(date) => setProfile({ ...profile, date_of_birth: date ? date.toISOString().split('T')[0] : "" })}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-2">
                 <Label>Gender</Label>
-                <Input
-                  value={profile.gender}
-                  onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
-                  placeholder="Enter your gender"
-                />
+                <Select 
+                  value={profile.gender} 
+                  onValueChange={(value) => setProfile({ ...profile, gender: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Address</Label>
+                <Label>Profile Picture URL</Label>
                 <Input
-                  value={profile.address}
-                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                  placeholder="Enter your address"
+                  type="url"
+                  value={profile.avatar_url}
+                  onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })}
+                  placeholder="https://example.com/profile-picture.jpg"
                 />
               </div>
             </div>
@@ -168,12 +199,12 @@ const Profile = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Avatar URL</Label>
-              <Input
-                type="url"
-                value={profile.avatar_url}
-                onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })}
-                placeholder="https://example.com/avatar.jpg"
+              <Label>Address</Label>
+              <Textarea
+                value={profile.address}
+                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                placeholder="Enter your address"
+                className="min-h-[80px]"
               />
             </div>
 
