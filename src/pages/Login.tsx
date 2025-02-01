@@ -14,11 +14,18 @@ const Login = () => {
   useEffect(() => {
     console.log("Login component mounted, session:", session ? "exists" : "none");
     
+    // Clear any existing invalid sessions
+    if (errorMessage.includes("session_not_found")) {
+      console.log("Invalid session detected, clearing session data");
+      supabase.auth.signOut();
+      setErrorMessage("");
+    }
+    
     if (session) {
       console.log("User is authenticated, redirecting to home");
       navigate("/");
     }
-  }, [session, navigate]);
+  }, [session, navigate, errorMessage]);
 
   useEffect(() => {
     const {
@@ -35,8 +42,9 @@ const Login = () => {
         setErrorMessage("");
       }
 
-      // Handle specific auth errors
-      if (event === "USER_UPDATED" && !currentSession) {
+      // Handle session errors
+      if (event === "TOKEN_REFRESHED" && !currentSession) {
+        console.log("Token refresh failed, checking session");
         const { error } = await supabase.auth.getSession();
         if (error) {
           console.error("Session error:", error);
@@ -54,21 +62,34 @@ const Login = () => {
   }, [navigate]);
 
   const checkInitialSession = async () => {
-    const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-    if (error) {
-      console.error("Initial session check error:", error);
+    console.log("Checking initial session");
+    try {
+      const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Initial session check error:", error);
+        if (error.message.includes("session_not_found")) {
+          console.log("Session not found, clearing session data");
+          await supabase.auth.signOut();
+        }
+        handleAuthError(error);
+      } else if (initialSession) {
+        console.log("Initial session exists, redirecting to home");
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Session check failed:", error);
       handleAuthError(error);
-    } else if (initialSession) {
-      console.log("Initial session exists, redirecting to home");
-      navigate("/");
     }
   };
 
   const handleAuthError = (error: any) => {
     console.error("Auth error:", error);
     
-    // User-friendly error messages
-    if (error.message.includes("Email not confirmed")) {
+    if (error.message.includes("session_not_found")) {
+      setErrorMessage("Your session has expired. Please sign in again.");
+      supabase.auth.signOut();
+    } else if (error.message.includes("Email not confirmed")) {
       setErrorMessage("Please verify your email address before signing in. Check your inbox for the verification link.");
     } else if (error.message.includes("Invalid login credentials")) {
       setErrorMessage("The email or password you entered is incorrect. Please try again.");
@@ -86,11 +107,6 @@ const Login = () => {
       setErrorMessage("We couldn't find an account with this email address. Please check your email or sign up for a new account.");
     } else if (error.message.includes("Password recovery")) {
       setErrorMessage("We've sent you a password reset link. Please check your email.");
-    } else if (error.message.includes("session_not_found")) {
-      // Handle the specific session not found error
-      console.log("Session not found, clearing session");
-      supabase.auth.signOut(); // Clear any invalid session data
-      setErrorMessage("Your session has expired. Please sign in again.");
     } else {
       setErrorMessage("An error occurred. Please try again or contact support if the problem persists.");
     }
