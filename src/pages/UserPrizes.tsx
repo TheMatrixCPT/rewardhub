@@ -25,10 +25,10 @@ const UserPrizes = () => {
 
   const now = new Date();
 
+  // Only consider deadline for completed prizes
   const activePrizes = prizes?.filter(
     (prize) =>
       prize.active &&
-      (!prize.registration_end || new Date(prize.registration_end) > now) &&
       (!prize.deadline || new Date(prize.deadline) > now)
   );
 
@@ -39,11 +39,10 @@ const UserPrizes = () => {
       new Date(prize.registration_start) > now
   );
 
+  // Only move to completed if deadline has passed
   const completedPrizes = prizes?.filter(
     (prize) =>
-      !prize.active ||
-      (prize.deadline && new Date(prize.deadline) < now) ||
-      (prize.registration_end && new Date(prize.registration_end) < now)
+      prize.deadline && new Date(prize.deadline) < now
   );
 
   return (
