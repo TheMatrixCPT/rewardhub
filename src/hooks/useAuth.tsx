@@ -37,18 +37,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, isChecking, checkAdminStatus } = useAdminStatus(user?.id);
 
   useEffect(() => {
-    console.log("AuthProvider mounted, setting up auth state...");
     let mounted = true;
 
     const initializeAuth = async () => {
-      if (!mounted) return;
-      
       try {
-        console.log("Fetching initial session...");
-        const { data: { session }, error } = await authService.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("Session check error:", error);
+          console.error("Session initialization error:", error.message);
           if (mounted) {
             setIsLoading(false);
             setUser(null);
@@ -58,20 +54,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        if (session?.user) {
-          console.log("Setting up authenticated user state...");
+        if (session?.user && mounted) {
           setSession(session);
           setUser(session.user);
           await checkAdminStatus(session.user.id);
         }
         
         if (mounted) {
-          console.log("Completing initialization, setting loading to false");
           setIsLoading(false);
           setIsInitialized(true);
         }
       } catch (error) {
-        console.error("Error in auth initialization:", error);
+        console.error("Auth initialization error:", error);
         if (mounted) {
           setIsLoading(false);
           setIsInitialized(true);
@@ -81,29 +75,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log("Auth state changed:", event, currentSession ? "Session exists" : "No session");
       
-      if (!mounted) {
-        console.log("Component unmounted, skipping auth state update");
-        return;
+      if (!mounted) return;
+
+      if (event === 'TOKEN_REFRESHED') {
+        console.log("Token refreshed successfully");
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+        }
+      }
+
+      if (event === 'SIGNED_IN') {
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          await checkAdminStatus(currentSession.user.id);
+        }
       }
 
       if (event === 'SIGNED_OUT') {
-        console.log("User signed out, clearing auth state");
-        setSession(null);
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-
-      if (session?.user) {
-        console.log("Updating auth state with new session");
-        setSession(session);
-        setUser(session.user);
-        await checkAdminStatus(session.user.id);
-      } else {
-        console.log("No session in auth state change");
         setSession(null);
         setUser(null);
       }
@@ -112,15 +105,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => {
-      console.log("Cleaning up auth subscription");
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
-
-  useEffect(() => {
-    setIsLoading(isChecking);
-  }, [isChecking]);
 
   const signInWithEmail = async (email: string, password: string) => {
     try {

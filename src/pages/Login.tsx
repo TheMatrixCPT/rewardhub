@@ -13,19 +13,19 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
-    console.log("Login: Initial session check");
-    
     const checkSession = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        console.log("Login: Session check result:", data.session ? "Has session" : "No session");
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
-        if (data.session) {
-          console.log("Login: Redirecting to home due to existing session");
+        if (error) {
+          console.error("Session check error:", error);
+          setErrorMessage("Failed to check authentication status");
+        } else if (currentSession) {
+          console.log("Active session found, redirecting to home");
           navigate("/");
         }
       } catch (error) {
-        console.error("Login: Session check error:", error);
+        console.error("Session check failed:", error);
       } finally {
         setIsLoading(false);
       }
@@ -35,24 +35,26 @@ const Login = () => {
   }, [navigate]);
 
   useEffect(() => {
-    console.log("Login: Setting up auth state change listener");
-    
+    if (session) {
+      console.log("Session detected, redirecting to home");
+      navigate("/");
+    }
+  }, [session, navigate]);
+
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Login: Auth state changed -", event);
+      console.log("Auth state changed:", event);
 
       if (event === "SIGNED_IN" && session) {
-        console.log("Login: User signed in, redirecting to home");
         navigate("/");
       }
 
       if (event === "SIGNED_OUT") {
-        console.log("Login: User signed out");
         setErrorMessage("");
       }
     });
 
     return () => {
-      console.log("Login: Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, [navigate]);
