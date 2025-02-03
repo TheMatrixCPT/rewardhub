@@ -12,25 +12,35 @@ import Leaderboard from "@/pages/Leaderboard";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
+import { Suspense } from "react";
+
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="text-center space-y-4">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+      <p className="text-muted-foreground">Loading application...</p>
+    </div>
+  </div>
+);
 
 const AppRoutes = () => {
-  const { isLoading } = useAuth();
-  console.log("AppRoutes rendered, isLoading:", isLoading);
+  const { isLoading, isInitialized } = useAuth();
+  console.log("AppRoutes rendered, isLoading:", isLoading, "isInitialized:", isInitialized);
 
+  // Show loading spinner while auth is initializing
+  if (!isInitialized) {
+    console.log("Auth not initialized, showing loading state");
+    return <LoadingSpinner />;
+  }
+
+  // Show loading spinner while checking auth state
   if (isLoading) {
     console.log("Auth is loading, showing loading state");
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
-    <>
+    <Suspense fallback={<LoadingSpinner />}>
       <Navbar />
       <Routes>
         {/* Public routes */}
@@ -90,7 +100,7 @@ const AppRoutes = () => {
         {/* 404 route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </>
+    </Suspense>
   );
 };
 

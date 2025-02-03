@@ -11,6 +11,7 @@ interface AuthContextType {
   session: Session | null;
   isAdmin: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, metadata?: any) => Promise<void>;
   handleLogout: () => Promise<void>;
@@ -21,40 +22,17 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   isAdmin: false,
   isLoading: true,
+  isInitialized: false,
   signInWithEmail: async () => {},
   signUpWithEmail: async () => {},
   handleLogout: async () => {},
 });
 
-// Helper functions for session storage
-const SESSION_KEY = 'app_session';
-const USER_KEY = 'app_user';
-const ADMIN_KEY = 'is_admin';
-
-const getStoredSession = () => {
-  const stored = sessionStorage.getItem(SESSION_KEY);
-  return stored ? JSON.parse(stored) : null;
-};
-
-const getStoredUser = () => {
-  const stored = sessionStorage.getItem(USER_KEY);
-  return stored ? JSON.parse(stored) : null;
-};
-
-const getStoredAdminStatus = () => {
-  return sessionStorage.getItem(ADMIN_KEY) === 'true';
-};
-
-const clearStoredAuth = () => {
-  sessionStorage.removeItem(SESSION_KEY);
-  sessionStorage.removeItem(USER_KEY);
-  sessionStorage.removeItem(ADMIN_KEY);
-};
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(() => getStoredUser());
-  const [session, setSession] = useState<Session | null>(() => getStoredSession());
-  const [isLoading, setIsLoading] = useState(!user);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
   const { isAdmin, isChecking, checkAdminStatus } = useAdminStatus(user?.id);
 
@@ -67,54 +45,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       try {
         console.log("Fetching initial session...");
-        // Try to get session from storage first
-        const storedSession = getStoredSession();
-        const storedUser = getStoredUser();
+        const { data: { session }, error } = await authService.getSession();
         
-        if (storedSession && storedUser) {
-          console.log("Found stored session, validating...");
-          const { data: { session: freshSession }, error } = await authService.getSession();
-          
-          if (!error && freshSession) {
-            console.log("Stored session is valid");
-            setSession(freshSession);
-            setUser(storedUser);
-            await checkAdminStatus(storedUser.id);
-          } else {
-            console.log("Stored session invalid, clearing...");
-            clearStoredAuth();
-            setSession(null);
+        if (error) {
+          console.error("Session check error:", error);
+          if (mounted) {
+            setIsLoading(false);
             setUser(null);
+            setSession(null);
+            setIsInitialized(true);
           }
-        } else {
-          console.log("No stored session, checking for active session...");
-          const { data: { session }, error } = await authService.getSession();
-          
-          if (error) {
-            console.error("Error fetching session:", error);
-            if (mounted) {
-              setIsLoading(false);
-              setUser(null);
-              setSession(null);
-            }
-            return;
-          }
-
-          if (session?.user) {
-            console.log("Setting up authenticated user state...");
-            sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-            sessionStorage.setItem(USER_KEY, JSON.stringify(session.user));
-            setSession(session);
-            setUser(session.user);
-            await checkAdminStatus(session.user.id);
-          }
+          return;
         }
-      } catch (error) {
-        console.error("Error in auth initialization:", error);
-      } finally {
+
+        if (session?.user) {
+          console.log("Setting up authenticated user state...");
+          setSession(session);
+          setUser(session.user);
+          await checkAdminStatus(session.user.id);
+        }
+        
         if (mounted) {
           console.log("Completing initialization, setting loading to false");
           setIsLoading(false);
+          setIsInitialized(true);
+        }
+      } catch (error) {
+        console.error("Error in auth initialization:", error);
+        if (mounted) {
+          setIsLoading(false);
+          setIsInitialized(true);
         }
       }
     };
@@ -131,7 +91,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (event === 'SIGNED_OUT') {
         console.log("User signed out, clearing auth state");
-        clearStoredAuth();
         setSession(null);
         setUser(null);
         setIsLoading(false);
@@ -140,17 +99,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (session?.user) {
         console.log("Updating auth state with new session");
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-        sessionStorage.setItem(USER_KEY, JSON.stringify(session.user));
         setSession(session);
         setUser(session.user);
         await checkAdminStatus(session.user.id);
-        if (isAdmin) {
-          sessionStorage.setItem(ADMIN_KEY, 'true');
-        }
       } else {
         console.log("No session in auth state change");
-        clearStoredAuth();
         setSession(null);
         setUser(null);
       }
@@ -200,7 +153,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log("Attempting logout...");
       setIsLoading(true);
-      clearStoredAuth();
       await authService.handleLogout();
       navigate("/login");
     } catch (error: any) {
@@ -218,6 +170,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         session,
         isAdmin,
         isLoading,
+        isInitialized,
         signInWithEmail,
         signUpWithEmail,
         handleLogout,
