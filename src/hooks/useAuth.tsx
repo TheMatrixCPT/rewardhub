@@ -34,34 +34,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, checkAdminStatus } = useAdminStatus(user?.id);
 
   useEffect(() => {
-    console.log("AuthProvider mounted");
+    console.log("AuthProvider mounted, setting up auth state...");
     let mounted = true;
 
     const initializeAuth = async () => {
+      if (!mounted) return;
+      
       try {
-        console.log("Fetching initial session");
+        console.log("Fetching initial session...");
         const { data: { session }, error } = await authService.getSession();
         
         if (error) {
           console.error("Error fetching session:", error);
-          if (mounted) setIsLoading(false);
+          if (mounted) {
+            setIsLoading(false);
+            setUser(null);
+            setSession(null);
+          }
           return;
         }
 
         if (!mounted) return;
         
-        console.log("Initial session:", session ? "exists" : "none");
-        setSession(session);
-        setUser(session?.user ?? null);
+        console.log("Initial session loaded:", session ? "exists" : "none");
         
         if (session?.user) {
+          console.log("Setting up authenticated user state...");
+          setSession(session);
+          setUser(session.user);
           await checkAdminStatus(session.user.id);
+        } else {
+          console.log("No active session found");
+          setSession(null);
+          setUser(null);
         }
-        
-        setIsLoading(false);
       } catch (error) {
-        console.error("Error initializing auth:", error);
-        if (mounted) setIsLoading(false);
+        console.error("Error in auth initialization:", error);
+      } finally {
+        if (mounted) {
+          console.log("Completing initialization, setting loading to false");
+          setIsLoading(false);
+        }
       }
     };
 
@@ -70,20 +83,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session ? "Session exists" : "No session");
       
-      if (!mounted) return;
+      if (!mounted) {
+        console.log("Component unmounted, skipping auth state update");
+        return;
+      }
 
       if (event === 'SIGNED_OUT') {
+        console.log("User signed out, clearing auth state");
         setSession(null);
         setUser(null);
         setIsLoading(false);
         return;
       }
 
-      setSession(session);
-      setUser(session?.user ?? null);
-      
       if (session?.user) {
+        console.log("Updating auth state with new session");
+        setSession(session);
+        setUser(session.user);
         await checkAdminStatus(session.user.id);
+      } else {
+        console.log("No session in auth state change");
+        setSession(null);
+        setUser(null);
       }
       
       setIsLoading(false);
@@ -98,6 +119,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign in...");
       setIsLoading(true);
       await authService.signInWithEmail(email, password);
       navigate("/");
@@ -111,6 +133,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUpWithEmail = async (email: string, password: string, metadata?: any) => {
     try {
+      console.log("Attempting sign up...");
       setIsLoading(true);
       await authService.signUpWithEmail(email, password, metadata);
     } catch (error: any) {
@@ -123,6 +146,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleLogout = async () => {
     try {
+      console.log("Attempting logout...");
       setIsLoading(true);
       await authService.handleLogout();
       navigate("/login");
