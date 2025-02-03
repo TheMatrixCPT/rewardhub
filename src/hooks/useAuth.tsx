@@ -34,17 +34,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
-  const { isAdmin, isChecking, checkAdminStatus } = useAdminStatus(user?.id);
+  const { isAdmin, checkAdminStatus } = useAdminStatus(user?.id);
 
   useEffect(() => {
     let mounted = true;
+    console.log("AuthProvider: Initializing auth state");
 
     const initializeAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log("AuthProvider: Getting session");
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("Session initialization error:", error.message);
+          console.error("AuthProvider: Session initialization error:", error.message);
           if (mounted) {
             setIsLoading(false);
             setUser(null);
@@ -54,10 +56,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        if (session?.user && mounted) {
-          setSession(session);
-          setUser(session.user);
-          await checkAdminStatus(session.user.id);
+        if (currentSession?.user && mounted) {
+          console.log("AuthProvider: Valid session found");
+          setSession(currentSession);
+          setUser(currentSession.user);
+          await checkAdminStatus(currentSession.user.id);
+        } else {
+          console.log("AuthProvider: No valid session found");
         }
         
         if (mounted) {
@@ -65,7 +70,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setIsInitialized(true);
         }
       } catch (error) {
-        console.error("Auth initialization error:", error);
+        console.error("AuthProvider: Auth initialization error:", error);
         if (mounted) {
           setIsLoading(false);
           setIsInitialized(true);
@@ -76,19 +81,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log("Auth state changed:", event, currentSession ? "Session exists" : "No session");
+      console.log("AuthProvider: Auth state changed:", event, currentSession ? "Session exists" : "No session");
       
       if (!mounted) return;
 
       if (event === 'TOKEN_REFRESHED') {
-        console.log("Token refreshed successfully");
-        if (currentSession) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-        }
-      }
-
-      if (event === 'SIGNED_IN') {
+        console.log("AuthProvider: Token refreshed successfully");
         if (currentSession) {
           setSession(currentSession);
           setUser(currentSession.user);
@@ -96,28 +94,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
+      if (event === 'SIGNED_IN') {
+        console.log("AuthProvider: User signed in");
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          await checkAdminStatus(currentSession.user.id);
+          navigate("/");
+        }
+      }
+
       if (event === 'SIGNED_OUT') {
+        console.log("AuthProvider: User signed out");
         setSession(null);
         setUser(null);
+        navigate("/login");
       }
       
       setIsLoading(false);
     });
 
     return () => {
+      console.log("AuthProvider: Cleaning up auth subscription");
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate, checkAdminStatus]);
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      console.log("Attempting sign in...");
+      console.log("AuthProvider: Attempting sign in");
       setIsLoading(true);
-      await authService.signInWithEmail(email, password);
+      const { error } = await authService.signInWithEmail(email, password);
+      if (error) throw error;
       navigate("/");
     } catch (error: any) {
-      console.error("Sign in error:", error);
+      console.error("AuthProvider: Sign in error:", error);
       toast.error(error.message);
     } finally {
       setIsLoading(false);
@@ -126,11 +138,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUpWithEmail = async (email: string, password: string, metadata?: any) => {
     try {
-      console.log("Attempting sign up...");
+      console.log("AuthProvider: Attempting sign up");
       setIsLoading(true);
-      await authService.signUpWithEmail(email, password, metadata);
+      const { error } = await authService.signUpWithEmail(email, password, metadata);
+      if (error) throw error;
     } catch (error: any) {
-      console.error("Sign up error:", error);
+      console.error("AuthProvider: Sign up error:", error);
       toast.error(error.message);
     } finally {
       setIsLoading(false);
@@ -139,12 +152,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleLogout = async () => {
     try {
-      console.log("Attempting logout...");
+      console.log("AuthProvider: Attempting logout");
       setIsLoading(true);
-      await authService.handleLogout();
+      const { error } = await authService.handleLogout();
+      if (error) throw error;
       navigate("/login");
     } catch (error: any) {
-      console.error("Logout error:", error);
+      console.error("AuthProvider: Logout error:", error);
       toast.error(error.message);
     } finally {
       setIsLoading(false);
