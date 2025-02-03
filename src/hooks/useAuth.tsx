@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { isAdmin, checkAdminStatus } = useAdminStatus(user?.id);
+  const { isAdmin, isChecking, checkAdminStatus } = useAdminStatus(user?.id);
 
   useEffect(() => {
     console.log("AuthProvider mounted, setting up auth state...");
@@ -116,6 +116,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Update loading state when admin check is in progress
+  useEffect(() => {
+    setIsLoading(isChecking);
+  }, [isChecking]);
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
