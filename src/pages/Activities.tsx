@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmissionForm } from "@/components/submissions/SubmissionForm";
 import RecentActivities from "@/components/dashboard/RecentActivities";
+import { useAuth } from "@/hooks/useAuth";
 import type { Tables } from "@/integrations/supabase/types";
 import * as z from "zod";
 
@@ -36,7 +37,10 @@ const Activities = () => {
   const [activities, setActivities] = useState<Tables<"activities">[]>([]);
   const [prizes, setPrizes] = useState<Tables<"prizes">[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const navigate = useNavigate();
+  const { session, isLoading: authLoading } = useAuth();
+  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,37 +54,55 @@ const Activities = () => {
   });
 
   useEffect(() => {
+    console.log("Activities page mounted, auth loading:", authLoading, "session:", session ? "exists" : "none");
+    
+    // If auth is not loading and there's no session, redirect to login
+    if (!authLoading && !session) {
+      console.log("No session found, redirecting to login");
+      navigate("/login");
+      return;
+    }
+
     const fetchData = async () => {
-      console.log("Fetching activities and prizes...");
-      const { data: activitiesData, error: activitiesError } = await supabase
-        .from("activities")
-        .select("*");
-      
-      if (activitiesError) {
-        console.error("Error fetching activities:", activitiesError);
-        toast.error("Failed to load activities");
-        return;
+      try {
+        console.log("Fetching activities and prizes...");
+        const { data: activitiesData, error: activitiesError } = await supabase
+          .from("activities")
+          .select("*");
+        
+        if (activitiesError) {
+          console.error("Error fetching activities:", activitiesError);
+          toast.error("Failed to load activities");
+          return;
+        }
+
+        const { data: prizesData, error: prizesError } = await supabase
+          .from("prizes")
+          .select("*")
+          .eq('active', true);
+
+        if (prizesError) {
+          console.error("Error fetching prizes:", prizesError);
+          toast.error("Failed to load prizes");
+          return;
+        }
+
+        console.log("Fetched activities:", activitiesData);
+        console.log("Fetched prizes:", prizesData);
+        setActivities(activitiesData || []);
+        setPrizes(prizesData || []);
+      } catch (error) {
+        console.error("Error in fetchData:", error);
+        toast.error("Failed to load data");
+      } finally {
+        setPageLoading(false);
       }
-
-      const { data: prizesData, error: prizesError } = await supabase
-        .from("prizes")
-        .select("*")
-        .eq('active', true);
-
-      if (prizesError) {
-        console.error("Error fetching prizes:", prizesError);
-        toast.error("Failed to load prizes");
-        return;
-      }
-
-      console.log("Fetched activities:", activitiesData);
-      console.log("Fetched prizes:", prizesData);
-      setActivities(activitiesData || []);
-      setPrizes(prizesData || []);
     };
 
-    fetchData();
-  }, []);
+    if (session) {
+      fetchData();
+    }
+  }, [navigate, session, authLoading]);
 
   const onSubmit = async (data: FormData) => {
     console.log("Submitting form data:", data);
@@ -115,7 +137,6 @@ const Activities = () => {
       console.log("Submission created successfully");
       toast.success("Your activity has been submitted for review");
       
-      // Reset form with default values
       form.reset({
         activityId: "",
         prizeId: "",
@@ -131,6 +152,19 @@ const Activities = () => {
       setLoading(false);
     }
   };
+
+  if (pageLoading || authLoading) {
+    return (
+      <div className="container py-10">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-10">
