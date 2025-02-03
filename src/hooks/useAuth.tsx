@@ -112,6 +112,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       setIsLoading(false);
+      setIsInitialized(true);
     });
 
     return () => {
@@ -162,6 +163,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
     }
   };
+
+  // Don't show loading spinner for authenticated routes
+  if (!isInitialized && !session) {
+    console.log("AuthProvider: Still initializing, showing loading state");
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading application...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider
