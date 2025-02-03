@@ -126,11 +126,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("AuthProvider: Attempting sign in");
       setIsLoading(true);
       const { error } = await authService.signInWithEmail(email, password);
-      if (error) throw error;
-      navigate("/");
-    } catch (error: any) {
-      console.error("AuthProvider: Sign in error:", error);
-      toast.error(error.message);
+      if (error) {
+        console.error("AuthProvider: Sign in error:", error);
+        toast.error(error.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -141,10 +140,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("AuthProvider: Attempting sign up");
       setIsLoading(true);
       const { error } = await authService.signUpWithEmail(email, password, metadata);
-      if (error) throw error;
-    } catch (error: any) {
-      console.error("AuthProvider: Sign up error:", error);
-      toast.error(error.message);
+      if (error) {
+        console.error("AuthProvider: Sign up error:", error);
+        toast.error(error.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -155,11 +154,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("AuthProvider: Attempting logout");
       setIsLoading(true);
       const { error } = await authService.handleLogout();
-      if (error) throw error;
-      navigate("/login");
-    } catch (error: any) {
-      console.error("AuthProvider: Logout error:", error);
-      toast.error(error.message);
+      if (error) {
+        console.error("AuthProvider: Logout error:", error);
+        toast.error(error.message);
+      }
     } finally {
       setIsLoading(false);
     }
