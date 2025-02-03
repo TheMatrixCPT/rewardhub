@@ -34,11 +34,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, checkAdminStatus } = useAdminStatus(user?.id);
 
   useEffect(() => {
-    let mounted = true;
     console.log("AuthProvider mounted");
+    let mounted = true;
 
     const initializeAuth = async () => {
       try {
+        console.log("Fetching initial session");
         const { data: { session }, error } = await authService.getSession();
         
         if (error) {
@@ -46,19 +47,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (mounted) setIsLoading(false);
           return;
         }
+
+        if (!mounted) return;
         
         console.log("Initial session:", session ? "exists" : "none");
-        if (!mounted) return;
-
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           await checkAdminStatus(session.user.id);
         }
+        
+        setIsLoading(false);
       } catch (error) {
         console.error("Error initializing auth:", error);
-      } finally {
         if (mounted) setIsLoading(false);
       }
     };
@@ -69,6 +71,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Auth state changed:", event, session ? "Session exists" : "No session");
       
       if (!mounted) return;
+
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
 
       setSession(session);
       setUser(session?.user ?? null);
