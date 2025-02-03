@@ -8,76 +8,56 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { session, isInitialized } = useAuth();
+  const { session } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
-    console.log("Login component mounted, checking auth state...");
-    console.log("isInitialized:", isInitialized, "session:", session ? "exists" : "none");
+    console.log("Login: Initial session check");
     
-    if (!isInitialized) {
-      console.log("Auth not initialized yet, showing loading state");
-      return;
-    }
+    const checkSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        console.log("Login: Session check result:", data.session ? "Has session" : "No session");
+        
+        if (data.session) {
+          console.log("Login: Redirecting to home due to existing session");
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Login: Session check error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    if (session) {
-      console.log("User is authenticated, redirecting to home");
-      navigate("/");
-    }
-  }, [session, navigate, isInitialized]);
+    checkSession();
+  }, [navigate]);
 
   useEffect(() => {
+    console.log("Login: Setting up auth state change listener");
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state change:", event, session ? "Session exists" : "No session");
-      
-      if (event === "SIGNED_IN") {
-        console.log("User signed in, redirecting to home");
+      console.log("Login: Auth state changed -", event);
+
+      if (event === "SIGNED_IN" && session) {
+        console.log("Login: User signed in, redirecting to home");
         navigate("/");
       }
 
-      // Clear error when auth state changes
-      if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
+      if (event === "SIGNED_OUT") {
+        console.log("Login: User signed out");
         setErrorMessage("");
-      }
-
-      // Handle auth errors
-      if (event === "USER_UPDATED" && !session) {
-        handleAuthError();
       }
     });
 
     return () => {
-      console.log("Cleaning up auth subscription");
+      console.log("Login: Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, [navigate]);
 
-  const handleAuthError = async () => {
-    const { error } = await supabase.auth.getSession();
-    if (error) {
-      console.error("Auth error:", error);
-      
-      // More user-friendly error messages
-      if (error.message.includes("Email not confirmed")) {
-        setErrorMessage("Please verify your email address before signing in.");
-      } else if (error.message.includes("Invalid login credentials")) {
-        setErrorMessage("The email or password you entered is incorrect. Please try again.");
-      } else if (error.message.includes("Email address is required")) {
-        setErrorMessage("Please enter your email address.");
-      } else if (error.message.includes("Password is required")) {
-        setErrorMessage("Please enter your password.");
-      } else if (error.message.includes("Invalid email")) {
-        setErrorMessage("Please enter a valid email address.");
-      } else if (error.message.includes("Password should be")) {
-        setErrorMessage("Your password must be at least 6 characters long.");
-      } else {
-        setErrorMessage("An error occurred. Please try again.");
-      }
-    }
-  };
-
-  // Show loading state while auth is initializing
-  if (!isInitialized) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
