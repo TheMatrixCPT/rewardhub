@@ -8,23 +8,30 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, isInitialized } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
-    console.log("Login component mounted, session:", session ? "exists" : "none");
+    console.log("Login component mounted, checking auth state...");
+    console.log("isInitialized:", isInitialized, "session:", session ? "exists" : "none");
     
+    if (!isInitialized) {
+      console.log("Auth not initialized yet, showing loading state");
+      return;
+    }
+
     if (session) {
       console.log("User is authenticated, redirecting to home");
       navigate("/");
     }
-  }, [session, navigate]);
+  }, [session, navigate, isInitialized]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state change:", event, session ? "Session exists" : "No session");
       
       if (event === "SIGNED_IN") {
+        console.log("User signed in, redirecting to home");
         navigate("/");
       }
 
@@ -39,7 +46,10 @@ const Login = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("Cleaning up auth subscription");
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleAuthError = async () => {
@@ -65,6 +75,18 @@ const Login = () => {
       }
     }
   };
+
+  // Show loading state while auth is initializing
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
