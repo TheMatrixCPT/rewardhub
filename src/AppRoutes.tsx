@@ -11,6 +11,7 @@ import UserPrizes from "@/pages/UserPrizes";
 import Leaderboard from "@/pages/Leaderboard";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import NotFound from "@/pages/NotFound";
 
 const AppRoutes = () => {
   const { isLoading } = useAuth();
@@ -86,8 +87,8 @@ const AppRoutes = () => {
           }
         />
 
-        {/* Catch all route - redirect to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* 404 route */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
