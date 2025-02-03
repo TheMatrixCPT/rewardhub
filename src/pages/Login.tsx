@@ -13,19 +13,25 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
+    console.log("Login: Component mounted");
+    
     const checkSession = async () => {
       try {
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        console.log("Login: Session check result:", currentSession ? "Has session" : "No session");
         
         if (error) {
-          console.error("Session check error:", error);
+          console.error("Login: Session check error:", error);
           setErrorMessage("Failed to check authentication status");
-        } else if (currentSession) {
-          console.log("Active session found, redirecting to home");
+          return;
+        }
+
+        if (currentSession) {
+          console.log("Login: Active session found, redirecting to home");
           navigate("/");
         }
       } catch (error) {
-        console.error("Session check failed:", error);
+        console.error("Login: Session check failed:", error);
       } finally {
         setIsLoading(false);
       }
@@ -36,25 +42,48 @@ const Login = () => {
 
   useEffect(() => {
     if (session) {
-      console.log("Session detected, redirecting to home");
+      console.log("Login: Session detected in auth context, redirecting to home");
       navigate("/");
     }
   }, [session, navigate]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event);
+    console.log("Login: Setting up auth state change listener");
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log("Login: Auth state changed -", event, currentSession ? "Session exists" : "No session");
 
-      if (event === "SIGNED_IN" && session) {
+      if (event === "SIGNED_IN" && currentSession) {
+        console.log("Login: User signed in successfully, redirecting to home");
         navigate("/");
       }
 
       if (event === "SIGNED_OUT") {
+        console.log("Login: User signed out");
         setErrorMessage("");
+      }
+
+      // Handle token refresh
+      if (event === "TOKEN_REFRESHED") {
+        console.log("Login: Token refreshed successfully");
+        if (currentSession) {
+          navigate("/");
+        }
+      }
+
+      // Handle potential auth errors
+      if (event === "USER_UPDATED" && !currentSession) {
+        console.log("Login: User updated but no session, checking for errors");
+        const { error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Login: Auth error after user update:", error);
+          setErrorMessage(error.message);
+        }
       }
     });
 
     return () => {
+      console.log("Login: Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, [navigate]);
