@@ -11,6 +11,8 @@ interface MobileMenuProps {
 }
 
 const MobileMenu = ({ navigation, user, handleLogout, setIsOpen }: MobileMenuProps) => {
+  if (!user) return null;
+
   return (
     <div className="md:hidden">
       <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -25,23 +27,17 @@ const MobileMenu = ({ navigation, user, handleLogout, setIsOpen }: MobileMenuPro
             {item.name}
           </Link>
         ))}
-        {user ? (
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={() => {
-              handleLogout();
-              setIsOpen(false);
-            }}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        ) : (
-          <Link to="/auth" onClick={() => setIsOpen(false)}>
-            <Button className="w-full">Login</Button>
-          </Link>
-        )}
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => {
+            handleLogout();
+            setIsOpen(false);
+          }}
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Logout
+        </Button>
       </div>
     </div>
   );

@@ -15,17 +15,19 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <div className="relative group cursor-pointer">
-              <div className="flex items-center justify-center w-10 h-10 transform transition-all duration-200 group-hover:scale-105">
-                <div className="flex items-center">
-                  <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">R</span>
-                  <span className="text-2xl font-bold bg-gradient-to-r from-primary-hover to-primary bg-clip-text text-transparent">H</span>
+            {user && (
+              <div className="relative group cursor-pointer">
+                <div className="flex items-center justify-center w-10 h-10 transform transition-all duration-200 group-hover:scale-105">
+                  <div className="flex items-center">
+                    <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">R</span>
+                    <span className="text-2xl font-bold bg-gradient-to-r from-primary-hover to-primary bg-clip-text text-transparent">H</span>
+                  </div>
                 </div>
+                <span className="absolute left-full ml-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  RewardHub
+                </span>
               </div>
-              <span className="absolute left-full ml-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                RewardHub
-              </span>
-            </div>
+            )}
           </div>
 
           <DesktopMenu
@@ -35,23 +37,25 @@ const Navbar = () => {
             isAdmin={isAdmin}
           />
 
-          <div className="md:hidden flex items-center">
-            <Button
-              variant="ghost"
-              className="inline-flex items-center justify-center p-2"
-              onClick={() => setIsOpen(!isOpen)}
-            >
-              {isOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </Button>
-          </div>
+          {user && (
+            <div className="md:hidden flex items-center">
+              <Button
+                variant="ghost"
+                className="inline-flex items-center justify-center p-2"
+                onClick={() => setIsOpen(!isOpen)}
+              >
+                {isOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
-      {isOpen && (
+      {isOpen && user && (
         <MobileMenu
           navigation={navigationItems}
           user={user}

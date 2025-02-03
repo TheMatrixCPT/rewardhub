@@ -16,37 +16,41 @@ const DesktopMenu = ({ navigation, user, handleLogout, isAdmin }: DesktopMenuPro
 
   return (
     <div className="hidden md:flex md:items-center md:space-x-4">
-      {regularNavItems.map((item) => (
-        <Link
-          key={item.name}
-          to={item.href}
-          className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
-        >
-          {item.icon && <item.icon className="h-4 w-4" />}
-          {item.name}
-        </Link>
-      ))}
-      
-      {isAdmin && adminNavItems.length > 0 && (
-        <Link
-          to="/admin/prizes"
-          className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
-        >
-          Admin
-        </Link>
-      )}
+      {user && (
+        <>
+          {regularNavItems.map((item) => (
+            <Link
+              key={item.name}
+              to={item.href}
+              className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+            >
+              {item.icon && <item.icon className="h-4 w-4" />}
+              {item.name}
+            </Link>
+          ))}
+          
+          {isAdmin && adminNavItems.length > 0 && (
+            <Link
+              to="/admin/prizes"
+              className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+            >
+              Admin
+            </Link>
+          )}
 
-      {user ? (
-        <Button
-          variant="ghost"
-          className="flex items-center gap-2"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
-        </Button>
-      ) : (
-        <Link to="/auth">
+          <Button
+            variant="ghost"
+            className="flex items-center gap-2"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </>
+      )}
+      
+      {!user && (
+        <Link to="/login">
           <Button>Login</Button>
         </Link>
       )}
