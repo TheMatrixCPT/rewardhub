@@ -42,6 +42,9 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
     return deadline > new Date();
   });
 
+  // Check if there are any available prizes
+  const hasAvailablePrizes = activePrizes.length > 0;
+
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <ActivitySelect control={control} activities={activities} />
@@ -125,8 +128,12 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
         )}
       />
 
-      <Button type="submit" disabled={loading} className="w-full bg-emerald-500 hover:bg-emerald-600">
-        {loading ? "Submitting..." : "Submit Activity"}
+      <Button 
+        type="submit" 
+        disabled={loading || !hasAvailablePrizes} 
+        className={`w-full ${!hasAvailablePrizes ? 'bg-gray-400' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+      >
+        {loading ? "Submitting..." : hasAvailablePrizes ? "Submit Activity" : "No Prizes Available"}
       </Button>
     </form>
   );
