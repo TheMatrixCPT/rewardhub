@@ -102,10 +102,13 @@ const PrizeBanner = ({ prizes: propPrizes }: PrizeBannerProps) => {
     const registrationStart = prize.registration_start ? new Date(prize.registration_start) : null;
     
     if (!registrationStart) {
+      // If no registration start date is set, consider it as active
       acc.active.push(prize);
-    } else if (registrationStart > now) {
+    } else if (now < registrationStart) {
+      // If current date is before registration start, it's upcoming
       acc.upcoming.push(prize);
     } else {
+      // If current date is after or equal to registration start, it's active
       acc.active.push(prize);
     }
     
