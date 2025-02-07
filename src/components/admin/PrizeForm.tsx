@@ -61,21 +61,25 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     const deadline = new Date(newPrize.deadline);
     const now = new Date();
 
+    // Check if dates are valid
     if (isNaN(regStart.getTime()) || isNaN(regEnd.getTime()) || isNaN(deadline.getTime())) {
       toast.error("Please enter valid dates");
       return false;
     }
 
+    // Check if registration start is before registration end
     if (regStart >= regEnd) {
       toast.error("Registration start date must be before registration end date");
       return false;
     }
 
+    // Check if registration end is before competition end
     if (regEnd >= deadline) {
       toast.error("Registration end date must be before competition end date");
       return false;
     }
 
+    // Check if all dates are in the future
     if (regStart < now) {
       toast.error("Registration start date must be in the future");
       return false;
@@ -87,12 +91,14 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
     if (!newPrize.name || !newPrize.points_required || !newPrize.registration_start || 
         !newPrize.registration_end || !newPrize.deadline) {
       toast.error("Please fill in all required fields");
       return;
     }
 
+    // Validate dates
     if (!validateDates()) {
       return;
     }
@@ -174,7 +180,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
             type="datetime-local"
             value={newPrize.registration_start}
             onChange={(e) => setNewPrize({ ...newPrize, registration_start: e.target.value })}
-            className="select-content"
+            placeholder="Set registration start date"
           />
         </div>
 
@@ -185,7 +191,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
             type="datetime-local"
             value={newPrize.registration_end}
             onChange={(e) => setNewPrize({ ...newPrize, registration_end: e.target.value })}
-            className="select-content"
+            placeholder="Set registration end date"
           />
         </div>
 
@@ -196,7 +202,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
             type="datetime-local"
             value={newPrize.deadline}
             onChange={(e) => setNewPrize({ ...newPrize, deadline: e.target.value })}
-            className="select-content"
+            placeholder="Set competition end date"
           />
         </div>
 
