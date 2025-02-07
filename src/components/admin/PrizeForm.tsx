@@ -5,11 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Prize = Tables<"prizes">
@@ -30,6 +28,44 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     registration_start: "",
     registration_end: "",
   });
+
+  // Date handling functions
+  const handleDateChange = (type: 'registration_start' | 'registration_end' | 'deadline', field: 'year' | 'month' | 'day', value: string) => {
+    const dateField = newPrize[type] ? new Date(newPrize[type]) : new Date();
+    
+    switch (field) {
+      case 'year':
+        dateField.setFullYear(parseInt(value));
+        break;
+      case 'month':
+        dateField.setMonth(parseInt(value));
+        break;
+      case 'day':
+        dateField.setDate(parseInt(value));
+        break;
+    }
+    
+    setNewPrize({ ...newPrize, [type]: dateField.toISOString() });
+  };
+
+  const getDateParts = (dateString: string) => {
+    const date = dateString ? new Date(dateString) : new Date();
+    return {
+      year: date.getFullYear(),
+      month: date.getMonth(),
+      day: date.getDate()
+    };
+  };
+
+  const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i);
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    value: i.toString(),
+    label: format(new Date(2000, i, 1), 'MMMM')
+  }));
+  
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -143,6 +179,68 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     }
   };
 
+  const renderDateSelects = (fieldName: 'registration_start' | 'registration_end' | 'deadline', label: string) => {
+    const date = newPrize[fieldName] ? new Date(newPrize[fieldName]) : new Date();
+    const daysInMonth = getDaysInMonth(date);
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const dateParts = getDateParts(newPrize[fieldName]);
+
+    return (
+      <div className="space-y-2">
+        <label className="block text-sm font-medium mb-2">{label} *</label>
+        <div className="grid grid-cols-3 gap-2">
+          <Select
+            value={dateParts.year.toString()}
+            onValueChange={(value) => handleDateChange(fieldName, 'year', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((year) => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={dateParts.month.toString()}
+            onValueChange={(value) => handleDateChange(fieldName, 'month', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Month" />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((month) => (
+                <SelectItem key={month.value} value={month.value}>
+                  {month.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={dateParts.day.toString()}
+            onValueChange={(value) => handleDateChange(fieldName, 'day', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Day" />
+            </SelectTrigger>
+            <SelectContent>
+              {days.map((day) => (
+                <SelectItem key={day} value={day.toString()}>
+                  {day}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Card className="p-6 bg-muted/50">
       <h2 className="text-2xl font-semibold mb-2">Add New Prize</h2>
@@ -178,95 +276,9 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Registration Start *</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !newPrize.registration_start && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {newPrize.registration_start ? (
-                  format(new Date(newPrize.registration_start), "PPP")
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={newPrize.registration_start ? new Date(newPrize.registration_start) : undefined}
-                onSelect={(date) => setNewPrize({ ...newPrize, registration_start: date ? date.toISOString() : "" })}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Registration End *</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !newPrize.registration_end && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {newPrize.registration_end ? (
-                  format(new Date(newPrize.registration_end), "PPP")
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={newPrize.registration_end ? new Date(newPrize.registration_end) : undefined}
-                onSelect={(date) => setNewPrize({ ...newPrize, registration_end: date ? date.toISOString() : "" })}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Competition End Date *</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !newPrize.deadline && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {newPrize.deadline ? (
-                  format(new Date(newPrize.deadline), "PPP")
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={newPrize.deadline ? new Date(newPrize.deadline) : undefined}
-                onSelect={(date) => setNewPrize({ ...newPrize, deadline: date ? date.toISOString() : "" })}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        {renderDateSelects('registration_start', 'Registration Start')}
+        {renderDateSelects('registration_end', 'Registration End')}
+        {renderDateSelects('deadline', 'Competition End Date')}
 
         <div>
           <label className="block text-sm font-medium mb-2">Prize Image</label>
