@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Upload } from "lucide-react";
+import { toast } from "sonner";
 
 interface ProfileImageProps {
   avatarUrl: string;
@@ -16,6 +17,18 @@ export const ProfileImage = ({
   uploadingImage,
   onImageUpload,
 }: ProfileImageProps) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!event.target.files || event.target.files.length === 0) {
+        toast.error('Please select an image to upload.');
+        return;
+      }
+      onImageUpload(event);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <Label>Profile Picture</Label>
@@ -24,14 +37,14 @@ export const ProfileImage = ({
           <img
             src={avatarUrl}
             alt="Profile"
-            className="w-32 h-32 rounded-full object-cover"
+            className="w-32 h-32 rounded-full object-cover border-2 border-gray-200"
           />
         )}
         <div className="flex items-center space-x-2">
           <Input
             type="file"
             accept="image/*"
-            onChange={onImageUpload}
+            onChange={handleImageUpload}
             disabled={uploadingImage || !isEditing}
             className="hidden"
             id="profile-picture"

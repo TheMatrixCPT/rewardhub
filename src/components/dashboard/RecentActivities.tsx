@@ -9,7 +9,7 @@ const RecentActivities = () => {
     queryKey: ["recent-submissions"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
+      if (!user) return null;
 
       const { data, error } = await supabase
         .from("submissions")
@@ -28,6 +28,7 @@ const RecentActivities = () => {
       if (error) throw error;
       return data;
     },
+    enabled: true,
   });
 
   const getActivityIcon = (type: string) => {
@@ -43,66 +44,84 @@ const RecentActivities = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Recent Activities
+        </h2>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-20 bg-gray-100 rounded-lg animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!submissions || submissions.length === 0) {
+    return (
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Recent Activities
+        </h2>
+        <Card className="p-4">
+          <p className="text-center text-gray-500">Not active yet!</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-8">
       <h2 className="text-xl font-semibold text-gray-900 mb-4">
         Recent Activities
       </h2>
       <div className="space-y-4">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-20 bg-gray-100 rounded-lg animate-pulse"
-            />
-          ))
-        ) : !submissions || submissions.length === 0 ? (
-          <Card className="p-4">
-            <p className="text-center text-gray-500">Not active yet!</p>
-          </Card>
-        ) : (
-          submissions.map((submission) => {
-            const Icon = getActivityIcon(submission.activities?.type || "");
-            return (
-              <Card
-                key={submission.id}
-                className="p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Icon className="h-6 w-6 text-primary mr-3" />
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {submission.activities?.name}
+        {submissions.map((submission) => {
+          const Icon = getActivityIcon(submission.activities?.type || "");
+          return (
+            <Card
+              key={submission.id}
+              className="p-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Icon className="h-6 w-6 text-primary mr-3" />
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {submission.activities?.name}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {format(new Date(submission.created_at), "PPP")}
+                    </p>
+                    {submission.status === "rejected" && submission.admin_comment && (
+                      <p className="text-sm text-red-600 mt-1">
+                        Rejection reason: {submission.admin_comment}
                       </p>
-                      <p className="text-sm text-gray-600">
-                        {format(new Date(submission.created_at), "PPP")}
-                      </p>
-                      {submission.status === "rejected" && submission.admin_comment && (
-                        <p className="text-sm text-red-600 mt-1">
-                          Rejection reason: {submission.admin_comment}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    {submission.status === "approved" ? (
-                      <span className="font-semibold text-primary">
-                        +{submission.activities?.points + (submission.bonus_points || 0)} pts
-                      </span>
-                    ) : (
-                      <span className={`text-sm ${
-                        submission.status === "pending" ? "text-yellow-500" : "text-red-500"
-                      }`}>
-                        {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
-                      </span>
                     )}
                   </div>
                 </div>
-              </Card>
-            );
-          })
-        )}
+                <div className="flex items-center">
+                  {submission.status === "approved" ? (
+                    <span className="font-semibold text-primary">
+                      +{submission.activities?.points + (submission.bonus_points || 0)} pts
+                    </span>
+                  ) : (
+                    <span className={`text-sm ${
+                      submission.status === "pending" ? "text-yellow-500" : "text-red-500"
+                    }`}>
+                      {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

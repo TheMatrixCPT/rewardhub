@@ -1,5 +1,7 @@
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Trophy } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 type PrizeLeaderboardEntry = {
   points: number;
@@ -13,9 +15,35 @@ type LeaderboardTableProps = {
   entries: PrizeLeaderboardEntry[];
   pointsRequired: number;
   isCompetitionEnded?: boolean;
+  prizeId: string;
 };
 
-export function LeaderboardTable({ entries, pointsRequired, isCompetitionEnded }: LeaderboardTableProps) {
+export function LeaderboardTable({ entries, pointsRequired, isCompetitionEnded, prizeId }: LeaderboardTableProps) {
+  const { data: isRegistered } = useQuery({
+    queryKey: ["prize-registration", prizeId],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { data } = await supabase
+        .from("prize_registrations")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("prize_id", prizeId)
+        .single();
+
+      return !!data;
+    },
+  });
+
+  if (!isRegistered) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        You need to register for this prize to view the leaderboard.
+      </div>
+    );
+  }
+
   const sortedEntries = [...entries].sort((a, b) => b.points - a.points);
   const winners = isCompetitionEnded ? sortedEntries.filter(entry => entry.points >= pointsRequired) : [];
 
