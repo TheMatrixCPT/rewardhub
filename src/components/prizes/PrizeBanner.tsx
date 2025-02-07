@@ -102,8 +102,8 @@ const PrizeBanner = ({ prizes: propPrizes }: PrizeBannerProps) => {
     const registrationStart = prize.registration_start ? new Date(prize.registration_start) : null;
     
     if (!registrationStart) {
-      // If no registration start date is set, consider it as active
-      acc.active.push(prize);
+      // If no registration start date, consider it completed
+      acc.completed.push(prize);
     } else if (now < registrationStart) {
       // If current date is before registration start, it's upcoming
       acc.upcoming.push(prize);
@@ -113,7 +113,7 @@ const PrizeBanner = ({ prizes: propPrizes }: PrizeBannerProps) => {
     }
     
     return acc;
-  }, { active: [] as Tables<"prizes">[], upcoming: [] as Tables<"prizes">[] });
+  }, { active: [] as Tables<"prizes">[], upcoming: [] as Tables<"prizes">[], completed: [] as Tables<"prizes">[] });
 
   const renderPrizeSection = (title: string, prizes: Tables<"prizes">[]) => (
     <div className="mb-8">
@@ -213,6 +213,7 @@ const PrizeBanner = ({ prizes: propPrizes }: PrizeBannerProps) => {
     <div>
       {categorizedPrizes.active.length > 0 && renderPrizeSection("Active Prizes", categorizedPrizes.active)}
       {categorizedPrizes.upcoming.length > 0 && renderPrizeSection("Upcoming Prizes", categorizedPrizes.upcoming)}
+      {categorizedPrizes.completed.length > 0 && renderPrizeSection("Completed Prizes", categorizedPrizes.completed)}
     </div>
   );
 };
