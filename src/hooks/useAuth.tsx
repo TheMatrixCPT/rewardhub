@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
@@ -52,6 +53,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(null);
             setSession(null);
             setIsInitialized(true);
+            toast.error("Authentication error. Please log in.");
+            navigate("/login");
           }
           return;
         }
@@ -60,9 +63,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.log("AuthProvider: Valid session found");
           setSession(currentSession);
           setUser(currentSession.user);
-          await checkAdminStatus(currentSession.user.id);
+          // Move admin check after basic auth is initialized
+          setTimeout(() => checkAdminStatus(currentSession.user.id), 0);
         } else {
           console.log("AuthProvider: No valid session found");
+          toast("Please log in to continue", {
+            action: {
+              label: "Login",
+              onClick: () => navigate("/login")
+            },
+          });
         }
         
         if (mounted) {
@@ -74,6 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (mounted) {
           setIsLoading(false);
           setIsInitialized(true);
+          navigate("/login");
         }
       }
     };
@@ -90,7 +101,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (currentSession) {
           setSession(currentSession);
           setUser(currentSession.user);
-          await checkAdminStatus(currentSession.user.id);
+          // Move admin check after token refresh
+          setTimeout(() => checkAdminStatus(currentSession.user.id), 0);
         }
       }
 
@@ -99,7 +111,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (currentSession) {
           setSession(currentSession);
           setUser(currentSession.user);
-          await checkAdminStatus(currentSession.user.id);
+          // Move admin check after sign in
+          setTimeout(() => checkAdminStatus(currentSession.user.id), 0);
           navigate("/");
         }
       }
@@ -163,19 +176,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
     }
   };
-
-  // Don't show loading spinner for authenticated routes
-  if (!isInitialized && !session) {
-    console.log("AuthProvider: Still initializing, showing loading state");
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading application...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <AuthContext.Provider

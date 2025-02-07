@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
@@ -8,44 +9,15 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { session } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
+  const { session, isInitialized } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
-    console.log("Login: Component mounted");
-    
-    const checkSession = async () => {
-      try {
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        console.log("Login: Session check result:", currentSession ? "Has session" : "No session");
-        
-        if (error) {
-          console.error("Login: Session check error:", error);
-          setErrorMessage("Failed to check authentication status");
-          return;
-        }
-
-        if (currentSession) {
-          console.log("Login: Active session found, redirecting to home");
-          navigate("/");
-        }
-      } catch (error) {
-        console.error("Login: Session check failed:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkSession();
-  }, [navigate]);
-
-  useEffect(() => {
-    if (session) {
+    if (session && isInitialized) {
       console.log("Login: Session detected in auth context, redirecting to home");
       navigate("/");
     }
-  }, [session, navigate]);
+  }, [session, navigate, isInitialized]);
 
   useEffect(() => {
     console.log("Login: Setting up auth state change listener");
@@ -63,22 +35,9 @@ const Login = () => {
         setErrorMessage("");
       }
 
-      // Handle token refresh
-      if (event === "TOKEN_REFRESHED") {
+      if (event === "TOKEN_REFRESHED" && currentSession) {
         console.log("Login: Token refreshed successfully");
-        if (currentSession) {
-          navigate("/");
-        }
-      }
-
-      // Handle potential auth errors
-      if (event === "USER_UPDATED" && !currentSession) {
-        console.log("Login: User updated but no session, checking for errors");
-        const { error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Login: Auth error after user update:", error);
-          setErrorMessage(error.message);
-        }
+        navigate("/");
       }
     });
 
@@ -87,17 +46,6 @@ const Login = () => {
       subscription.unsubscribe();
     };
   }, [navigate]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
