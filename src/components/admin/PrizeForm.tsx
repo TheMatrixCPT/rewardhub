@@ -5,6 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Prize = Tables<"prizes">
@@ -175,35 +180,92 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
 
         <div>
           <label className="block text-sm font-medium mb-2">Registration Start *</label>
-          <Input
-            required
-            type="datetime-local"
-            value={newPrize.registration_start}
-            onChange={(e) => setNewPrize({ ...newPrize, registration_start: e.target.value })}
-            placeholder="Set registration start date"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !newPrize.registration_start && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {newPrize.registration_start ? (
+                  format(new Date(newPrize.registration_start), "PPP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={newPrize.registration_start ? new Date(newPrize.registration_start) : undefined}
+                onSelect={(date) => setNewPrize({ ...newPrize, registration_start: date ? date.toISOString() : "" })}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Registration End *</label>
-          <Input
-            required
-            type="datetime-local"
-            value={newPrize.registration_end}
-            onChange={(e) => setNewPrize({ ...newPrize, registration_end: e.target.value })}
-            placeholder="Set registration end date"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !newPrize.registration_end && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {newPrize.registration_end ? (
+                  format(new Date(newPrize.registration_end), "PPP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={newPrize.registration_end ? new Date(newPrize.registration_end) : undefined}
+                onSelect={(date) => setNewPrize({ ...newPrize, registration_end: date ? date.toISOString() : "" })}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Competition End Date *</label>
-          <Input
-            required
-            type="datetime-local"
-            value={newPrize.deadline}
-            onChange={(e) => setNewPrize({ ...newPrize, deadline: e.target.value })}
-            placeholder="Set competition end date"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !newPrize.deadline && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {newPrize.deadline ? (
+                  format(new Date(newPrize.deadline), "PPP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={newPrize.deadline ? new Date(newPrize.deadline) : undefined}
+                onSelect={(date) => setNewPrize({ ...newPrize, deadline: date ? date.toISOString() : "" })}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div>
