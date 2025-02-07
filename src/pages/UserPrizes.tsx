@@ -25,11 +25,10 @@ const UserPrizes = () => {
 
   const now = new Date();
 
-  // Active prizes are those within their competition period and not past deadline
-  const activePrizes = prizes?.filter(
+  // Completed prizes are those without registration dates
+  const completedPrizes = prizes?.filter(
     (prize) =>
-      prize.active &&
-      (!prize.deadline || new Date(prize.deadline) > now)
+      !prize.registration_start || !prize.registration_end
   );
 
   // Upcoming prizes are those where registration hasn't started yet
@@ -37,13 +36,17 @@ const UserPrizes = () => {
     (prize) =>
       prize.active &&
       prize.registration_start &&
+      prize.registration_end &&
       new Date(prize.registration_start) > now
   );
 
-  // Only move to completed if deadline has passed
-  const completedPrizes = prizes?.filter(
+  // Active prizes are those within their registration period
+  const activePrizes = prizes?.filter(
     (prize) =>
-      prize.deadline && new Date(prize.deadline) < now
+      prize.active &&
+      prize.registration_start &&
+      prize.registration_end &&
+      new Date(prize.registration_start) <= now
   );
 
   return (
@@ -125,21 +128,10 @@ const UserPrizes = () => {
                       {prize.points_required} points required
                     </Badge>
                   </div>
-                  {prize.registration_start && prize.registration_end && (
-                    <div className="text-sm text-muted-foreground mt-2">
-                      <p>Registration period:</p>
-                      <p>
-                        {format(new Date(prize.registration_start), "MMM d, yyyy")} -{" "}
-                        {format(new Date(prize.registration_end), "MMM d, yyyy")}
-                      </p>
-                    </div>
-                  )}
-                  {prize.deadline && (
-                    <div className="text-sm text-muted-foreground">
-                      <p>Competition ended:</p>
-                      <p>{format(new Date(prize.deadline), "MMM d, yyyy")}</p>
-                    </div>
-                  )}
+                  <div className="text-sm text-muted-foreground">
+                    <p>Status: Completed</p>
+                    <p>This prize has no valid registration period set.</p>
+                  </div>
                 </div>
               ))}
             </div>
