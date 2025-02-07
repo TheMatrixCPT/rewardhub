@@ -101,6 +101,7 @@ export function PrizeLeaderboard({ prize, isRegistered }: PrizeLeaderboardProps)
           entries={entries} 
           pointsRequired={prize.points_required}
           isCompetitionEnded={isCompetitionEnded}
+          prizeId={prize.id}
         />
       </TabsContent>
     </Tabs>
