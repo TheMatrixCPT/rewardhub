@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -25,10 +26,10 @@ const UserPrizes = () => {
 
   const now = new Date();
 
-  // Completed prizes are those without registration dates
+  // Completed prizes are those that have passed their deadline
   const completedPrizes = prizes?.filter(
     (prize) =>
-      !prize.registration_start || !prize.registration_end
+      prize.deadline && new Date(prize.deadline) < now
   );
 
   // Upcoming prizes are those where registration hasn't started yet
@@ -40,13 +41,15 @@ const UserPrizes = () => {
       new Date(prize.registration_start) > now
   );
 
-  // Active prizes are those within their registration period
+  // Active prizes are those within their registration period and before deadline
   const activePrizes = prizes?.filter(
     (prize) =>
       prize.active &&
       prize.registration_start &&
       prize.registration_end &&
-      new Date(prize.registration_start) <= now
+      prize.deadline &&
+      new Date(prize.registration_start) <= now &&
+      new Date(prize.deadline) > now
   );
 
   return (
@@ -130,7 +133,7 @@ const UserPrizes = () => {
                   </div>
                   <div className="text-sm text-muted-foreground">
                     <p>Status: Completed</p>
-                    <p>This prize has no valid registration period set.</p>
+                    <p>Competition ended on {format(new Date(prize.deadline), "MMM d, yyyy")}</p>
                   </div>
                 </div>
               ))}
