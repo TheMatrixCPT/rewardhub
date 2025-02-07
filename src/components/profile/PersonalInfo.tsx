@@ -1,10 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -20,16 +16,36 @@ interface PersonalInfoProps {
 }
 
 export const PersonalInfo = ({ profile, isEditing, onChange }: PersonalInfoProps) => {
-  // Function to format the date for display
-  const formatDate = (date: string) => {
-    if (!date) return "";
-    try {
-      return format(new Date(date), "PPP");
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "";
+  const handleDateChange = (type: 'year' | 'month' | 'day', value: string) => {
+    const date = profile.date_of_birth ? new Date(profile.date_of_birth) : new Date();
+    
+    switch (type) {
+      case 'year':
+        date.setFullYear(parseInt(value));
+        break;
+      case 'month':
+        date.setMonth(parseInt(value));
+        break;
+      case 'day':
+        date.setDate(parseInt(value));
+        break;
     }
+    
+    onChange('date_of_birth', date.toISOString().split('T')[0]);
   };
+
+  const currentDate = profile.date_of_birth ? new Date(profile.date_of_birth) : new Date();
+  const years = Array.from({ length: new Date().getFullYear() - 1940 + 1 }, (_, i) => 1940 + i);
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    value: i.toString(),
+    label: format(new Date(2000, i, 1), 'MMMM')
+  }));
+  const daysInMonth = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth() + 1,
+    0
+  ).getDate();
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -57,36 +73,58 @@ export const PersonalInfo = ({ profile, isEditing, onChange }: PersonalInfoProps
 
       <div className="space-y-2">
         <Label>Date of Birth</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !profile.date_of_birth && "text-muted-foreground",
-                !isEditing && "bg-muted cursor-not-allowed"
-              )}
-              disabled={!isEditing}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {profile.date_of_birth ? formatDate(profile.date_of_birth) : <span>Pick a date</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={profile.date_of_birth ? new Date(profile.date_of_birth) : undefined}
-              onSelect={(date) => onChange('date_of_birth', date ? date.toISOString().split('T')[0] : "")}
-              initialFocus
-              disabled={!isEditing}
-              captionLayout="dropdown-buttons"
-              fromYear={1940}
-              toYear={new Date().getFullYear()}
-              defaultMonth={profile.date_of_birth ? new Date(profile.date_of_birth) : new Date(1990, 0)}
-              className="rounded-md border"
-            />
-          </PopoverContent>
-        </Popover>
+        <div className="grid grid-cols-3 gap-2">
+          <Select
+            value={currentDate.getFullYear().toString()}
+            onValueChange={(value) => handleDateChange('year', value)}
+            disabled={!isEditing}
+          >
+            <SelectTrigger className={cn(!isEditing && "bg-muted")}>
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent>
+              {years.reverse().map((year) => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={currentDate.getMonth().toString()}
+            onValueChange={(value) => handleDateChange('month', value)}
+            disabled={!isEditing}
+          >
+            <SelectTrigger className={cn(!isEditing && "bg-muted")}>
+              <SelectValue placeholder="Month" />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((month) => (
+                <SelectItem key={month.value} value={month.value}>
+                  {month.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={currentDate.getDate().toString()}
+            onValueChange={(value) => handleDateChange('day', value)}
+            disabled={!isEditing}
+          >
+            <SelectTrigger className={cn(!isEditing && "bg-muted")}>
+              <SelectValue placeholder="Day" />
+            </SelectTrigger>
+            <SelectContent>
+              {days.map((day) => (
+                <SelectItem key={day} value={day.toString()}>
+                  {day}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="space-y-2">

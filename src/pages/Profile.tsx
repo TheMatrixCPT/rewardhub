@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -51,6 +51,16 @@ const Profile = () => {
     },
     enabled: !!session?.user?.id,
   });
+
+  // Update profile state when userProfile data is loaded
+  useEffect(() => {
+    if (userProfile) {
+      setProfile(prev => ({
+        ...prev,
+        ...userProfile,
+      }));
+    }
+  }, [userProfile]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
