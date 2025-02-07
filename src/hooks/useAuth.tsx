@@ -1,11 +1,8 @@
-
 import { useState, useEffect, createContext, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAdminStatus } from "./useAdminStatus";
-import { authService } from "@/services/authService";
 
 interface AuthContextType {
   user: User | null;
@@ -34,8 +31,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
-  const { isAdmin, checkAdminStatus } = useAdminStatus(user?.id);
+
+  // Check if user is admin based on email
+  const checkAdminAccess = (email: string | undefined) => {
+    console.log("Checking admin access for email:", email);
+    return email === 'shadlyfrans@gmail.com';
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -53,8 +56,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(null);
             setSession(null);
             setIsInitialized(true);
-            toast.error("Authentication error. Please log in.");
-            navigate("/login");
           }
           return;
         }
@@ -63,16 +64,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.log("AuthProvider: Valid session found");
           setSession(currentSession);
           setUser(currentSession.user);
-          // Move admin check after basic auth is initialized
-          setTimeout(() => checkAdminStatus(currentSession.user.id), 0);
-        } else {
-          console.log("AuthProvider: No valid session found");
-          toast("Please log in to continue", {
-            action: {
-              label: "Login",
-              onClick: () => navigate("/login")
-            },
-          });
+          setIsAdmin(checkAdminAccess(currentSession.user.email));
         }
         
         if (mounted) {
@@ -84,7 +76,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (mounted) {
           setIsLoading(false);
           setIsInitialized(true);
-          navigate("/login");
         }
       }
     };
@@ -101,8 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (currentSession) {
           setSession(currentSession);
           setUser(currentSession.user);
-          // Move admin check after token refresh
-          setTimeout(() => checkAdminStatus(currentSession.user.id), 0);
+          setIsAdmin(checkAdminAccess(currentSession.user.email));
         }
       }
 
@@ -111,8 +101,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (currentSession) {
           setSession(currentSession);
           setUser(currentSession.user);
-          // Move admin check after sign in
-          setTimeout(() => checkAdminStatus(currentSession.user.id), 0);
+          setIsAdmin(checkAdminAccess(currentSession.user.email));
           navigate("/");
         }
       }
@@ -121,6 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log("AuthProvider: User signed out");
         setSession(null);
         setUser(null);
+        setIsAdmin(false);
         navigate("/login");
       }
       
@@ -133,13 +123,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, checkAdminStatus]);
+  }, [navigate]);
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
       console.log("AuthProvider: Attempting sign in");
       setIsLoading(true);
-      const { error } = await authService.signInWithEmail(email, password);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         console.error("AuthProvider: Sign in error:", error);
         toast.error(error.message);
@@ -153,7 +143,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log("AuthProvider: Attempting sign up");
       setIsLoading(true);
-      const { error } = await authService.signUpWithEmail(email, password, metadata);
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: { data: metadata }
+      });
       if (error) {
         console.error("AuthProvider: Sign up error:", error);
         toast.error(error.message);
@@ -167,7 +161,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log("AuthProvider: Attempting logout");
       setIsLoading(true);
-      const { error } = await authService.handleLogout();
+      const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("AuthProvider: Logout error:", error);
         toast.error(error.message);
