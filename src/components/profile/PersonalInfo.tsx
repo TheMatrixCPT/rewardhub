@@ -20,25 +20,38 @@ interface PersonalInfoProps {
 }
 
 export const PersonalInfo = ({ profile, isEditing, onChange }: PersonalInfoProps) => {
+  // Function to format the date for display
+  const formatDate = (date: string) => {
+    if (!date) return "";
+    try {
+      return format(new Date(date), "PPP");
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-2">
         <Label>First Name</Label>
         <Input
-          value={profile.first_name}
+          value={profile.first_name || ""}
           onChange={(e) => onChange('first_name', e.target.value)}
           placeholder="Enter your first name"
           disabled={!isEditing}
+          className={cn(!isEditing && "bg-muted")}
         />
       </div>
 
       <div className="space-y-2">
         <Label>Last Name</Label>
         <Input
-          value={profile.last_name}
+          value={profile.last_name || ""}
           onChange={(e) => onChange('last_name', e.target.value)}
           placeholder="Enter your last name"
           disabled={!isEditing}
+          className={cn(!isEditing && "bg-muted")}
         />
       </div>
 
@@ -50,12 +63,13 @@ export const PersonalInfo = ({ profile, isEditing, onChange }: PersonalInfoProps
               variant="outline"
               className={cn(
                 "w-full justify-start text-left font-normal",
-                !profile.date_of_birth && "text-muted-foreground"
+                !profile.date_of_birth && "text-muted-foreground",
+                !isEditing && "bg-muted cursor-not-allowed"
               )}
               disabled={!isEditing}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {profile.date_of_birth ? format(new Date(profile.date_of_birth), "PPP") : <span>Pick a date</span>}
+              {profile.date_of_birth ? formatDate(profile.date_of_birth) : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -65,6 +79,11 @@ export const PersonalInfo = ({ profile, isEditing, onChange }: PersonalInfoProps
               onSelect={(date) => onChange('date_of_birth', date ? date.toISOString().split('T')[0] : "")}
               initialFocus
               disabled={!isEditing}
+              captionLayout="dropdown-buttons"
+              fromYear={1940}
+              toYear={new Date().getFullYear()}
+              defaultMonth={profile.date_of_birth ? new Date(profile.date_of_birth) : new Date(1990, 0)}
+              className="rounded-md border"
             />
           </PopoverContent>
         </Popover>
@@ -73,16 +92,18 @@ export const PersonalInfo = ({ profile, isEditing, onChange }: PersonalInfoProps
       <div className="space-y-2">
         <Label>Gender</Label>
         <Select 
-          value={profile.gender} 
+          value={profile.gender || ""} 
           onValueChange={(value) => onChange('gender', value)}
           disabled={!isEditing}
         >
-          <SelectTrigger>
+          <SelectTrigger className={cn(!isEditing && "bg-muted")}>
             <SelectValue placeholder="Select gender" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="male">Male</SelectItem>
             <SelectItem value="female">Female</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+            <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
           </SelectContent>
         </Select>
       </div>
