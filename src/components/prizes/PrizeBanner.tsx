@@ -54,8 +54,6 @@ const PrizeBanner = ({ prizes: propPrizes }: PrizeBannerProps) => {
     },
   });
 
-  const activePrizes = propPrizes || prizes;
-
   const handleRegister = async (prizeId: string) => {
     setRegistering(true);
     try {
@@ -72,10 +70,7 @@ const PrizeBanner = ({ prizes: propPrizes }: PrizeBannerProps) => {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (checkError) {
-        console.error("Error checking registration:", checkError);
-        throw checkError;
-      }
+      if (checkError) throw checkError;
 
       if (existingReg) {
         toast.error("You are already registered for this prize");
@@ -90,14 +85,11 @@ const PrizeBanner = ({ prizes: propPrizes }: PrizeBannerProps) => {
           points: 0
         }]);
 
-      if (insertError) {
-        console.error("Error inserting registration:", insertError);
-        throw insertError;
-      }
+      if (insertError) throw insertError;
       
       toast.success("Successfully registered for the prize!");
       refetchRegistrations();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error registering for prize:", error);
       toast.error("Failed to register for the prize");
     } finally {
@@ -105,102 +97,120 @@ const PrizeBanner = ({ prizes: propPrizes }: PrizeBannerProps) => {
     }
   };
 
-  const isRegistrationOpen = (prize: Tables<"prizes">) => {
+  const categorizedPrizes = (prizes || []).reduce((acc, prize) => {
     const now = new Date();
-    const start = prize.registration_start ? new Date(prize.registration_start) : null;
-    const end = prize.registration_end ? new Date(prize.registration_end) : null;
+    const registrationStart = prize.registration_start ? new Date(prize.registration_start) : null;
     
-    if (!start || !end) return true; // If no dates set, registration is open
-    return !isPast(end) && !isFuture(start);
-  };
+    if (!registrationStart) {
+      acc.active.push(prize);
+    } else if (registrationStart > now) {
+      acc.upcoming.push(prize);
+    } else {
+      acc.active.push(prize);
+    }
+    
+    return acc;
+  }, { active: [] as Tables<"prizes">[], upcoming: [] as Tables<"prizes">[] });
 
-  if (!activePrizes?.length) return null;
-
-  return (
-    <Carousel className="w-full">
-      <CarouselContent>
-        {activePrizes.map((prize) => {
-          const registration = registrations?.find(
-            (r) => r.prize_id === prize.id
-          );
-          const registrationOpen = isRegistrationOpen(prize);
-          
-          return (
-            <CarouselItem key={prize.id} className="md:basis-1/2 lg:basis-1/3">
-              <Card className="p-4">
-                {prize.image_url && (
-                  <img
-                    src={prize.image_url}
-                    alt={prize.name}
-                    className="w-full h-32 object-cover rounded-md mb-4"
-                  />
-                )}
-                <div className="space-y-2">
-                  <h3 className="font-semibold">{prize.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {prize.description}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">
-                      {prize.points_required} points required
-                    </Badge>
-                    {prize.deadline && (
-                      <Badge variant="outline">
-                        Competition ends {format(new Date(prize.deadline), "MMM d, yyyy")}
+  const renderPrizeSection = (title: string, prizes: Tables<"prizes">[]) => (
+    <div className="mb-8">
+      <h2 className="text-xl font-semibold mb-4">{title}</h2>
+      <Carousel className="w-full">
+        <CarouselContent>
+          {prizes.map((prize) => {
+            const registration = registrations?.find(
+              (r) => r.prize_id === prize.id
+            );
+            const registrationOpen = prize.registration_start && prize.registration_end && 
+              new Date() >= new Date(prize.registration_start) && 
+              new Date() <= new Date(prize.registration_end);
+            
+            return (
+              <CarouselItem key={prize.id} className="md:basis-1/2 lg:basis-1/3">
+                <Card className="p-4">
+                  {prize.image_url && (
+                    <img
+                      src={prize.image_url}
+                      alt={prize.name}
+                      className="w-full h-32 object-cover rounded-md mb-4"
+                    />
+                  )}
+                  <div className="space-y-2">
+                    <h3 className="font-semibold">{prize.name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {prize.description}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">
+                        {prize.points_required} points required
+                      </Badge>
+                      {prize.deadline && (
+                        <Badge variant="outline">
+                          Competition ends {format(new Date(prize.deadline), "MMM d, yyyy")}
+                        </Badge>
+                      )}
+                    </div>
+                    {prize.registration_start && prize.registration_end && (
+                      <div className="text-sm text-muted-foreground mt-2">
+                        <p>Registration period:</p>
+                        <p>
+                          {format(new Date(prize.registration_start), "MMM d, yyyy")} -{" "}
+                          {format(new Date(prize.registration_end), "MMM d, yyyy")}
+                        </p>
+                      </div>
+                    )}
+                    {registration ? (
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="secondary">Enrolled</Badge>
+                          <p className="text-sm text-muted-foreground">
+                            Competition Points: {registration.points}
+                          </p>
+                        </div>
+                        <div className="w-full bg-secondary h-2 rounded-full mt-1">
+                          <div
+                            className="bg-primary h-2 rounded-full transition-all"
+                            style={{
+                              width: `${Math.min(
+                                (registration.points / prize.points_required) * 100,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : registrationOpen ? (
+                      <Button
+                        className="w-full mt-4"
+                        onClick={() => handleRegister(prize.id)}
+                        disabled={registering}
+                      >
+                        Register to Compete
+                      </Button>
+                    ) : (
+                      <Badge variant="secondary" className="w-full mt-4">
+                        Registration {isPast(new Date(prize.registration_end || '')) ? 'Closed' : 'Not Started'}
                       </Badge>
                     )}
                   </div>
-                  {prize.registration_start && prize.registration_end && (
-                    <div className="text-sm text-muted-foreground mt-2">
-                      <p>Registration period:</p>
-                      <p>
-                        {format(new Date(prize.registration_start), "MMM d, yyyy")} -{" "}
-                        {format(new Date(prize.registration_end), "MMM d, yyyy")}
-                      </p>
-                    </div>
-                  )}
-                  {registration ? (
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="secondary">Enrolled</Badge>
-                        <p className="text-sm text-muted-foreground">
-                          Competition Points: {registration.points}
-                        </p>
-                      </div>
-                      <div className="w-full bg-secondary h-2 rounded-full mt-1">
-                        <div
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{
-                            width: `${Math.min(
-                              (registration.points / prize.points_required) * 100,
-                              100
-                            )}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ) : registrationOpen ? (
-                    <Button
-                      className="w-full mt-4"
-                      onClick={() => handleRegister(prize.id)}
-                      disabled={registering}
-                    >
-                      Register to Compete
-                    </Button>
-                  ) : (
-                    <Badge variant="secondary" className="w-full mt-4">
-                      Registration {isPast(new Date(prize.registration_end || '')) ? 'Closed' : 'Not Started'}
-                    </Badge>
-                  )}
-                </div>
-              </Card>
-            </CarouselItem>
-          );
-        })}
-      </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
-    </Carousel>
+                </Card>
+              </CarouselItem>
+            );
+          })}
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+      </Carousel>
+    </div>
+  );
+
+  if (!prizes?.length) return null;
+
+  return (
+    <div>
+      {categorizedPrizes.active.length > 0 && renderPrizeSection("Active Prizes", categorizedPrizes.active)}
+      {categorizedPrizes.upcoming.length > 0 && renderPrizeSection("Upcoming Prizes", categorizedPrizes.upcoming)}
+    </div>
   );
 };
 
