@@ -26,9 +26,10 @@ type Prize = {
 type PrizeLeaderboardProps = {
   prize: Prize;
   entries: PrizeLeaderboardEntry[];
+  isRegistered: boolean;
 };
 
-export function PrizeLeaderboard({ prize }: PrizeLeaderboardProps) {
+export function PrizeLeaderboard({ prize, isRegistered }: PrizeLeaderboardProps) {
   const isCompetitionEnded = prize.deadline && new Date(prize.deadline) < new Date();
 
   const { data: entries = [], isLoading } = useQuery({
@@ -36,7 +37,6 @@ export function PrizeLeaderboard({ prize }: PrizeLeaderboardProps) {
     queryFn: async () => {
       console.log("Fetching leaderboard entries for prize:", prize.id);
       
-      // Using the leaderboard_view which already has the correct joins
       const { data: registrations, error } = await supabase
         .from('leaderboard_view')
         .select(`
@@ -52,7 +52,6 @@ export function PrizeLeaderboard({ prize }: PrizeLeaderboardProps) {
         throw error;
       }
 
-      // Transform the data to match the expected type
       const transformedData: PrizeLeaderboardEntry[] = registrations.map(reg => ({
         points: reg.points || 0,
         user_id: reg.user_id || '',
@@ -64,8 +63,21 @@ export function PrizeLeaderboard({ prize }: PrizeLeaderboardProps) {
       console.log("Fetched leaderboard entries:", transformedData);
       return transformedData;
     },
-    enabled: !!prize.id,
+    enabled: !!prize.id && isRegistered,
   });
+
+  if (!isRegistered) {
+    return (
+      <Card className="p-4 bg-yellow-50 border-yellow-200">
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="bg-yellow-200">Not Registered</Badge>
+          <span className="text-sm text-yellow-800">
+            You need to register for this prize to view the leaderboard.
+          </span>
+        </div>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return <div>Loading leaderboard...</div>;

@@ -25,6 +25,7 @@ type Prize = {
 
 const Leaderboard = () => {
   const [prizes, setPrizes] = useState<Prize[]>([]);
+  const [registeredPrizes, setRegisteredPrizes] = useState<string[]>([]);
   const [leaderboards, setLeaderboards] = useState<Record<string, PrizeLeaderboardEntry[]>>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -45,40 +46,29 @@ const Leaderboard = () => {
         if (prizesData && prizesData.length > 0) {
           console.log("Prizes fetched successfully:", prizesData);
           setPrizes(prizesData);
-          setActiveTab(prizesData[0].id);
           
-          const leaderboardsData: Record<string, PrizeLeaderboardEntry[]> = {};
-          
-          for (const prize of prizesData) {
-            console.log(`Fetching leaderboard data for prize ${prize.id}...`);
-            const { data: leaderboardData, error: leaderboardError } = await supabase
-              .from('leaderboard_view')
-              .select(`
-                points,
-                user_id,
-                email
-              `)
-              .eq('prize_id', prize.id)
-              .order('points', { ascending: false });
+          // Fetch user's registrations
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: registrations, error: regError } = await supabase
+              .from('prize_registrations')
+              .select('prize_id')
+              .eq('user_id', user.id);
 
-            if (leaderboardError) {
-              console.error("Error fetching leaderboard:", leaderboardError);
-              continue;
-            }
-
-            if (leaderboardData) {
-              console.log(`Leaderboard data fetched for prize ${prize.id}:`, leaderboardData);
-              leaderboardsData[prize.id] = leaderboardData.map(entry => ({
-                points: entry.points || 0,
-                user_id: entry.user_id || '',
-                profiles: {
-                  email: entry.email
-                }
-              }));
+            if (regError) throw regError;
+            
+            console.log("Fetched registrations:", registrations);
+            const registeredIds = registrations?.map(reg => reg.prize_id) || [];
+            setRegisteredPrizes(registeredIds);
+            
+            // Set active tab to first registered prize if available
+            if (registeredIds.length > 0) {
+              const firstRegisteredPrize = prizesData.find(p => registeredIds.includes(p.id));
+              if (firstRegisteredPrize) {
+                setActiveTab(firstRegisteredPrize.id);
+              }
             }
           }
-          
-          setLeaderboards(leaderboardsData);
         }
       } catch (error) {
         console.error("Error fetching leaderboard data:", error);
@@ -119,6 +109,8 @@ const Leaderboard = () => {
     );
   }
 
+  const registeredPrizesData = prizes.filter(prize => registeredPrizes.includes(prize.id));
+
   return (
     <div className="container py-10">
       <Card>
@@ -130,28 +122,39 @@ const Leaderboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <Select value={activeTab} onValueChange={setActiveTab}>
-              <SelectTrigger className="w-full md:w-[300px]">
-                <SelectValue placeholder="Select a prize competition" />
-              </SelectTrigger>
-              <SelectContent>
+            {registeredPrizesData.length > 0 ? (
+              <>
+                <Select value={activeTab} onValueChange={setActiveTab}>
+                  <SelectTrigger className="w-full md:w-[300px]">
+                    <SelectValue placeholder="Select a prize competition" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {registeredPrizesData.map((prize) => (
+                      <SelectItem key={prize.id} value={prize.id}>
+                        {prize.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
                 {prizes.map((prize) => (
-                  <SelectItem key={prize.id} value={prize.id}>
-                    {prize.name}
-                  </SelectItem>
+                  prize.id === activeTab && (
+                    <PrizeLeaderboard
+                      key={prize.id}
+                      prize={prize}
+                      entries={leaderboards[prize.id] || []}
+                      isRegistered={registeredPrizes.includes(prize.id)}
+                    />
+                  )
                 ))}
-              </SelectContent>
-            </Select>
-            
-            {prizes.map((prize) => (
-              prize.id === activeTab && (
-                <PrizeLeaderboard
-                  key={prize.id}
-                  prize={prize}
-                  entries={leaderboards[prize.id] || []}
-                />
-              )
-            ))}
+              </>
+            ) : (
+              <Card className="p-4 bg-yellow-50 border-yellow-200">
+                <p className="text-center text-yellow-800">
+                  You haven't registered for any prize competitions yet.
+                </p>
+              </Card>
+            )}
           </div>
         </CardContent>
       </Card>

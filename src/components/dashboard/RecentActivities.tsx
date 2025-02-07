@@ -56,12 +56,12 @@ const RecentActivities = () => {
               className="h-20 bg-gray-100 rounded-lg animate-pulse"
             />
           ))
-        ) : submissions?.length === 0 ? (
+        ) : !submissions || submissions.length === 0 ? (
           <Card className="p-4">
-            <p className="text-center text-gray-500">No recent activities</p>
+            <p className="text-center text-gray-500">Not active yet!</p>
           </Card>
         ) : (
-          submissions?.map((submission) => {
+          submissions.map((submission) => {
             const Icon = getActivityIcon(submission.activities?.type || "");
             return (
               <Card
