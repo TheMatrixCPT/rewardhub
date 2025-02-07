@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,33 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
         break;
     }
     
+    // Validate dates
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    
+    if (dateField < now) {
+      toast.error("Cannot select a date before today");
+      return;
+    }
+
+    // Check registration end date is after start date
+    if (type === 'registration_end' && newPrize.registration_start) {
+      const startDate = new Date(newPrize.registration_start);
+      if (dateField <= startDate) {
+        toast.error("Registration end date must be after registration start date");
+        return;
+      }
+    }
+
+    // Check deadline is after registration end date
+    if (type === 'deadline' && newPrize.registration_end) {
+      const endDate = new Date(newPrize.registration_end);
+      if (dateField <= endDate) {
+        toast.error("Competition end date must be after registration end date");
+        return;
+      }
+    }
+
     setNewPrize({ ...newPrize, [type]: dateField.toISOString() });
   };
 
@@ -101,10 +129,17 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     const regEnd = new Date(newPrize.registration_end);
     const deadline = new Date(newPrize.deadline);
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
 
     // Check if dates are valid
     if (isNaN(regStart.getTime()) || isNaN(regEnd.getTime()) || isNaN(deadline.getTime())) {
       toast.error("Please enter valid dates");
+      return false;
+    }
+
+    // Check if all dates are in the future
+    if (regStart < now) {
+      toast.error("Registration start date must be in the future");
       return false;
     }
 
@@ -117,12 +152,6 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     // Check if registration end is before competition end
     if (regEnd >= deadline) {
       toast.error("Registration end date must be before competition end date");
-      return false;
-    }
-
-    // Check if all dates are in the future
-    if (regStart < now) {
-      toast.error("Registration start date must be in the future");
       return false;
     }
 
@@ -193,7 +222,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
             value={dateParts.year.toString()}
             onValueChange={(value) => handleDateChange(fieldName, 'year', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-24">
               <SelectValue placeholder="Year" />
             </SelectTrigger>
             <SelectContent>
@@ -209,7 +238,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
             value={dateParts.month.toString()}
             onValueChange={(value) => handleDateChange(fieldName, 'month', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-24">
               <SelectValue placeholder="Month" />
             </SelectTrigger>
             <SelectContent>
@@ -225,7 +254,7 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
             value={dateParts.day.toString()}
             onValueChange={(value) => handleDateChange(fieldName, 'day', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-24">
               <SelectValue placeholder="Day" />
             </SelectTrigger>
             <SelectContent>
