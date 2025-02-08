@@ -1,3 +1,4 @@
+
 import { ArrowRight, Award, Users, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -28,23 +29,29 @@ const Index = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-fade-in">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-              Reward Your
-              <span className="text-primary"> Professional Growth</span>
+              Welcome to{" "}
+              <span className="text-primary">RewardHub</span>
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
-              Track your achievements, earn points, and get recognized for your
-              professional development journey.
+              Track your progress, earn rewards, and compete with others in a
+              gamified learning experience.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
-                to="/dashboard"
+                to="/login"
                 className="group rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-hover transition-all duration-200 flex items-center gap-2"
               >
-                Get Started
+                Sign In
                 <ArrowRight
                   size={16}
                   className="group-hover:translate-x-1 transition-transform duration-200"
                 />
+              </Link>
+              <Link
+                to="/register"
+                className="rounded-full px-6 py-3 text-sm font-semibold text-gray-600 border border-gray-300 hover:bg-gray-50 transition-all duration-200"
+              >
+                Register
               </Link>
             </div>
           </div>

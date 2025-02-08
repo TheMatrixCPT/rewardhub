@@ -1,8 +1,10 @@
+
 import { Routes, Route } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminRoute from "@/components/auth/AdminRoute";
 import Navbar from "@/components/layout/Navbar";
+import Index from "@/pages/Index";
 import Home from "@/pages/Home";
 import Profile from "@/pages/Profile";
 import Activities from "@/pages/Activities";
@@ -44,12 +46,13 @@ const AppRoutes = () => {
       <Navbar />
       <Routes>
         {/* Public routes */}
+        <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* Protected routes */}
         <Route
-          path="/"
+          path="/home"
           element={
             <ProtectedRoute>
               <Home />
