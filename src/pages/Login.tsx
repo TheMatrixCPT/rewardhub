@@ -108,14 +108,12 @@ const Login = () => {
           localization={{
             variables: {
               sign_up: {
-                link_text: "Don't have an account? Sign up here",
                 email_label: "Email address",
                 password_label: "Password",
               }
             }
           }}
           view="sign_in"
-          onSignUp={() => navigate('/register')}
         />
       </div>
     </div>
