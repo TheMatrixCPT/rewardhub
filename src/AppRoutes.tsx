@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminRoute from "@/components/auth/AdminRoute";
 import Navbar from "@/components/layout/Navbar";
+import ChatWindow from "@/components/chat/ChatWindow";
 import Index from "@/pages/Index";
 import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
@@ -106,9 +107,9 @@ const AppRoutes = () => {
         {/* 404 route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <ChatWindow />
     </Suspense>
   );
 };
 
 export default AppRoutes;
-
