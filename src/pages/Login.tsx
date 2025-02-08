@@ -108,9 +108,15 @@ const Login = () => {
           showLinks={false}
           localization={{
             variables: {
-              sign_up: {
+              sign_in: {
                 email_label: "Email address",
                 password_label: "Password",
+                button_label: "Sign in",
+                loading_button_label: "Signing in ...",
+                password_input_placeholder: "Your password",
+                email_input_placeholder: "Your email address",
+                link_text: "Already have an account? Sign in",
+                forgot_password_label: "Forgot your password?"
               }
             }
           }}
