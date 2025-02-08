@@ -104,14 +104,18 @@ const Login = () => {
             },
           }}
           providers={[]}
-          redirectTo={window.location.origin}
+          redirectTo={`${window.location.origin}/register`}
           localization={{
             variables: {
               sign_up: {
-                link_text: "Don't have an account? Sign up here"
+                link_text: "Don't have an account? Sign up here",
+                email_label: "Email address",
+                password_label: "Password",
               }
             }
           }}
+          onlyThirdPartyProviders={false}
+          view="sign_in"
         />
       </div>
     </div>
