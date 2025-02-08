@@ -9,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 const Index = () => {
   const features = [
@@ -43,6 +44,8 @@ const Index = () => {
       icon: Trophy,
     },
   ];
+
+  const plugin = Autoplay({ delay: 4000, stopOnInteraction: false });
 
   return (
     <div className="min-h-screen pt-16">
@@ -91,10 +94,8 @@ const Index = () => {
               containScroll: false,
               watchDrag: false,
               skipSnaps: true,
-              duration: 30, // Slower transition duration (in milliseconds)
-              autoplay: true,
-              delay: 4000, // 4 seconds delay between slides
             }}
+            plugins={[plugin]}
             className="w-full"
           >
             <CarouselContent>
