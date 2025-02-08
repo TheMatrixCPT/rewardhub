@@ -104,7 +104,7 @@ const Login = () => {
             },
           }}
           providers={[]}
-          redirectTo={`${window.location.origin}/register`}
+          redirectTo={window.location.origin}
           localization={{
             variables: {
               sign_up: {
@@ -116,6 +116,10 @@ const Login = () => {
           }}
           onlyThirdPartyProviders={false}
           view="sign_in"
+          magicLink={false}
+          socialButtonStyle="button"
+          socialLayout="horizontal"
+          onSignUp={() => navigate('/register')}
         />
       </div>
     </div>
