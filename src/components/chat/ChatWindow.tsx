@@ -41,7 +41,13 @@ const ChatWindow = () => {
           return
         }
 
-        setMessages(data)
+        // Ensure the role is correctly typed
+        const typedMessages = data.map(msg => ({
+          ...msg,
+          role: msg.role as 'user' | 'assistant'
+        }))
+
+        setMessages(typedMessages)
       }
     }
 
