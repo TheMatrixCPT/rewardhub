@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronLeft } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -141,12 +142,14 @@ const Login = () => {
         />
 
         <div className="mt-4 text-center space-y-2">
-          <button
-            onClick={() => setIsResetMode(true)}
-            className="text-sm text-primary hover:text-primary/90 block w-full"
-          >
-            Forgot password?
-          </button>
+          {!isResetMode && (
+            <button
+              onClick={() => setIsResetMode(true)}
+              className="text-sm text-primary hover:text-primary/90 block w-full"
+            >
+              Forgot password?
+            </button>
+          )}
           <Link to="/register" className="text-sm text-primary hover:text-primary/90 block">
             Don't have an account? Sign up here
           </Link>
