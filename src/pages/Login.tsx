@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronLeft } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -60,10 +60,15 @@ const Login = () => {
         redirectTo: `${window.location.origin}/login`,
       });
       if (error) throw error;
-      toast.success("Password reset instructions have been sent to your email");
+      toast({
+        description: "Password reset instructions have been sent to your email",
+      });
     } catch (error) {
       console.error("Error sending reset password email:", error);
-      toast.error("Failed to send reset password email. Please try again.");
+      toast({
+        variant: "destructive",
+        description: "Failed to send reset password email. Please try again.",
+      });
     }
   };
 
