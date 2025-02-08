@@ -23,6 +23,8 @@ const registerSchema = z.object({
   date_of_birth: z.string().min(1),
   gender: z.string().min(1),
   referral_source: z.string().min(1),
+  job_title: z.string().min(1),
+  company: z.string().min(1),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -45,6 +47,8 @@ const Register = () => {
       date_of_birth: "",
       gender: "",
       referral_source: "",
+      job_title: "",
+      company: "",
     },
   });
 
@@ -72,6 +76,8 @@ const Register = () => {
             date_of_birth: data.date_of_birth,
             gender: data.gender,
             referral_source: data.referral_source,
+            job_title: data.job_title,
+            company: data.company,
           },
         },
       });
@@ -95,15 +101,15 @@ const Register = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="max-w-md w-full space-y-8 bg-card p-8 rounded-xl shadow-sm">
-        <div className="text-center relative">
+        <div className="mb-8">
           <Link 
             to="/" 
-            className="absolute left-0 top-0 flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             Back to Home
           </Link>
-          <h2 className="mt-6 text-3xl font-bold text-foreground">Create an account</h2>
+          <h2 className="text-3xl font-bold text-foreground">Create an account</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Sign up to get started
           </p>
@@ -136,6 +142,34 @@ const Register = () => {
                   <FormLabel>Last Name *</FormLabel>
                   <FormControl>
                     <Input placeholder="Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="job_title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Job Title *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Software Engineer" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="company"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Acme Inc" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
