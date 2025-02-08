@@ -116,12 +116,17 @@ const Login = () => {
                 password_input_placeholder: "Your password",
                 email_input_placeholder: "Your email address",
                 link_text: "Already have an account? Sign in",
-                forgot_password_label: "Forgot your password?"
               }
             }
           }}
           view="sign_in"
         />
+
+        <div className="mt-4 text-center">
+          <Link to="/register" className="text-sm text-primary hover:text-primary/90">
+            Don't have an account? Sign up here
+          </Link>
+        </div>
       </div>
     </div>
   );
