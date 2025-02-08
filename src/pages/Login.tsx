@@ -51,21 +51,18 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="max-w-md w-full space-y-8 bg-card p-8 rounded-xl shadow-sm">
-        <div className="text-center relative">
+        <div className="mb-8">
           <Link 
             to="/" 
-            className="absolute left-0 top-0 flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             Back to Home
           </Link>
-          <h2 className="mt-6 text-3xl font-bold text-foreground">Welcome back</h2>
+          <h2 className="text-3xl font-bold text-foreground">Welcome back</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Sign in to your account to continue
           </p>
-          <Link to="/register" className="mt-2 text-sm text-primary hover:text-primary/90 block">
-            Don't have an account? Sign up here
-          </Link>
         </div>
 
         {errorMessage && (
@@ -108,6 +105,13 @@ const Login = () => {
           }}
           providers={[]}
           redirectTo={window.location.origin}
+          localization={{
+            variables: {
+              sign_up: {
+                link_text: "Don't have an account? Sign up here"
+              }
+            }
+          }}
         />
       </div>
     </div>
