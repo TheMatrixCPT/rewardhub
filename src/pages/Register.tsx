@@ -1,5 +1,6 @@
+
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -8,18 +9,23 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { ChevronLeft } from "lucide-react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-interface RegisterFormData {
-  email: string;
-  password: string;
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  address: string;
-  date_of_birth: string;
-  gender: string;
-  referral_source: string;
-}
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  first_name: z.string().min(1),
+  last_name: z.string().min(1),
+  phone_number: z.string().min(1),
+  address: z.string().min(1),
+  date_of_birth: z.string().min(1),
+  gender: z.string().min(1),
+  referral_source: z.string().min(1),
+});
+
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 const Register = () => {
   console.log("Register component rendered");
@@ -28,6 +34,7 @@ const Register = () => {
   const { user } = useAuth();
 
   const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -85,16 +92,24 @@ const Register = () => {
     }
   };
 
-  // ... keep existing code (form JSX)
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="max-w-md w-full space-y-8 bg-card p-8 rounded-xl shadow-sm">
-        <div className="text-center">
-          <h2 className="mt-2 text-3xl font-bold text-foreground">Create an account</h2>
+        <div className="text-center relative">
+          <Link 
+            to="/" 
+            className="absolute left-0 top-0 flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back to Home
+          </Link>
+          <h2 className="mt-6 text-3xl font-bold text-foreground">Create an account</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Sign up to get started
           </p>
+          <Link to="/login" className="mt-2 text-sm text-primary hover:text-primary/90 block">
+            Already have an account? Sign in here
+          </Link>
         </div>
 
         <Form {...form}>
@@ -104,7 +119,7 @@ const Register = () => {
               name="first_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel>First Name *</FormLabel>
                   <FormControl>
                     <Input placeholder="John" {...field} />
                   </FormControl>
@@ -118,7 +133,7 @@ const Register = () => {
               name="last_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Name</FormLabel>
+                  <FormLabel>Last Name *</FormLabel>
                   <FormControl>
                     <Input placeholder="Doe" {...field} />
                   </FormControl>
@@ -132,7 +147,7 @@ const Register = () => {
               name="phone_number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>Phone Number *</FormLabel>
                   <FormControl>
                     <Input placeholder="+27123456789" {...field} />
                   </FormControl>
@@ -146,7 +161,7 @@ const Register = () => {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address</FormLabel>
+                  <FormLabel>Address *</FormLabel>
                   <FormControl>
                     <Input placeholder="123 Main St, City" {...field} />
                   </FormControl>
@@ -160,7 +175,7 @@ const Register = () => {
               name="date_of_birth"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Date of Birth</FormLabel>
+                  <FormLabel>Date of Birth *</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
@@ -174,7 +189,7 @@ const Register = () => {
               name="gender"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Gender</FormLabel>
+                  <FormLabel>Gender *</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -197,7 +212,7 @@ const Register = () => {
               name="referral_source"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>How did you hear about us?</FormLabel>
+                  <FormLabel>How did you hear about us? *</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -221,7 +236,7 @@ const Register = () => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email *</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="john@example.com" {...field} />
                   </FormControl>
@@ -235,7 +250,7 @@ const Register = () => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Password *</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>

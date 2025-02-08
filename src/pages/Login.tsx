@@ -1,11 +1,12 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { ChevronLeft } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -50,11 +51,21 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="max-w-md w-full space-y-8 bg-card p-8 rounded-xl shadow-sm">
-        <div className="text-center">
-          <h2 className="mt-2 text-3xl font-bold text-foreground">Welcome back</h2>
+        <div className="text-center relative">
+          <Link 
+            to="/" 
+            className="absolute left-0 top-0 flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back to Home
+          </Link>
+          <h2 className="mt-6 text-3xl font-bold text-foreground">Welcome back</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Sign in to your account to continue
           </p>
+          <Link to="/register" className="mt-2 text-sm text-primary hover:text-primary/90 block">
+            Don't have an account? Sign up here
+          </Link>
         </div>
 
         {errorMessage && (
