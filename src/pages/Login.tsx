@@ -12,6 +12,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { session, isInitialized } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isResetMode, setIsResetMode] = useState(false);
 
   useEffect(() => {
     if (session && isInitialized) {
@@ -40,6 +41,10 @@ const Login = () => {
         console.log("Login: Token refreshed successfully");
         navigate("/");
       }
+
+      if (event === "PASSWORD_RECOVERY") {
+        setIsResetMode(true);
+      }
     });
 
     return () => {
@@ -47,6 +52,19 @@ const Login = () => {
       subscription.unsubscribe();
     };
   }, [navigate]);
+
+  const handleForgotPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (error) throw error;
+      toast.success("Password reset instructions have been sent to your email");
+    } catch (error) {
+      console.error("Error sending reset password email:", error);
+      toast.error("Failed to send reset password email. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -119,11 +137,17 @@ const Login = () => {
               }
             }
           }}
-          view="sign_in"
+          view={isResetMode ? "update_password" : "sign_in"}
         />
 
-        <div className="mt-4 text-center">
-          <Link to="/register" className="text-sm text-primary hover:text-primary/90">
+        <div className="mt-4 text-center space-y-2">
+          <button
+            onClick={() => setIsResetMode(true)}
+            className="text-sm text-primary hover:text-primary/90 block w-full"
+          >
+            Forgot password?
+          </button>
+          <Link to="/register" className="text-sm text-primary hover:text-primary/90 block">
             Don't have an account? Sign up here
           </Link>
         </div>
