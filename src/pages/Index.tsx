@@ -87,6 +87,13 @@ const Index = () => {
             opts={{
               align: "start",
               loop: true,
+              dragFree: true,
+              containScroll: false,
+              watchDrag: false,
+              skipSnaps: true,
+              duration: 30, // Slower transition duration (in milliseconds)
+              autoplay: true,
+              delay: 4000, // 4 seconds delay between slides
             }}
             className="w-full"
           >
