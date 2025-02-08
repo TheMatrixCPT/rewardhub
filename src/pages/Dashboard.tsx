@@ -1,8 +1,8 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import PrizeBanner from "@/components/prizes/PrizeBanner";
-import StatsGrid from "@/components/dashboard/StatsGrid";
-import RecentActivities from "@/components/dashboard/RecentActivities";
+import { Card } from "@/components/ui/card";
+import { Trophy, Activity, Medal } from "lucide-react";
 
 const Dashboard = () => {
   // Fetch total points and activities count
@@ -66,25 +66,42 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="min-h-screen pt-4 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-2 text-gray-600">
-          Track your progress and recent activities
-        </p>
+    <div className="container max-w-7xl mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="p-6 flex items-start space-x-4">
+          <div className="rounded-full p-3 bg-primary/10">
+            <Trophy className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Total Points</p>
+            <h2 className="text-3xl font-bold">{userStats?.totalPoints || 0}</h2>
+          </div>
+        </Card>
+
+        <Card className="p-6 flex items-start space-x-4">
+          <div className="rounded-full p-3 bg-primary/10">
+            <Activity className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Activities</p>
+            <h2 className="text-3xl font-bold">{userStats?.activitiesCount || 0}</h2>
+          </div>
+        </Card>
+
+        <Card className="p-6 flex items-start space-x-4">
+          <div className="rounded-full p-3 bg-primary/10">
+            <Medal className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Rank</p>
+            <h2 className="text-3xl font-bold">#{userRank || "N/A"}</h2>
+          </div>
+        </Card>
       </div>
-
-      <StatsGrid
-        totalPoints={userStats?.totalPoints || 0}
-        activitiesCount={userStats?.activitiesCount || 0}
-        userRank={userRank || "N/A"}
-      />
-
-      <PrizeBanner />
-
-      <RecentActivities />
     </div>
   );
 };
 
 export default Dashboard;
+

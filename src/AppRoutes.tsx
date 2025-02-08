@@ -1,11 +1,11 @@
 
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminRoute from "@/components/auth/AdminRoute";
 import Navbar from "@/components/layout/Navbar";
 import Index from "@/pages/Index";
-import Home from "@/pages/Home";
+import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
 import Activities from "@/pages/Activities";
 import Prizes from "@/pages/Prizes";
@@ -26,7 +26,7 @@ const LoadingSpinner = () => (
 );
 
 const AppRoutes = () => {
-  const { isLoading, isInitialized } = useAuth();
+  const { isLoading, isInitialized, user } = useAuth();
   console.log("AppRoutes rendered, isLoading:", isLoading, "isInitialized:", isInitialized);
 
   // Show loading spinner while auth is initializing
@@ -46,16 +46,19 @@ const AppRoutes = () => {
       <Navbar />
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<Index />} />
+        <Route 
+          path="/" 
+          element={user ? <Navigate to="/dashboard" replace /> : <Index />} 
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* Protected routes */}
         <Route
-          path="/home"
+          path="/dashboard"
           element={
             <ProtectedRoute>
-              <Home />
+              <Dashboard />
             </ProtectedRoute>
           }
         />
@@ -108,3 +111,4 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
+
