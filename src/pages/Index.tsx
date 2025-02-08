@@ -6,18 +6,18 @@ import { Card } from "@/components/ui/card";
 const Index = () => {
   const features = [
     {
-      title: "Track Your Progress",
-      description: "Monitor your achievements and growth through our point system",
+      title: "Motivates Self-Education",
+      description: "Empowers users to take control of their learning journey through engaging rewards and incentives",
       icon: Award,
     },
     {
-      title: "Connect & Network",
-      description: "Engage with peers and build valuable professional relationships",
+      title: "Skill Development",
+      description: "Provides structured pathways and opportunities for continuous professional growth",
       icon: Users,
     },
     {
-      title: "Earn Rewards",
-      description: "Get recognized for your accomplishments with badges and prizes",
+      title: "Achievement Recognition",
+      description: "Celebrates your accomplishments with meaningful rewards and community acknowledgment",
       icon: Trophy,
     },
   ];
