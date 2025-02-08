@@ -1,11 +1,12 @@
-import { Home, Trophy, Activity, User, Gift } from "lucide-react";
+
+import { LayoutDashboard, Trophy, Activity, User, Gift } from "lucide-react";
 import type { NavigationItem } from "@/components/navigation/types";
 
 export const navigationItems: NavigationItem[] = [
   {
-    name: "Home",
-    href: "/",
-    icon: Home,
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
   },
   {
     name: "Activities",
