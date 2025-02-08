@@ -114,11 +114,7 @@ const Login = () => {
               }
             }
           }}
-          onlyThirdPartyProviders={false}
           view="sign_in"
-          magicLink={false}
-          socialButtonStyle="button"
-          socialLayout="horizontal"
           onSignUp={() => navigate('/register')}
         />
       </div>
