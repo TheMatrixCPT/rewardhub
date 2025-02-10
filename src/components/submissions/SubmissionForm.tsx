@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
@@ -20,10 +21,11 @@ const formSchema = z.object({
   companyTag: z.string().optional(),
   mentorTag: z.string().optional(),
 }).refine((data) => {
+  // LinkedIn URL is not required if proof URL is provided
   return data.linkedinUrl || data.proofUrl;
 }, {
   message: "Please provide either a LinkedIn URL or a proof URL",
-  path: ["proofUrl"],
+  path: ["linkedinUrl"],
 });
 
 interface SubmissionFormProps {
@@ -42,7 +44,7 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
     return deadline > new Date();
   });
 
-  // Check if there are any available prizes
+  // Check if there are any available prizes and if a prize is selected
   const hasAvailablePrizes = activePrizes.length > 0;
 
   return (
@@ -64,7 +66,7 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
               />
             </FormControl>
             <FormDescription>
-              Link to your LinkedIn post if applicable
+              Link to your LinkedIn post (required if no proof URL provided)
             </FormDescription>
             <FormMessage className="text-red-500" />
           </FormItem>
@@ -76,7 +78,7 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
         name="proofUrl"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Proof URL</FormLabel>
+            <FormLabel>Proof URL (Optional)</FormLabel>
             <FormControl>
               <Input 
                 placeholder="https://..." 
@@ -85,7 +87,7 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
               />
             </FormControl>
             <FormDescription>
-              Link to any proof of completion (required if no LinkedIn URL provided)
+              Link to any proof of completion (optional if LinkedIn URL provided)
             </FormDescription>
             <FormMessage className="text-red-500" />
           </FormItem>

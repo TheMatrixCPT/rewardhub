@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -28,7 +29,7 @@ const formSchema = z.object({
   return data.linkedinUrl || data.proofUrl;
 }, {
   message: "Please provide either a LinkedIn URL or a proof URL",
-  path: ["proofUrl"],
+  path: ["linkedinUrl"],
 });
 
 type FormData = z.infer<typeof formSchema>;
