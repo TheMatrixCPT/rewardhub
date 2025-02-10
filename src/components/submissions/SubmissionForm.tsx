@@ -17,8 +17,7 @@ const formSchema = z.object({
     required_error: "Please select a prize",
   }),
   linkedinUrl: z.string().url("Please enter a valid LinkedIn URL"),
-  proofUrl: z.string().optional().transform(val => val === "" ? undefined : val)
-    .pipe(z.string().url("Please enter a valid URL").optional()),
+  proofUrl: z.string().optional(),
   companyTag: z.string().optional(),
   mentorTag: z.string().optional(),
 });
@@ -80,13 +79,13 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
               <Input 
                 placeholder="https://..." 
                 {...field} 
-                className="focus:ring-2 focus:ring-primary focus:border-primary invalid:border-red-500 invalid:ring-red-500"
+                className="focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </FormControl>
             <FormDescription>
               Link to any additional proof of completion (optional)
             </FormDescription>
-            <FormMessage className="text-red-500" />
+            <FormMessage />
           </FormItem>
         )}
       />
