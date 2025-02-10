@@ -121,7 +121,7 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
                 {...field} 
                 className="focus:ring-2 focus:ring-primary focus:border-primary"
               />
-            </Control>
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
