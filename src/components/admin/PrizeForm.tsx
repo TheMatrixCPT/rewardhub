@@ -56,6 +56,16 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
       return;
     }
 
+    // Check if registration start date is the same as today
+    if (type === 'registration_start') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (dateField.getTime() === today.getTime()) {
+        toast.error("Registration start date cannot be today's date");
+        return;
+      }
+    }
+
     // Check registration end date is after start date
     if (type === 'registration_end' && newPrize.registration_start) {
       const startDate = new Date(newPrize.registration_start);
@@ -146,16 +156,26 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
     }
 
     // Validate dates if they exist
-    if (newPrize.registration_start && newPrize.registration_end && newPrize.deadline) {
+    if (newPrize.registration_start) {
       const regStart = new Date(newPrize.registration_start);
-      const regEnd = new Date(newPrize.registration_end);
-      const deadline = new Date(newPrize.deadline);
       const now = new Date();
       now.setHours(0, 0, 0, 0);
 
       if (regStart < now) {
         errors.push("Registration start date must be in the future");
       }
+      
+      // Check if registration start date is the same as today
+      if (regStart.getTime() === now.getTime()) {
+        errors.push("Registration start date cannot be today's date");
+      }
+    }
+
+    if (newPrize.registration_start && newPrize.registration_end && newPrize.deadline) {
+      const regStart = new Date(newPrize.registration_start);
+      const regEnd = new Date(newPrize.registration_end);
+      const deadline = new Date(newPrize.deadline);
+      
       if (regStart >= regEnd) {
         errors.push("Registration end date must be after registration start date");
       }
@@ -291,9 +311,9 @@ const PrizeForm = ({ onPrizeAdded }: PrizeFormProps) => {
       <p className="text-muted-foreground mb-6">Create a new prize for users to compete for</p>
 
       {validationErrors.length > 0 && (
-        <Alert variant="destructive" className="mb-6">
+        <Alert variant="destructive" className="mb-6 border-red-500 bg-red-50">
           <AlertDescription>
-            <ul className="list-disc pl-4">
+            <ul className="list-disc pl-4 text-red-600">
               {validationErrors.map((error, index) => (
                 <li key={index}>{error}</li>
               ))}
