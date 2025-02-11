@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Table } from "@/components/ui/table";
 import { format } from "date-fns";
+import { ExternalLink } from "lucide-react";
 import StatusSelect from "./submissions/StatusSelect";
 import RejectionDialog from "./submissions/RejectionDialog";
 import type { Submission, SubmissionStatus } from "@/types/admin";
@@ -99,6 +101,7 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
             <tr>
               <th>Activity</th>
               <th>User</th>
+              <th>LinkedIn Post</th>
               <th>Status</th>
               <th>Created At</th>
               <th>Actions</th>
@@ -107,17 +110,31 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="text-center">Loading...</td>
+                <td colSpan={6} className="text-center">Loading...</td>
               </tr>
             ) : filteredSubmissions.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center">No submissions found</td>
+                <td colSpan={6} className="text-center">No submissions found</td>
               </tr>
             ) : (
               filteredSubmissions.map((submission) => (
                 <tr key={submission.id}>
                   <td>{submission.activities?.name}</td>
                   <td>{submission.user_id}</td>
+                  <td>
+                    {submission.linkedin_url ? (
+                      <a 
+                        href={submission.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                      >
+                        View Post <ExternalLink className="h-4 w-4" />
+                      </a>
+                    ) : (
+                      <span className="text-gray-400">No URL provided</span>
+                    )}
+                  </td>
                   <td className={getStatusColor(submission.status)}>
                     {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
                   </td>
