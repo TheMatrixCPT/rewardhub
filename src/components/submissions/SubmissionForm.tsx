@@ -16,7 +16,7 @@ const formSchema = z.object({
   prizeId: z.string({
     required_error: "Please select a prize",
   }),
-  linkedinUrl: z.string().url("Please enter a valid LinkedIn URL"),
+  linkedinUrl: z.string().url("Please enter a valid URL"),
   proofUrl: z.string().optional(),
   companyTag: z.string().optional(),
   mentorTag: z.string().optional(),
@@ -74,19 +74,19 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
         name="proofUrl"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Proof URL (Optional)</FormLabel>
+            <FormLabel>Proof URL</FormLabel>
             <FormControl>
               <Input 
                 placeholder="https://..." 
                 {...field} 
                 value={field.value || ''}
-                className="focus:ring-2 focus:ring-primary focus:border-primary"
+                className="focus:ring-2 focus:ring-primary focus:border-primary invalid:border-red-500 invalid:ring-red-500"
               />
             </FormControl>
             <FormDescription>
-              Link to any additional proof of completion (optional)
+              Link to any additional proof of completion
             </FormDescription>
-            <FormMessage />
+            <FormMessage className="text-red-500" />
           </FormItem>
         )}
       />
