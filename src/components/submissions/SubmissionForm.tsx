@@ -16,10 +16,16 @@ const formSchema = z.object({
   prizeId: z.string({
     required_error: "Please select a prize",
   }),
-  linkedinUrl: z.string().url("Please enter a valid LinkedIn URL"),
-  proofUrl: z.string().optional(),
+  linkedinUrl: z.string().url("Please enter a valid LinkedIn URL").optional(),
+  proofUrl: z.string().url("Please enter a valid URL").optional(),
   companyTag: z.string().optional(),
   mentorTag: z.string().optional(),
+}).refine((data) => {
+  // LinkedIn URL is not required if proof URL is provided
+  return data.linkedinUrl || data.proofUrl;
+}, {
+  message: "Please provide either a LinkedIn URL or a proof URL",
+  path: ["linkedinUrl"],
 });
 
 interface SubmissionFormProps {
@@ -40,8 +46,6 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
 
   // Check if there are any available prizes and if a prize is selected
   const hasAvailablePrizes = activePrizes.length > 0;
-  const selectedPrize = control._formValues?.prizeId;
-  const isPrizeSelected = Boolean(selectedPrize);
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -62,7 +66,7 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
               />
             </FormControl>
             <FormDescription>
-              Link to your LinkedIn post (required)
+              Link to your LinkedIn post (required if no proof URL provided)
             </FormDescription>
             <FormMessage className="text-red-500" />
           </FormItem>
@@ -79,13 +83,13 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
               <Input 
                 placeholder="https://..." 
                 {...field} 
-                className="focus:ring-2 focus:ring-primary focus:border-primary"
+                className="focus:ring-2 focus:ring-primary focus:border-primary invalid:border-red-500 invalid:ring-red-500"
               />
             </FormControl>
             <FormDescription>
-              Link to any additional proof of completion (optional)
+              Link to any proof of completion (optional if LinkedIn URL provided)
             </FormDescription>
-            <FormMessage />
+            <FormMessage className="text-red-500" />
           </FormItem>
         )}
       />
@@ -128,10 +132,10 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
 
       <Button 
         type="submit" 
-        disabled={loading || !hasAvailablePrizes || !isPrizeSelected} 
-        className={`w-full ${!hasAvailablePrizes || !isPrizeSelected ? 'bg-gray-400' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+        disabled={loading || !hasAvailablePrizes} 
+        className={`w-full ${!hasAvailablePrizes ? 'bg-gray-400' : 'bg-emerald-500 hover:bg-emerald-600'}`}
       >
-        {loading ? "Submitting..." : !hasAvailablePrizes ? "No Prizes Available" : !isPrizeSelected ? "Select a Prize" : "Submit Activity"}
+        {loading ? "Submitting..." : hasAvailablePrizes ? "Submit Activity" : "No Prizes Available"}
       </Button>
     </form>
   );
