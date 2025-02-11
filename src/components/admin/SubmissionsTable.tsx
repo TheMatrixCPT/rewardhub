@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,6 +34,10 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
   const [rejectionReason, setRejectionReason] = useState("");
   const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>(initialSubmissions);
   const [duplicateSubmissions, setDuplicateSubmissions] = useState<Record<string, DuplicateInfo[]>>({});
+
+  useEffect(() => {
+    setFilteredSubmissions(initialSubmissions);
+  }, [initialSubmissions]);
 
   useEffect(() => {
     checkForDuplicates();

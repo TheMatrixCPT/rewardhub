@@ -28,7 +28,7 @@ const SubmissionManagement = () => {
             name,
             points
           ),
-          profiles (
+          profiles!submissions_user_id_fkey (
             first_name,
             last_name,
             email
@@ -55,7 +55,7 @@ const SubmissionManagement = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Submission[];
+      return (data || []) as Submission[];
     },
   });
 
@@ -85,7 +85,7 @@ const SubmissionManagement = () => {
           </div>
         </div>
       </div>
-      <SubmissionsTable submissions={submissions} />
+      <SubmissionsTable submissions={submissions || []} />
     </Card>
   );
 };
