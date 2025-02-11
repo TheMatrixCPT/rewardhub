@@ -1,3 +1,4 @@
+
 export interface DailyStats {
   pending_reviews: number;
   approved_today: number;
@@ -23,5 +24,6 @@ export interface Submission {
   company_tag: string | null;
   mentor_tag: string | null;
   admin_comment?: string | null;
+  post_content?: string | null;
   activities?: Activity;
 }
