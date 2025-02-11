@@ -16,16 +16,10 @@ const formSchema = z.object({
   prizeId: z.string({
     required_error: "Please select a prize",
   }),
-  linkedinUrl: z.string().url("Please enter a valid LinkedIn URL").optional(),
-  proofUrl: z.string().url("Please enter a valid URL").optional(),
+  linkedinUrl: z.string().url("Please enter a valid LinkedIn URL"),
+  proofUrl: z.string().optional(),
   companyTag: z.string().optional(),
   mentorTag: z.string().optional(),
-}).refine((data) => {
-  // LinkedIn URL is not required if proof URL is provided
-  return data.linkedinUrl || data.proofUrl;
-}, {
-  message: "Please provide either a LinkedIn URL or a proof URL",
-  path: ["linkedinUrl"],
 });
 
 interface SubmissionFormProps {
@@ -66,7 +60,7 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
               />
             </FormControl>
             <FormDescription>
-              Link to your LinkedIn post (required if no proof URL provided)
+              Link to your LinkedIn post (required)
             </FormDescription>
             <FormMessage className="text-red-500" />
           </FormItem>
@@ -83,13 +77,14 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
               <Input 
                 placeholder="https://..." 
                 {...field} 
-                className="focus:ring-2 focus:ring-primary focus:border-primary invalid:border-red-500 invalid:ring-red-500"
+                value={field.value || ''}
+                className="focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </FormControl>
             <FormDescription>
-              Link to any proof of completion (optional if LinkedIn URL provided)
+              Link to any additional proof of completion (optional)
             </FormDescription>
-            <FormMessage className="text-red-500" />
+            <FormMessage />
           </FormItem>
         )}
       />
