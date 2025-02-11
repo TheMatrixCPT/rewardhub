@@ -1,6 +1,7 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Control } from "react-hook-form";
 import { PrizeSelect } from "./PrizeSelect";
 import { ActivitySelect } from "./ActivitySelect";
@@ -17,6 +18,7 @@ const formSchema = z.object({
     required_error: "Please select a prize",
   }),
   linkedinUrl: z.string().url("Please enter a valid URL"),
+  postContent: z.string().min(1, "Please paste your LinkedIn post content"),
   proofUrl: z.string().url("Please enter a valid URL").optional(),
   companyTag: z.string().optional(),
   mentorTag: z.string().optional(),
@@ -63,6 +65,27 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
             </FormControl>
             <FormDescription>
               Link to your LinkedIn post (required)
+            </FormDescription>
+            <FormMessage className="text-red-500" />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="postContent"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>LinkedIn Post Content</FormLabel>
+            <FormControl>
+              <Textarea 
+                placeholder="Paste your LinkedIn post content here..." 
+                {...field} 
+                className="focus:ring-2 focus:ring-primary focus:border-primary min-h-[150px]"
+              />
+            </FormControl>
+            <FormDescription>
+              Paste the content of your LinkedIn post (required)
             </FormDescription>
             <FormMessage className="text-red-500" />
           </FormItem>
@@ -137,3 +160,4 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
     </form>
   );
 };
+
