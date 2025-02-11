@@ -1,16 +1,30 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Table } from "@/components/ui/table";
 import { format } from "date-fns";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, AlertTriangle } from "lucide-react";
 import StatusSelect from "./submissions/StatusSelect";
 import RejectionDialog from "./submissions/RejectionDialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Submission, SubmissionStatus } from "@/types/admin";
 
 interface SubmissionsTableProps {
   submissions: Submission[];
+}
+
+interface DuplicateInfo {
+  id: string;
+  similarity: number;
+  created_at: string;
+  user_id: string;
+  status: SubmissionStatus;
 }
 
 const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableProps) => {
@@ -19,10 +33,48 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>(initialSubmissions);
+  const [duplicateSubmissions, setDuplicateSubmissions] = useState<Record<string, DuplicateInfo[]>>({});
+
+  useEffect(() => {
+    checkForDuplicates();
+  }, [initialSubmissions]);
+
+  const checkForDuplicates = async () => {
+    for (const submission of initialSubmissions) {
+      if (submission.post_content) {
+        const { data, error } = await supabase.rpc('find_similar_submissions', {
+          check_content: submission.post_content,
+          similarity_threshold: 0.8
+        });
+
+        if (error) {
+          console.error('Error checking for duplicates:', error);
+          continue;
+        }
+
+        // Filter out the current submission and store others
+        const similarPosts = data.filter(post => post.id !== submission.id);
+        if (similarPosts.length > 0) {
+          setDuplicateSubmissions(prev => ({
+            ...prev,
+            [submission.id]: similarPosts
+          }));
+        }
+      }
+    }
+  };
 
   const handleStatusChange = async (submissionId: string, newStatus: SubmissionStatus) => {
     if (newStatus === 'rejected') {
       setSelectedSubmissionId(submissionId);
+      // Pre-fill rejection reason if duplicates found
+      if (duplicateSubmissions[submissionId]?.length > 0) {
+        const duplicateInfo = duplicateSubmissions[submissionId];
+        const similarity = Math.round(duplicateInfo[0].similarity * 100);
+        setRejectionReason(`Submission rejected due to duplicate content. Similar content found from ${format(new Date(duplicateInfo[0].created_at), "PPP")} with ${similarity}% similarity.`);
+      } else {
+        setRejectionReason("");
+      }
       setIsRejectDialogOpen(true);
       return;
     }
@@ -102,6 +154,7 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
               <th>Activity</th>
               <th>User</th>
               <th>LinkedIn Post</th>
+              <th>Post Content</th>
               <th>Status</th>
               <th>Created At</th>
               <th>Actions</th>
@@ -110,11 +163,11 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="text-center">Loading...</td>
+                <td colSpan={7} className="text-center">Loading...</td>
               </tr>
             ) : filteredSubmissions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center">No submissions found</td>
+                <td colSpan={7} className="text-center">No submissions found</td>
               </tr>
             ) : (
               filteredSubmissions.map((submission) => (
@@ -134,6 +187,34 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
                     ) : (
                       <span className="text-gray-400">No URL provided</span>
                     )}
+                  </td>
+                  <td className="max-w-md">
+                    <div className="flex items-start gap-2">
+                      <div className="truncate">
+                        {submission.post_content || "No content provided"}
+                      </div>
+                      {duplicateSubmissions[submission.id] && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                            </TooltipTrigger>
+                            <TooltipContent className="w-80 p-2">
+                              <div className="text-sm">
+                                <p className="font-semibold mb-1">Potential Duplicate Posts Found:</p>
+                                {duplicateSubmissions[submission.id].map((dup, idx) => (
+                                  <div key={idx} className="mb-1">
+                                    <p>Similarity: {Math.round(dup.similarity * 100)}%</p>
+                                    <p>Date: {format(new Date(dup.created_at), "PPP")}</p>
+                                    <p>Status: {dup.status}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
                   </td>
                   <td className={getStatusColor(submission.status)}>
                     {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}

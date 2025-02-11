@@ -357,6 +357,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      find_similar_submissions: {
+        Args: {
+          check_content: string
+          similarity_threshold?: number
+        }
+        Returns: {
+          id: string
+          post_content: string
+          similarity: number
+          created_at: string
+          user_id: string
+          status: Database["public"]["Enums"]["submission_status"]
+        }[]
+      }
       get_daily_stats: {
         Args: {
           check_date: string
@@ -388,11 +402,57 @@ export type Database = {
           rank: number
         }[]
       }
+      gtrgm_compress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: {
+          "": unknown
+        }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
       is_admin: {
         Args: {
           user_id: string
         }
         Returns: boolean
+      }
+      set_limit: {
+        Args: {
+          "": number
+        }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: {
+          "": string
+        }
+        Returns: string[]
       }
     }
     Enums: {
