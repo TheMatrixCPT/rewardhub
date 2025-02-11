@@ -40,6 +40,8 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
 
   // Check if there are any available prizes and if a prize is selected
   const hasAvailablePrizes = activePrizes.length > 0;
+  const selectedPrize = control._formValues?.prizeId;
+  const isPrizeSelected = Boolean(selectedPrize);
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -127,10 +129,10 @@ export const SubmissionForm = ({ control, activities, prizes, onSubmit, loading 
 
       <Button 
         type="submit" 
-        disabled={loading || !hasAvailablePrizes} 
-        className={`w-full ${!hasAvailablePrizes ? 'bg-gray-400' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+        disabled={loading || !hasAvailablePrizes || !isPrizeSelected} 
+        className={`w-full ${!hasAvailablePrizes || !isPrizeSelected ? 'bg-gray-400' : 'bg-emerald-500 hover:bg-emerald-600'}`}
       >
-        {loading ? "Submitting..." : hasAvailablePrizes ? "Submit Activity" : "No Prizes Available"}
+        {loading ? "Submitting..." : hasAvailablePrizes ? (isPrizeSelected ? "Submit Activity" : "Select a Prize") : "No Prizes Available"}
       </Button>
     </form>
   );
