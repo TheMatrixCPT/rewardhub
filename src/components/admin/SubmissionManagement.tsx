@@ -28,7 +28,7 @@ const SubmissionManagement = () => {
             name,
             points
           ),
-          user:user_id (
+          profiles!submissions_user_id_fkey (
             first_name,
             last_name,
             email
@@ -56,11 +56,7 @@ const SubmissionManagement = () => {
       const { data, error } = await query;
       if (error) throw error;
       
-      // Transform the data to match the Submission type
-      return (data || []).map(item => ({
-        ...item,
-        profiles: item.user // Map the user data to profiles to match our interface
-      })) as Submission[];
+      return (data || []) as Submission[];
     },
   });
 
