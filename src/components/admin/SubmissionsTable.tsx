@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -173,7 +172,20 @@ const SubmissionsTable = ({ submissions: initialSubmissions }: SubmissionsTableP
               filteredSubmissions.map((submission) => (
                 <tr key={submission.id}>
                   <td>{submission.activities?.name}</td>
-                  <td>{submission.user_id}</td>
+                  <td>
+                    {submission.profiles ? (
+                      <div className="flex flex-col">
+                        <span>
+                          {submission.profiles.first_name || ''} {submission.profiles.last_name || ''}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {submission.profiles.email || submission.user_id}
+                        </span>
+                      </div>
+                    ) : (
+                      submission.user_id
+                    )}
+                  </td>
                   <td>
                     {submission.linkedin_url ? (
                       <a 

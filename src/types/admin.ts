@@ -11,6 +11,12 @@ interface Activity {
   points: number;
 }
 
+interface Profile {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+}
+
 export type SubmissionStatus = "pending" | "approved" | "rejected";
 
 export interface Submission {
@@ -26,4 +32,5 @@ export interface Submission {
   admin_comment?: string | null;
   post_content?: string | null;
   activities?: Activity;
+  profiles?: Profile;
 }

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +27,11 @@ const SubmissionManagement = () => {
           activities (
             name,
             points
+          ),
+          profiles (
+            first_name,
+            last_name,
+            email
           )
         `)
         .order('created_at', { ascending: false });
