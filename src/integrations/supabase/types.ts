@@ -269,6 +269,7 @@ export type Database = {
           id: string
           linkedin_url: string | null
           mentor_tag: string | null
+          post_content: string | null
           prize_id: string | null
           proof_url: string | null
           status: Database["public"]["Enums"]["submission_status"] | null
@@ -284,6 +285,7 @@ export type Database = {
           id?: string
           linkedin_url?: string | null
           mentor_tag?: string | null
+          post_content?: string | null
           prize_id?: string | null
           proof_url?: string | null
           status?: Database["public"]["Enums"]["submission_status"] | null
@@ -299,6 +301,7 @@ export type Database = {
           id?: string
           linkedin_url?: string | null
           mentor_tag?: string | null
+          post_content?: string | null
           prize_id?: string | null
           proof_url?: string | null
           status?: Database["public"]["Enums"]["submission_status"] | null
@@ -347,6 +350,13 @@ export type Database = {
       }
     }
     Functions: {
+      check_submission_frequency: {
+        Args: {
+          p_user_id: string
+          p_prize_id: string
+        }
+        Returns: boolean
+      }
       get_daily_stats: {
         Args: {
           check_date: string
