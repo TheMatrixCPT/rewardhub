@@ -38,7 +38,7 @@ const SubmissionManagement = () => {
             points
           ),
           user_id,
-          profiles!submissions_user_id_fkey (
+          profiles (
             email,
             company
           )
