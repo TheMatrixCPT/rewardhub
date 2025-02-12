@@ -23,12 +23,21 @@ const SubmissionManagement = () => {
       let query = supabase
         .from('submissions')
         .select(`
-          *,
+          id,
+          created_at,
+          status,
+          linkedin_url,
+          proof_url,
+          company_tag,
+          mentor_tag,
+          admin_comment,
+          post_content,
           activities (
             name,
             points
           ),
-          profiles (
+          user_id,
+          profiles!inner (
             first_name,
             last_name,
             email
@@ -56,7 +65,27 @@ const SubmissionManagement = () => {
       const { data, error } = await query;
       if (error) throw error;
       
-      return (data || []) as Submission[];
+      // Transform the data to include default values for null fields
+      const transformedData = (data || []).map(submission => ({
+        ...submission,
+        profiles: {
+          first_name: submission.profiles?.first_name || 'No Value',
+          last_name: submission.profiles?.last_name || 'No Value',
+          email: submission.profiles?.email || 'No Value'
+        },
+        activities: {
+          name: submission.activities?.name || 'No Value',
+          points: submission.activities?.points || 0
+        },
+        company_tag: submission.company_tag || 'No Value',
+        mentor_tag: submission.mentor_tag || 'No Value',
+        admin_comment: submission.admin_comment || 'No Value',
+        post_content: submission.post_content || 'No Value',
+        linkedin_url: submission.linkedin_url || 'No Value',
+        proof_url: submission.proof_url || 'No Value'
+      })) as Submission[];
+      
+      return transformedData;
     },
   });
 
