@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Filter } from "lucide-react";
+import { toast } from "sonner";
 import SubmissionsTable from "./SubmissionsTable";
 import type { Submission } from "@/types/admin";
 
@@ -20,72 +21,85 @@ const SubmissionManagement = () => {
   const { data: submissions, isLoading } = useQuery({
     queryKey: ['recentSubmissions', filter],
     queryFn: async () => {
-      let query = supabase
-        .from('submissions')
-        .select(`
-          id,
-          created_at,
-          status,
-          linkedin_url,
-          proof_url,
-          company_tag,
-          mentor_tag,
-          admin_comment,
-          post_content,
-          activity_id,
-          activities (
-            name,
-            points
-          ),
-          user_id,
-          profiles (
-            email,
-            company
-          )
-        `)
-        .order('created_at', { ascending: false });
+      try {
+        console.log("Fetching submissions with filter:", filter);
+        let query = supabase
+          .from('submissions')
+          .select(`
+            id,
+            created_at,
+            status,
+            linkedin_url,
+            proof_url,
+            company_tag,
+            mentor_tag,
+            admin_comment,
+            post_content,
+            activity_id,
+            activities (
+              name,
+              points
+            ),
+            user_id,
+            profiles (
+              email,
+              company
+            )
+          `)
+          .order('created_at', { ascending: false });
 
-      switch (filter) {
-        case 'pending':
-          query = query.eq('status', 'pending');
-          break;
-        case 'approved':
-          query = query.eq('status', 'approved');
-          break;
-        case 'rejected':
-          query = query.eq('status', 'rejected');
-          break;
-        case 'today':
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          query = query.gte('created_at', today.toISOString());
-          break;
+        switch (filter) {
+          case 'pending':
+            query = query.eq('status', 'pending');
+            break;
+          case 'approved':
+            query = query.eq('status', 'approved');
+            break;
+          case 'rejected':
+            query = query.eq('status', 'rejected');
+            break;
+          case 'today':
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            query = query.gte('created_at', today.toISOString());
+            break;
+        }
+
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error("Error fetching submissions:", error);
+          toast.error("Failed to fetch submissions");
+          throw error;
+        }
+
+        console.log("Fetched submissions:", data);
+        
+        // Transform the data to include default values for null fields
+        const transformedData = (data || []).map(submission => ({
+          ...submission,
+          activity_id: submission.activity_id,
+          profiles: {
+            email: submission.profiles?.email || 'No Value',
+            company: submission.profiles?.company || 'No Company',
+          },
+          activities: {
+            name: submission.activities?.name || 'No Value',
+            points: submission.activities?.points || 0
+          },
+          company_tag: submission.company_tag || 'No Value',
+          mentor_tag: submission.mentor_tag || 'No Value',
+          admin_comment: submission.admin_comment || 'No Value',
+          post_content: submission.post_content || 'No Value',
+          linkedin_url: submission.linkedin_url || 'No Value',
+          proof_url: submission.proof_url || 'No Value'
+        })) as Submission[];
+        
+        return transformedData;
+      } catch (error) {
+        console.error("Error in query function:", error);
+        return [];
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      
-      // Transform the data to include default values for null fields
-      const transformedData = (data || []).map(submission => ({
-        ...submission,
-        activity_id: submission.activity_id,
-        profiles: {
-          email: submission.profiles?.email || 'No Value',
-          company: submission.profiles?.company || 'No Company',
-        },
-        activities: {
-          name: submission.activities?.name || 'No Value',
-          points: submission.activities?.points || 0
-        },
-        company_tag: submission.company_tag || 'No Value',
-        mentor_tag: submission.mentor_tag || 'No Value',
-        admin_comment: submission.admin_comment || 'No Value',
-        post_content: submission.post_content || 'No Value',
-        linkedin_url: submission.linkedin_url || 'No Value',
-        proof_url: submission.proof_url || 'No Value'
-      })) as Submission[];
-      
-      return transformedData;
     },
   });
 
