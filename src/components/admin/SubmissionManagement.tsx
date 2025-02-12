@@ -36,12 +36,7 @@ const SubmissionManagement = () => {
             name,
             points
           ),
-          user_id,
-          profiles (
-            first_name,
-            last_name,
-            email
-          )
+          user_id
         `)
         .order('created_at', { ascending: false });
 
@@ -69,9 +64,9 @@ const SubmissionManagement = () => {
       const transformedData = (data || []).map(submission => ({
         ...submission,
         profiles: {
-          first_name: submission.profiles?.first_name || 'No Value',
-          last_name: submission.profiles?.last_name || 'No Value',
-          email: submission.profiles?.email || 'No Value'
+          first_name: 'No Value',
+          last_name: 'No Value',
+          email: 'No Value'
         },
         activities: {
           name: submission.activities?.name || 'No Value',
@@ -121,4 +116,3 @@ const SubmissionManagement = () => {
 };
 
 export default SubmissionManagement;
-
