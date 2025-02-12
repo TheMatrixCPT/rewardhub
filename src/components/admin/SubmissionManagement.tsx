@@ -23,31 +23,20 @@ const SubmissionManagement = () => {
     queryFn: async () => {
       try {
         console.log("Fetching submissions with filter:", filter);
+        
+        // First, fetch submissions with activities
         let query = supabase
           .from('submissions')
           .select(`
-            id,
-            created_at,
-            status,
-            linkedin_url,
-            proof_url,
-            company_tag,
-            mentor_tag,
-            admin_comment,
-            post_content,
-            activity_id,
+            *,
             activities (
               name,
               points
-            ),
-            user_id,
-            profiles (
-              email,
-              company
             )
           `)
           .order('created_at', { ascending: false });
 
+        // Apply filters
         switch (filter) {
           case 'pending':
             query = query.eq('status', 'pending');
@@ -65,27 +54,47 @@ const SubmissionManagement = () => {
             break;
         }
 
-        const { data, error } = await query;
+        const { data: submissionsData, error: submissionsError } = await query;
         
-        if (error) {
-          console.error("Error fetching submissions:", error);
+        if (submissionsError) {
+          console.error("Error fetching submissions:", submissionsError);
           toast.error("Failed to fetch submissions");
-          throw error;
+          throw submissionsError;
         }
 
-        console.log("Fetched submissions:", data);
-        
-        // Transform the data to include default values for null fields
-        const transformedData = (data || []).map(submission => ({
+        // Get unique user IDs from submissions
+        const userIds = [...new Set(submissionsData?.map(s => s.user_id) || [])];
+
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, email, company, first_name, last_name')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error("Error fetching profiles:", profilesError);
+          toast.error("Failed to fetch user profiles");
+          throw profilesError;
+        }
+
+        // Create a map of user profiles for easy lookup
+        const profilesMap = (profilesData || []).reduce((acc, profile) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {} as Record<string, any>);
+
+        // Combine submissions with their corresponding profiles
+        const transformedData = (submissionsData || []).map(submission => ({
           ...submission,
-          activity_id: submission.activity_id,
-          profiles: {
-            email: submission.profiles?.email || 'No Value',
-            company: submission.profiles?.company || 'No Company',
+          profiles: profilesMap[submission.user_id] || {
+            email: 'No Value',
+            company: 'No Company',
+            first_name: null,
+            last_name: null
           },
-          activities: {
-            name: submission.activities?.name || 'No Value',
-            points: submission.activities?.points || 0
+          activities: submission.activities || {
+            name: 'No Value',
+            points: 0
           },
           company_tag: submission.company_tag || 'No Value',
           mentor_tag: submission.mentor_tag || 'No Value',
@@ -94,7 +103,8 @@ const SubmissionManagement = () => {
           linkedin_url: submission.linkedin_url || 'No Value',
           proof_url: submission.proof_url || 'No Value'
         })) as Submission[];
-        
+
+        console.log("Processed submissions data:", transformedData);
         return transformedData;
       } catch (error) {
         console.error("Error in query function:", error);
