@@ -37,7 +37,7 @@ const SubmissionManagement = () => {
             points
           ),
           user_id,
-          profiles!inner (
+          profiles (
             first_name,
             last_name,
             email
@@ -121,3 +121,4 @@ const SubmissionManagement = () => {
 };
 
 export default SubmissionManagement;
+
