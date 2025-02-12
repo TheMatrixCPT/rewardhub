@@ -32,12 +32,13 @@ const SubmissionManagement = () => {
           mentor_tag,
           admin_comment,
           post_content,
+          activity_id,
           activities (
             name,
             points
           ),
           user_id,
-          profiles (
+          profiles!submissions_user_id_fkey (
             email,
             company
           )
@@ -67,8 +68,9 @@ const SubmissionManagement = () => {
       // Transform the data to include default values for null fields
       const transformedData = (data || []).map(submission => ({
         ...submission,
+        activity_id: submission.activity_id,
         profiles: {
-          email: submission.profiles?.email || submission.user_id,
+          email: submission.profiles?.email || 'No Value',
           company: submission.profiles?.company || 'No Company',
         },
         activities: {

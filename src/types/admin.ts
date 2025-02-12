@@ -12,9 +12,8 @@ interface Activity {
 }
 
 interface Profile {
-  first_name: string | null;
-  last_name: string | null;
   email: string | null;
+  company: string | null;
 }
 
 export type SubmissionStatus = "pending" | "approved" | "rejected";
