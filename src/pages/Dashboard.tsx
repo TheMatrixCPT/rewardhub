@@ -1,12 +1,8 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import StatsGrid from "@/components/dashboard/StatsGrid";
-import { useAuth } from "@/hooks/useAuth";
 
 const Dashboard = () => {
-  const { user } = useAuth();
-
   // Fetch current user
   const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
@@ -101,7 +97,7 @@ const Dashboard = () => {
 
   return (
     <div className="container max-w-7xl mx-auto py-8 space-y-8">
-      <div className="flex justify-between items-center border-b pb-4">
+      <div className="border-b pb-4">
         <h1 className="text-3xl font-bold">Dashboard</h1>
       </div>
       

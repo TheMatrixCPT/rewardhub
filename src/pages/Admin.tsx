@@ -1,37 +1,16 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import StatsCards from "@/components/admin/StatsCards";
 import SubmissionManagement from "@/components/admin/SubmissionManagement";
-import PrizeManagement from "@/components/admin/PrizeManagement";
-import { PointsAdjustmentDialog } from "@/components/admin/PointsAdjustmentDialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DailyStats } from "@/types/admin";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string>("");
-  const location = useLocation();
   const navigate = useNavigate();
-  
-  // Set initial active tab based on current path
-  const getInitialTab = () => {
-    if (location.pathname.includes('prizes')) return 'prizes';
-    if (location.pathname.includes('points')) return 'points';
-    return 'submissions';
-  };
-
-  const [activeTab, setActiveTab] = useState(getInitialTab());
-
-  // Update URL when tab changes
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    navigate(`/admin/${value}`);
-  };
 
   useEffect(() => {
     const checkAuthAndAdmin = async () => {
@@ -43,8 +22,6 @@ const Admin = () => {
           navigate("/auth");
           return;
         }
-
-        setCurrentUserId(session.user.id);
 
         console.log("Session found, checking admin status");
         const { data: adminStatus, error: adminError } = await supabase.rpc('is_admin', {
@@ -105,47 +82,18 @@ const Admin = () => {
   return (
     <div className="container py-10">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold">Administration</h1>
+        <h1 className="text-2xl font-bold">Submission Management</h1>
         <p className="text-muted-foreground">
-          Manage platform settings and content
+          Review and manage user submissions
         </p>
       </div>
 
       <StatsCards stats={stats} />
 
-      <div className="mt-8">
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="submissions">Submission Management</TabsTrigger>
-            <TabsTrigger value="points">Points Management</TabsTrigger>
-            <TabsTrigger value="prizes">Prize Management</TabsTrigger>
-          </TabsList>
-          <TabsContent value="submissions" className="mt-6">
-            <SubmissionManagement onPointsClick={() => handleTabChange('points')} />
-          </TabsContent>
-          <TabsContent value="points" className="mt-6">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-xl font-semibold">Points Management</h2>
-                  <p className="text-sm text-muted-foreground">View and analyze points</p>
-                </div>
-                <PointsAdjustmentDialog currentUserId={currentUserId} />
-              </div>
-            </div>
-          </TabsContent>
-          <TabsContent value="prizes" className="mt-6">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-xl font-semibold">Prize Management</h2>
-                  <p className="text-sm text-muted-foreground">Manage prizes and adjust user points</p>
-                </div>
-              </div>
-              <PrizeManagement />
-            </div>
-          </TabsContent>
-        </Tabs>
+      <div className="grid grid-cols-1 gap-8 mt-8">
+        <section>
+          <SubmissionManagement />
+        </section>
       </div>
     </div>
   );

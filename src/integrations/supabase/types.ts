@@ -412,15 +412,6 @@ export type Database = {
       }
     }
     Functions: {
-      adjust_user_points: {
-        Args: {
-          admin_user_id: string
-          target_user_id: string
-          point_adjustment: number
-          adjustment_reason: string
-        }
-        Returns: undefined
-      }
       check_submission_frequency: {
         Args: {
           p_user_id: string
