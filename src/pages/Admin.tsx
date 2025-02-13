@@ -8,6 +8,7 @@ import StatsCards from "@/components/admin/StatsCards";
 import SubmissionManagement from "@/components/admin/SubmissionManagement";
 import { PointsAdjustmentDialog } from "@/components/admin/PointsAdjustmentDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import type { DailyStats } from "@/types/admin";
 
 const Admin = () => {
@@ -109,9 +110,14 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="points" className="mt-6">
             <div className="space-y-4">
-              <div>
-                <h2 className="text-xl font-semibold">Points Management</h2>
-                <p className="text-sm text-muted-foreground">Adjust user points manually</p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-semibold">Points Management</h2>
+                  <p className="text-sm text-muted-foreground">Adjust user points manually</p>
+                </div>
+                <Button onClick={() => document.querySelector('[role="dialog"]')?.removeAttribute('hidden')}>
+                  Adjust Points
+                </Button>
               </div>
               <PointsAdjustmentDialog currentUserId={currentUserId} />
             </div>
