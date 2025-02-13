@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import StatsGrid from "@/components/dashboard/StatsGrid";
@@ -119,7 +120,7 @@ const Dashboard = () => {
         .from("announcements")
         .select(`
           *,
-          announcement_reactions(reaction_type, user_id)
+          announcement_reactions(*)
         `)
         .eq('active', true)
         .order("created_at", { ascending: false })
@@ -133,46 +134,108 @@ const Dashboard = () => {
   // Handle reaction
   const reactionMutation = useMutation({
     mutationFn: async ({ announcementId, reactionType }: { announcementId: string; reactionType: 'like' | 'dislike' }) => {
-      if (!currentUser) return;
+      if (!currentUser) throw new Error("Not authenticated");
 
       // First, check if user has an existing reaction
-      const { data: existingReaction } = await supabase
+      const { data: existingReaction, error: fetchError } = await supabase
         .from("announcement_reactions")
         .select("*")
         .eq("announcement_id", announcementId)
         .eq("user_id", currentUser.id)
-        .single();
+        .maybeSingle();
 
-      if (existingReaction) {
-        if (existingReaction.reaction_type === reactionType) {
-          // If clicking the same reaction, remove it
-          const { error } = await supabase
-            .from("announcement_reactions")
-            .delete()
-            .eq("id", existingReaction.id);
-          if (error) throw error;
-          return "removed";
+      if (fetchError) throw fetchError;
+
+      try {
+        if (existingReaction) {
+          if (existingReaction.reaction_type === reactionType) {
+            // If clicking the same reaction, remove it
+            const { error } = await supabase
+              .from("announcement_reactions")
+              .delete()
+              .eq("id", existingReaction.id);
+            if (error) throw error;
+            return "removed";
+          } else {
+            // If changing reaction, update it
+            const { error } = await supabase
+              .from("announcement_reactions")
+              .update({ reaction_type: reactionType })
+              .eq("id", existingReaction.id);
+            if (error) throw error;
+            return "updated";
+          }
         } else {
-          // If changing reaction, update it
+          // If no existing reaction, create new one
           const { error } = await supabase
             .from("announcement_reactions")
-            .update({ reaction_type: reactionType })
-            .eq("id", existingReaction.id);
+            .insert({
+              announcement_id: announcementId,
+              user_id: currentUser.id,
+              reaction_type: reactionType,
+            });
           if (error) throw error;
-          return "updated";
+          return "added";
         }
-      } else {
-        // If no existing reaction, create new one
-        const { error } = await supabase
-          .from("announcement_reactions")
-          .insert({
-            announcement_id: announcementId,
-            user_id: currentUser.id,
-            reaction_type: reactionType,
-          });
-        if (error) throw error;
-        return "added";
+      } catch (error) {
+        console.error("Error handling reaction:", error);
+        throw error;
       }
+    },
+    onMutate: async ({ announcementId, reactionType }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["announcements"] });
+
+      // Snapshot the previous value
+      const previousAnnouncements = queryClient.getQueryData(["announcements"]);
+
+      // Optimistically update the UI
+      queryClient.setQueryData(["announcements"], (old: any[]) => {
+        return old?.map(announcement => {
+          if (announcement.id !== announcementId) return announcement;
+
+          const existingReaction = announcement.announcement_reactions?.find(
+            (r: any) => r.user_id === currentUser?.id
+          );
+
+          let updatedReactions = [...(announcement.announcement_reactions || [])];
+
+          if (existingReaction) {
+            if (existingReaction.reaction_type === reactionType) {
+              // Remove reaction
+              updatedReactions = updatedReactions.filter((r: any) => r.id !== existingReaction.id);
+            } else {
+              // Update reaction
+              updatedReactions = updatedReactions.map((r: any) =>
+                r.id === existingReaction.id ? { ...r, reaction_type: reactionType } : r
+              );
+            }
+          } else {
+            // Add new reaction
+            updatedReactions.push({
+              id: 'temp-id',
+              user_id: currentUser?.id,
+              announcement_id: announcementId,
+              reaction_type: reactionType,
+            });
+          }
+
+          return {
+            ...announcement,
+            announcement_reactions: updatedReactions,
+          };
+        });
+      });
+
+      return { previousAnnouncements };
+    },
+    onError: (error, variables, context) => {
+      console.error("Error handling reaction:", error);
+      // Revert back to the previous state if there's an error
+      if (context?.previousAnnouncements) {
+        queryClient.setQueryData(["announcements"], context.previousAnnouncements);
+      }
+      toast.error("Failed to update reaction");
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["announcements"] });
@@ -183,10 +246,6 @@ const Dashboard = () => {
       } else {
         toast.success("Reaction added");
       }
-    },
-    onError: (error) => {
-      console.error("Error handling reaction:", error);
-      toast.error("Failed to update reaction");
     },
   });
 
