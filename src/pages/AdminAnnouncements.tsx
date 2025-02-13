@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, BarChart2 } from "lucide-react";
 
 const AdminAnnouncements = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,6 +29,7 @@ const AdminAnnouncements = () => {
   const [content, setContent] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [type, setType] = useState("general");
+  const [postedBy, setPostedBy] = useState("Community Team");
   const queryClient = useQueryClient();
 
   const { data: announcements, isLoading } = useQuery({
@@ -38,7 +39,6 @@ const AdminAnnouncements = () => {
         .from("announcements")
         .select(`
           *, 
-          profiles(first_name, last_name),
           announcement_reactions(reaction_type)
         `)
         .order("created_at", { ascending: false });
@@ -62,6 +62,7 @@ const AdminAnnouncements = () => {
         youtube_url: youtubeUrl || null,
         type,
         created_by: userData.user.id,
+        posted_by: postedBy,
       });
 
       if (error) {
@@ -76,6 +77,7 @@ const AdminAnnouncements = () => {
       setContent("");
       setYoutubeUrl("");
       setType("general");
+      setPostedBy("Community Team");
       toast.success("Announcement created successfully");
     },
     onError: (error) => {
@@ -102,8 +104,13 @@ const AdminAnnouncements = () => {
     },
   });
 
-  const getReactionCount = (reactions: any[], type: string) => {
-    return reactions?.filter(r => r.reaction_type === type).length || 0;
+  const getReactionStats = (reactions: any[]) => {
+    const likes = reactions?.filter(r => r.reaction_type === 'like').length || 0;
+    const dislikes = reactions?.filter(r => r.reaction_type === 'dislike').length || 0;
+    const total = reactions?.length || 0;
+    const likePercentage = total > 0 ? Math.round((likes / total) * 100) : 0;
+
+    return { likes, dislikes, total, likePercentage };
   };
 
   if (isLoading) {
@@ -128,6 +135,14 @@ const AdminAnnouncements = () => {
               <DialogTitle>Create New Announcement</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Posted By</label>
+                <Input
+                  value={postedBy}
+                  onChange={(e) => setPostedBy(e.target.value)}
+                  placeholder="e.g., Community Team, Support Team"
+                />
+              </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Type</label>
                 <Select value={type} onValueChange={setType}>
@@ -173,7 +188,7 @@ const AdminAnnouncements = () => {
               <Button
                 className="w-full"
                 onClick={() => createAnnouncement.mutate()}
-                disabled={!title || !content}
+                disabled={!title || !content || !postedBy}
               >
                 Create Announcement
               </Button>
@@ -183,60 +198,69 @@ const AdminAnnouncements = () => {
       </div>
 
       <div className="space-y-4">
-        {announcements?.map((announcement) => (
-          <div
-            key={announcement.id}
-            className="border rounded-lg p-4 space-y-2 bg-card"
-          >
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <h3 className="font-semibold">{announcement.title}</h3>
-                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                  <div className="flex items-center">
-                    <ThumbsUp className="h-4 w-4 mr-1" />
-                    {getReactionCount(announcement.announcement_reactions, 'like')}
+        {announcements?.map((announcement) => {
+          const stats = getReactionStats(announcement.announcement_reactions);
+          
+          return (
+            <div
+              key={announcement.id}
+              className="border rounded-lg p-4 space-y-2 bg-card"
+            >
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <h3 className="font-semibold">{announcement.title}</h3>
+                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center">
+                        <ThumbsUp className="h-4 w-4 mr-1" />
+                        <span className="mr-2">{stats.likes}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <ThumbsDown className="h-4 w-4 mr-1" />
+                        <span>{stats.dislikes}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <BarChart2 className="h-4 w-4 mr-1" />
+                        <span>{stats.likePercentage}% positive</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <ThumbsDown className="h-4 w-4 mr-1" />
-                    {getReactionCount(announcement.announcement_reactions, 'dislike')}
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={announcement.active}
+                      onCheckedChange={(checked) =>
+                        toggleAnnouncementStatus.mutate({
+                          id: announcement.id,
+                          active: checked,
+                        })
+                      }
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {announcement.active ? "Active" : "Disabled"}
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={announcement.active}
-                    onCheckedChange={(checked) =>
-                      toggleAnnouncementStatus.mutate({
-                        id: announcement.id,
-                        active: checked,
-                      })
-                    }
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    {announcement.active ? "Active" : "Disabled"}
-                  </span>
-                </div>
+              <p className="text-sm text-muted-foreground">{announcement.content}</p>
+              {announcement.youtube_url && (
+                <a
+                  href={announcement.youtube_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline"
+                >
+                  Watch Video
+                </a>
+              )}
+              <div className="text-xs text-muted-foreground">
+                Posted by: {announcement.posted_by} on{" "}
+                {new Date(announcement.created_at).toLocaleDateString()}
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">{announcement.content}</p>
-            {announcement.youtube_url && (
-              <a
-                href={announcement.youtube_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline"
-              >
-                Watch Video
-              </a>
-            )}
-            <div className="text-xs text-muted-foreground">
-              Posted by: {announcement.profiles?.first_name}{" "}
-              {announcement.profiles?.last_name} on{" "}
-              {new Date(announcement.created_at).toLocaleDateString()}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

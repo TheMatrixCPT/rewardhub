@@ -88,6 +88,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          posted_by: string | null
           title: string
           type: string | null
           youtube_url: string | null
@@ -98,6 +99,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          posted_by?: string | null
           title: string
           type?: string | null
           youtube_url?: string | null
@@ -108,6 +110,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          posted_by?: string | null
           title?: string
           type?: string | null
           youtube_url?: string | null
