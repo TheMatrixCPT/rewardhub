@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { AuthProvider } from "@/hooks/useAuth";
 import AppRoutes from "./AppRoutes";
-import Footer from "@/components/layout/Footer";
 
 const queryClient = new QueryClient();
 
@@ -18,7 +17,6 @@ const App = () => {
             <div className="min-h-screen flex flex-col">
               <Toaster position="top-center" />
               <AppRoutes />
-              <Footer />
             </div>
           </AuthProvider>
         </Router>
