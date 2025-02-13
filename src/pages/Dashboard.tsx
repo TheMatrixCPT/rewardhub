@@ -1,12 +1,23 @@
-
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import StatsGrid from "@/components/dashboard/StatsGrid";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp } from "lucide-react";
+import { ThumbsUp, ThumbsDown, X } from "lucide-react";
 import { toast } from "sonner";
+import {
+  ScrollArea,
+  ScrollBar,
+} from "@/components/ui/scroll-area";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const Dashboard = () => {
+  const queryClient = useQueryClient();
+
   // Fetch current user
   const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
@@ -99,7 +110,7 @@ const Dashboard = () => {
     }
   });
 
-  // Fetch announcements
+  // Fetch announcements with reactions
   const { data: announcements } = useQuery({
     queryKey: ["announcements"],
     queryFn: async () => {
@@ -108,10 +119,11 @@ const Dashboard = () => {
         .select(`
           *,
           profiles(first_name, last_name),
-          announcement_reactions(reaction_type)
+          announcement_reactions(reaction_type, user_id)
         `)
+        .eq('active', true)
         .order("created_at", { ascending: false })
-        .limit(5);
+        .limit(10);
 
       if (error) throw error;
       return data;
@@ -119,20 +131,29 @@ const Dashboard = () => {
   });
 
   // Handle reaction
-  const handleReaction = async (announcementId: string) => {
+  const handleReaction = async (announcementId: string, reactionType: 'like' | 'dislike') => {
     try {
       const { error } = await supabase.from("announcement_reactions").upsert({
         announcement_id: announcementId,
         user_id: currentUser?.id,
-        reaction_type: "like",
+        reaction_type: reactionType,
       });
 
       if (error) throw error;
       toast.success("Reaction added!");
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
     } catch (error) {
       console.error("Error adding reaction:", error);
       toast.error("Failed to add reaction");
     }
+  };
+
+  const getUserReaction = (announcementId: string, reactions: any[]) => {
+    return reactions?.find(r => r.user_id === currentUser?.id)?.reaction_type;
+  };
+
+  const getReactionCount = (reactions: any[], type: 'like' | 'dislike') => {
+    return reactions?.filter(r => r.reaction_type === type).length || 0;
   };
 
   return (
@@ -150,45 +171,59 @@ const Dashboard = () => {
 
       {announcements && announcements.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Announcements</h2>
-          <div className="space-y-4">
-            {announcements.map((announcement) => (
-              <div
-                key={announcement.id}
-                className="border rounded-lg p-4 space-y-2 bg-card"
-              >
-                <div className="flex justify-between items-start">
-                  <h3 className="font-semibold">{announcement.title}</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleReaction(announcement.id)}
-                  >
-                    <ThumbsUp className="h-4 w-4 mr-2" />
-                    {announcement.announcement_reactions?.length || 0}
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {announcement.content}
-                </p>
-                {announcement.youtube_url && (
-                  <a
-                    href={announcement.youtube_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Watch Video
-                  </a>
-                )}
-                <div className="text-xs text-muted-foreground">
-                  Posted by: {announcement.profiles?.first_name}{" "}
-                  {announcement.profiles?.last_name} on{" "}
-                  {new Date(announcement.created_at).toLocaleDateString()}
-                </div>
-              </div>
-            ))}
-          </div>
+          <h2 className="text-2xl font-bold mb-6 text-primary">Important Announcements</h2>
+          <ScrollArea className="w-full whitespace-nowrap rounded-xl border">
+            <div className="flex w-max space-x-4 p-4">
+              {announcements.map((announcement) => (
+                <Card key={announcement.id} className="w-[400px] bg-card">
+                  <CardHeader className="space-y-1">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-xl">{announcement.title}</CardTitle>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={getUserReaction(announcement.id, announcement.announcement_reactions) === 'like' ? 'default' : 'ghost'}
+                          size="sm"
+                          onClick={() => handleReaction(announcement.id, 'like')}
+                        >
+                          <ThumbsUp className="h-4 w-4 mr-2" />
+                          {getReactionCount(announcement.announcement_reactions, 'like')}
+                        </Button>
+                        <Button
+                          variant={getUserReaction(announcement.id, announcement.announcement_reactions) === 'dislike' ? 'default' : 'ghost'}
+                          size="sm"
+                          onClick={() => handleReaction(announcement.id, 'dislike')}
+                        >
+                          <ThumbsDown className="h-4 w-4 mr-2" />
+                          {getReactionCount(announcement.announcement_reactions, 'dislike')}
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm text-muted-foreground whitespace-normal">
+                      {announcement.content}
+                    </p>
+                    {announcement.youtube_url && (
+                      <a
+                        href={announcement.youtube_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline block"
+                      >
+                        Watch Video
+                      </a>
+                    )}
+                    <div className="text-xs text-muted-foreground">
+                      Posted by: {announcement.profiles?.first_name}{" "}
+                      {announcement.profiles?.last_name} on{" "}
+                      {new Date(announcement.created_at).toLocaleDateString()}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </div>
       )}
     </div>

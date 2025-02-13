@@ -20,6 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 
 const AdminAnnouncements = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +36,11 @@ const AdminAnnouncements = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
-        .select("*, profiles(first_name, last_name)")
+        .select(`
+          *, 
+          profiles(first_name, last_name),
+          announcement_reactions(reaction_type)
+        `)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -77,6 +83,28 @@ const AdminAnnouncements = () => {
       console.error("Error creating announcement:", error);
     },
   });
+
+  const toggleAnnouncementStatus = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase
+        .from("announcements")
+        .update({ active })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      toast.success("Announcement status updated");
+    },
+    onError: () => {
+      toast.error("Failed to update announcement status");
+    },
+  });
+
+  const getReactionCount = (reactions: any[], type: string) => {
+    return reactions?.filter(r => r.reaction_type === type).length || 0;
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -161,10 +189,35 @@ const AdminAnnouncements = () => {
             className="border rounded-lg p-4 space-y-2 bg-card"
           >
             <div className="flex justify-between items-start">
-              <h3 className="font-semibold">{announcement.title}</h3>
-              <span className="text-xs text-muted-foreground">
-                {new Date(announcement.created_at).toLocaleDateString()}
-              </span>
+              <div className="space-y-1">
+                <h3 className="font-semibold">{announcement.title}</h3>
+                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                  <div className="flex items-center">
+                    <ThumbsUp className="h-4 w-4 mr-1" />
+                    {getReactionCount(announcement.announcement_reactions, 'like')}
+                  </div>
+                  <div className="flex items-center">
+                    <ThumbsDown className="h-4 w-4 mr-1" />
+                    {getReactionCount(announcement.announcement_reactions, 'dislike')}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={announcement.active}
+                    onCheckedChange={(checked) =>
+                      toggleAnnouncementStatus.mutate({
+                        id: announcement.id,
+                        active: checked,
+                      })
+                    }
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {announcement.active ? "Active" : "Disabled"}
+                  </span>
+                </div>
+              </div>
             </div>
             <p className="text-sm text-muted-foreground">{announcement.content}</p>
             {announcement.youtube_url && (
@@ -179,7 +232,8 @@ const AdminAnnouncements = () => {
             )}
             <div className="text-xs text-muted-foreground">
               Posted by: {announcement.profiles?.first_name}{" "}
-              {announcement.profiles?.last_name}
+              {announcement.profiles?.last_name} on{" "}
+              {new Date(announcement.created_at).toLocaleDateString()}
             </div>
           </div>
         ))}

@@ -83,6 +83,7 @@ export type Database = {
       }
       announcements: {
         Row: {
+          active: boolean | null
           content: string
           created_at: string
           created_by: string
@@ -92,6 +93,7 @@ export type Database = {
           youtube_url: string | null
         }
         Insert: {
+          active?: boolean | null
           content: string
           created_at?: string
           created_by: string
@@ -101,6 +103,7 @@ export type Database = {
           youtube_url?: string | null
         }
         Update: {
+          active?: boolean | null
           content?: string
           created_at?: string
           created_by?: string
