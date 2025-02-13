@@ -33,8 +33,8 @@ const PrizeManagement = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Prize Management</h2>
         <div className="flex items-center gap-4">
-          <PointsAdjustmentDialog currentUserId={user?.id || ""} />
           <PrizeForm onPrizeAdded={refetch} />
+          <PointsAdjustmentDialog currentUserId={user?.id || ""} />
         </div>
       </div>
       <PrizeList prizes={prizes} onPrizeUpdated={refetch} />
