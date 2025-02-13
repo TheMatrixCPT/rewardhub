@@ -1,9 +1,11 @@
+
 import { BrowserRouter as Router } from "react-router-dom";
 import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { AuthProvider } from "@/hooks/useAuth";
 import AppRoutes from "./AppRoutes";
+import Footer from "@/components/layout/Footer";
 
 const queryClient = new QueryClient();
 
@@ -13,8 +15,11 @@ const App = () => {
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Router>
           <AuthProvider>
-            <Toaster position="top-center" />
-            <AppRoutes />
+            <div className="min-h-screen flex flex-col">
+              <Toaster position="top-center" />
+              <AppRoutes />
+              <Footer />
+            </div>
           </AuthProvider>
         </Router>
       </ThemeProvider>
