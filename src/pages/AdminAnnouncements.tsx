@@ -37,15 +37,18 @@ const AdminAnnouncements = () => {
         .select("*, profiles(first_name, last_name)")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching announcements:", error);
+        throw error;
+      }
       return data;
     },
   });
 
   const createAnnouncement = useMutation({
     mutationFn: async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Not authenticated");
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw new Error("Not authenticated");
 
       const { error } = await supabase.from("announcements").insert({
         title,
@@ -55,7 +58,10 @@ const AdminAnnouncements = () => {
         created_by: userData.user.id,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["announcements"] });
