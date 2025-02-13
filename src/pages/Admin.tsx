@@ -8,7 +8,6 @@ import StatsCards from "@/components/admin/StatsCards";
 import SubmissionManagement from "@/components/admin/SubmissionManagement";
 import { PointsAdjustmentDialog } from "@/components/admin/PointsAdjustmentDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import type { DailyStats } from "@/types/admin";
 
 const Admin = () => {
@@ -100,9 +99,10 @@ const Admin = () => {
 
       <div className="mt-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="submissions">Submission Management</TabsTrigger>
             <TabsTrigger value="points">Points Management</TabsTrigger>
+            <TabsTrigger value="adjust-points">Adjust Points</TabsTrigger>
             <TabsTrigger value="prizes">Prize Management</TabsTrigger>
           </TabsList>
           <TabsContent value="submissions" className="mt-6">
@@ -113,17 +113,23 @@ const Admin = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-xl font-semibold">Points Management</h2>
-                  <p className="text-sm text-muted-foreground">Adjust user points manually</p>
+                  <p className="text-sm text-muted-foreground">View and analyze points</p>
                 </div>
-                <Button onClick={() => document.querySelector('[role="dialog"]')?.removeAttribute('hidden')}>
-                  Adjust Points
-                </Button>
+              </div>
+            </div>
+          </TabsContent>
+          <TabsContent value="adjust-points" className="mt-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-semibold">Adjust Points</h2>
+                  <p className="text-sm text-muted-foreground">Manually adjust user points</p>
+                </div>
               </div>
               <PointsAdjustmentDialog currentUserId={currentUserId} />
             </div>
           </TabsContent>
           <TabsContent value="prizes" className="mt-6">
-            {/* Prize management content will go here */}
             <div className="text-center text-muted-foreground">
               Prize management functionality coming soon
             </div>
