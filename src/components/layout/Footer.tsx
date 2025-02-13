@@ -5,14 +5,14 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t py-4 bg-background">
+    <footer className="border-t py-2 bg-background">
       <div className="container max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
             <p className="text-sm text-muted-foreground">
               Powered by
             </p>
-            <div className="w-36">
+            <div className="w-44">
               <AspectRatio ratio={3/1}>
                 <img
                   src="/lovable-uploads/7d8293fe-494e-44ac-996c-b74a26e03b81.png"
@@ -23,7 +23,7 @@ const Footer = () => {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            © {currentYear} RewardHub. All rights reserved.
+            COPYRIGHT © {currentYear} RewardHub. All rights reserved.
           </p>
         </div>
       </div>
