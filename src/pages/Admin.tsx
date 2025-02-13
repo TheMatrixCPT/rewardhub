@@ -21,7 +21,6 @@ const Admin = () => {
   const getInitialTab = () => {
     if (location.pathname.includes('prizes')) return 'prizes';
     if (location.pathname.includes('points')) return 'points';
-    if (location.pathname.includes('adjust-points')) return 'adjust-points';
     return 'submissions';
   };
 
@@ -115,10 +114,9 @@ const Admin = () => {
 
       <div className="mt-8">
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="submissions">Submission Management</TabsTrigger>
             <TabsTrigger value="points">Points Management</TabsTrigger>
-            <TabsTrigger value="adjust-points">Adjust Points</TabsTrigger>
             <TabsTrigger value="prizes">Prize Management</TabsTrigger>
           </TabsList>
           <TabsContent value="submissions" className="mt-6">
@@ -134,20 +132,18 @@ const Admin = () => {
               </div>
             </div>
           </TabsContent>
-          <TabsContent value="adjust-points" className="mt-6">
+          <TabsContent value="prizes" className="mt-6">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-xl font-semibold">Adjust Points</h2>
-                  <p className="text-sm text-muted-foreground">Manually adjust user points</p>
+                  <h2 className="text-xl font-semibold">Prize Management</h2>
+                  <p className="text-sm text-muted-foreground">Manage prizes and adjust user points</p>
                 </div>
+                <PointsAdjustmentDialog currentUserId={currentUserId} />
               </div>
-              <PointsAdjustmentDialog currentUserId={currentUserId} />
-            </div>
-          </TabsContent>
-          <TabsContent value="prizes" className="mt-6">
-            <div className="text-center text-muted-foreground">
-              Prize management functionality coming soon
+              <div className="text-center text-muted-foreground">
+                Prize management functionality coming soon
+              </div>
             </div>
           </TabsContent>
         </Tabs>
