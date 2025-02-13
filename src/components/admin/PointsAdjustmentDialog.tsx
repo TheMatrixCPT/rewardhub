@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import {
   Dialog,
@@ -13,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from "react-router-dom";
 
 interface PointsAdjustmentDialogProps {
   currentUserId: string;
@@ -24,13 +24,19 @@ export function PointsAdjustmentDialog({ currentUserId }: PointsAdjustmentDialog
   const [userEmail, setUserEmail] = useState("");
   const [points, setPoints] = useState("");
   const [reason, setReason] = useState("");
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === "/admin/points") {
+      setOpen(true);
+    }
+  }, [location.pathname]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // First, get the user ID from the email
       const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('id')
@@ -42,7 +48,6 @@ export function PointsAdjustmentDialog({ currentUserId }: PointsAdjustmentDialog
         return;
       }
 
-      // Call the adjust_user_points function
       const { error } = await supabase.rpc('adjust_user_points', {
         admin_user_id: currentUserId,
         target_user_id: userData.id,
@@ -57,11 +62,12 @@ export function PointsAdjustmentDialog({ currentUserId }: PointsAdjustmentDialog
       }
 
       toast.success("Points adjusted successfully");
-      setOpen(false);
-      // Reset form
       setUserEmail("");
       setPoints("");
       setReason("");
+      if (location.pathname !== "/admin/points") {
+        setOpen(false);
+      }
     } catch (error) {
       console.error('Error:', error);
       toast.error("Failed to adjust points");
@@ -73,7 +79,7 @@ export function PointsAdjustmentDialog({ currentUserId }: PointsAdjustmentDialog
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Adjust Points</Button>
+        <Button variant="default" className="w-full">Adjust User Points</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -114,7 +120,7 @@ export function PointsAdjustmentDialog({ currentUserId }: PointsAdjustmentDialog
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Adjusting..." : "Adjust Points"}
+              {isLoading ? "Adjusting..." : "Submit Adjustment"}
             </Button>
           </DialogFooter>
         </form>

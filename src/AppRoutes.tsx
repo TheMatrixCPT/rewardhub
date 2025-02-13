@@ -16,6 +16,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
 import { Suspense } from "react";
+import AdminPoints from "@/pages/AdminPoints";
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen bg-background">
@@ -30,13 +31,11 @@ const AppRoutes = () => {
   const { isLoading, isInitialized, user } = useAuth();
   console.log("AppRoutes rendered, isLoading:", isLoading, "isInitialized:", isInitialized);
 
-  // Show loading spinner while auth is initializing
   if (!isInitialized) {
     console.log("Auth not initialized, showing loading state");
     return <LoadingSpinner />;
   }
 
-  // Show loading spinner while checking auth state
   if (isLoading) {
     console.log("Auth is loading, showing loading state");
     return <LoadingSpinner />;
@@ -92,6 +91,14 @@ const AppRoutes = () => {
           element={
             <AdminRoute>
               <Prizes />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/points"
+          element={
+            <AdminRoute>
+              <AdminPoints />
             </AdminRoute>
           }
         />
