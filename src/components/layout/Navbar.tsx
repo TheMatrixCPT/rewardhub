@@ -1,11 +1,18 @@
 
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { navigationItems } from "@/config/navigation";
+import { navigationItems, adminNavigationItems } from "@/config/navigation";
 import DesktopMenu from "@/components/navigation/DesktopMenu";
 import MobileMenu from "@/components/navigation/MobileMenu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,6 +42,32 @@ const Navbar = () => {
             handleLogout={handleLogout}
             isAdmin={isAdmin}
           />
+
+          {isAdmin && (
+            <div className="hidden md:flex items-center ml-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    Admin
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {adminNavigationItems.map((item) => (
+                    <DropdownMenuItem key={item.name} asChild>
+                      <Link
+                        to={item.href}
+                        className="flex items-center gap-2 w-full"
+                      >
+                        {item.icon && <item.icon className="h-4 w-4" />}
+                        {item.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
 
           {user && (
             <div className="md:hidden flex items-center">

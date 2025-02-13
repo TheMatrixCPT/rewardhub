@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Trophy, Activity, User, Gift, PlusSquare } from "lucide-react";
+import { LayoutDashboard, Trophy, Activity, User, Gift, PlusSquare, Settings } from "lucide-react";
 import type { NavigationItem } from "@/components/navigation/types";
 
 export const navigationItems: NavigationItem[] = [
@@ -28,16 +28,17 @@ export const navigationItems: NavigationItem[] = [
     href: "/profile",
     icon: User,
   },
+];
+
+export const adminNavigationItems: NavigationItem[] = [
   {
     name: "Manage Prizes",
     href: "/admin/prizes",
     icon: Gift,
-    adminOnly: true,
   },
   {
     name: "Adjust Points",
     href: "/admin/points",
     icon: PlusSquare,
-    adminOnly: true,
   },
 ];
