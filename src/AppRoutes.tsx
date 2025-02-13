@@ -17,6 +17,7 @@ import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
 import { Suspense } from "react";
 import AdminPoints from "@/pages/AdminPoints";
+import AdminAnnouncements from "@/pages/AdminAnnouncements";
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen bg-background">
@@ -99,6 +100,14 @@ const AppRoutes = () => {
           element={
             <AdminRoute>
               <AdminPoints />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/announcements"
+          element={
+            <AdminRoute>
+              <AdminAnnouncements />
             </AdminRoute>
           }
         />
