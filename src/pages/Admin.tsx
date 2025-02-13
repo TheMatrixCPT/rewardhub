@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
 import StatsCards from "@/components/admin/StatsCards";
 import SubmissionManagement from "@/components/admin/SubmissionManagement";
+import PrizeManagement from "@/components/admin/PrizeManagement";
 import { PointsAdjustmentDialog } from "@/components/admin/PointsAdjustmentDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DailyStats } from "@/types/admin";
@@ -141,9 +142,7 @@ const Admin = () => {
                 </div>
                 <PointsAdjustmentDialog currentUserId={currentUserId} />
               </div>
-              <div className="text-center text-muted-foreground">
-                Prize management functionality coming soon
-              </div>
+              <PrizeManagement />
             </div>
           </TabsContent>
         </Tabs>
