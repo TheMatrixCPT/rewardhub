@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { MessageCircle, X, Send } from 'lucide-react'
@@ -128,10 +127,10 @@ const ChatWindow = () => {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 rounded-full p-4 shadow-lg"
+        className="fixed bottom-20 right-4 rounded-full p-4 shadow-lg"
         size="icon"
       >
-        <MessageCircle className="h-6 w-6" />
+        <MessageCircle className="h-8 w-8" />
       </Button>
     )
   }
