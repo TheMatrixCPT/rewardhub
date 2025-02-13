@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Trophy, Activity, Medal } from "lucide-react";
+import ReferralStats from "@/components/dashboard/ReferralStats";
 
 const Dashboard = () => {
   // Fetch total points and activities count
@@ -65,10 +66,14 @@ const Dashboard = () => {
     },
   });
 
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="container max-w-7xl mx-auto py-8">
       <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="p-6 flex items-start space-x-4">
           <div className="rounded-full p-3 bg-primary/10">
             <Trophy className="h-6 w-6 text-primary" />
@@ -99,9 +104,15 @@ const Dashboard = () => {
           </div>
         </Card>
       </div>
+
+      {user && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-6">Referral Program</h2>
+          <ReferralStats userId={user.id} />
+        </div>
+      )}
     </div>
   );
 };
 
 export default Dashboard;
-

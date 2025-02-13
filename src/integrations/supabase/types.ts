@@ -215,7 +215,9 @@ export type Database = {
           last_name: string | null
           linkedin_profile: string | null
           phone_number: string | null
+          referral_code: string | null
           referral_source: string | null
+          referred_by: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string
         }
@@ -234,7 +236,9 @@ export type Database = {
           last_name?: string | null
           linkedin_profile?: string | null
           phone_number?: string | null
+          referral_code?: string | null
           referral_source?: string | null
+          referred_by?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
@@ -253,11 +257,69 @@ export type Database = {
           last_name?: string | null
           linkedin_profile?: string | null
           phone_number?: string | null
+          referral_code?: string | null
           referral_source?: string | null
+          referred_by?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          converted_at: string | null
+          created_at: string | null
+          id: string
+          points_awarded: boolean | null
+          referee_id: string | null
+          referral_code: string
+          referrer_id: string | null
+          status: string | null
+        }
+        Insert: {
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          points_awarded?: boolean | null
+          referee_id?: string | null
+          referral_code: string
+          referrer_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          points_awarded?: boolean | null
+          referee_id?: string | null
+          referral_code?: string
+          referrer_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referee_id_fkey"
+            columns: ["referee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       submissions: {
         Row: {
