@@ -7,11 +7,14 @@ import { useNavigate } from "react-router-dom";
 import StatsCards from "@/components/admin/StatsCards";
 import SubmissionManagement from "@/components/admin/SubmissionManagement";
 import { PointsAdjustmentDialog } from "@/components/admin/PointsAdjustmentDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DailyStats } from "@/types/admin";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("submissions");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,6 +27,8 @@ const Admin = () => {
           navigate("/auth");
           return;
         }
+
+        setCurrentUserId(session.user.id);
 
         console.log("Session found, checking admin status");
         const { data: adminStatus, error: adminError } = await supabase.rpc('is_admin', {
@@ -86,26 +91,38 @@ const Admin = () => {
       <div className="mb-8">
         <h1 className="text-2xl font-bold">Administration</h1>
         <p className="text-muted-foreground">
-          Manage submissions and user points
+          Manage platform settings and content
         </p>
       </div>
 
       <StatsCards stats={stats} />
 
-      <div className="grid grid-cols-1 gap-8 mt-8">
-        <section>
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h2 className="text-xl font-semibold">Points Management</h2>
-              <p className="text-sm text-muted-foreground">Adjust user points manually</p>
+      <div className="mt-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="submissions">Submission Management</TabsTrigger>
+            <TabsTrigger value="points">Points Management</TabsTrigger>
+            <TabsTrigger value="prizes">Prize Management</TabsTrigger>
+          </TabsList>
+          <TabsContent value="submissions" className="mt-6">
+            <SubmissionManagement />
+          </TabsContent>
+          <TabsContent value="points" className="mt-6">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-xl font-semibold">Points Management</h2>
+                <p className="text-sm text-muted-foreground">Adjust user points manually</p>
+              </div>
+              <PointsAdjustmentDialog currentUserId={currentUserId} />
             </div>
-            <PointsAdjustmentDialog currentUserId={supabase.auth.getSession().then(({ data }) => data.session?.user.id || '')} />
-          </div>
-        </section>
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Submission Management</h2>
-          <SubmissionManagement />
-        </section>
+          </TabsContent>
+          <TabsContent value="prizes" className="mt-6">
+            {/* Prize management content will go here */}
+            <div className="text-center text-muted-foreground">
+              Prize management functionality coming soon
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
