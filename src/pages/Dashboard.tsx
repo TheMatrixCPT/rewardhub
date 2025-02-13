@@ -1,9 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { Trophy, Activity, Medal } from "lucide-react";
 import ReferralStats from "@/components/dashboard/ReferralStats";
+import StatsGrid from "@/components/dashboard/StatsGrid";
 
 const Dashboard = () => {
   // Fetch current user
@@ -23,7 +22,6 @@ const Dashboard = () => {
     queryFn: async () => {
       if (!currentUser) throw new Error("No user found");
 
-      // Get all points from approved submissions
       const { data: points, error: pointsError } = await supabase
         .from("points")
         .select("points")
@@ -54,14 +52,12 @@ const Dashboard = () => {
     queryFn: async () => {
       if (!currentUser) throw new Error("No user found");
 
-      // Get all points per user
       const { data: points, error } = await supabase
         .from("points")
         .select("user_id, points");
 
       if (error) throw error;
 
-      // Calculate total points per user
       const userTotals = points.reduce((acc, point) => {
         const userId = point.user_id;
         acc[userId] = (acc[userId] || 0) + point.points;
@@ -77,43 +73,19 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="container max-w-7xl mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="p-6 flex items-start space-x-4">
-          <div className="rounded-full p-3 bg-primary/10">
-            <Trophy className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Total Points</p>
-            <h2 className="text-3xl font-bold">{userStats?.totalPoints || 0}</h2>
-          </div>
-        </Card>
-
-        <Card className="p-6 flex items-start space-x-4">
-          <div className="rounded-full p-3 bg-primary/10">
-            <Activity className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Activities</p>
-            <h2 className="text-3xl font-bold">{userStats?.activitiesCount || 0}</h2>
-          </div>
-        </Card>
-
-        <Card className="p-6 flex items-start space-x-4">
-          <div className="rounded-full p-3 bg-primary/10">
-            <Medal className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Rank</p>
-            <h2 className="text-3xl font-bold">#{userRank || "N/A"}</h2>
-          </div>
-        </Card>
+    <div className="container max-w-7xl mx-auto py-8 space-y-8">
+      <div className="border-b pb-4">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
       </div>
+      
+      <StatsGrid 
+        totalPoints={userStats?.totalPoints || 0}
+        activitiesCount={userStats?.activitiesCount || 0}
+        userRank={userRank || "N/A"}
+      />
 
       {currentUser && (
-        <div className="mt-8">
+        <div className="border-t pt-8">
           <h2 className="text-2xl font-bold mb-6">Referral Program</h2>
           <ReferralStats userId={currentUser.id} />
         </div>

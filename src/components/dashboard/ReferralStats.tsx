@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,91 +69,62 @@ const ReferralStats = ({ userId }: ReferralStatsProps) => {
     }
   };
 
-  const shareReferral = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Join me on RewardHub!',
-          text: 'Use my referral link to sign up and earn points!',
-          url: referralLink,
-        });
-      } catch (err) {
-        console.error('Error sharing:', err);
-        // Fallback to copying to clipboard
-        copyToClipboard(referralLink, 'Link copied to clipboard!');
-      }
-    } else {
-      // Fallback for browsers that don't support sharing
-      copyToClipboard(referralLink, 'Link copied to clipboard!');
-    }
-  };
-
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Your Referral Link</h3>
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={referralLink}
-              readOnly
-              className="flex-1 px-3 py-2 border rounded-md bg-muted"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => copyToClipboard(referralLink, 'Link copied!')}
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={shareReferral}
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Share this link with friends to earn points when they join!
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Your Referral Link</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => copyToClipboard(referralLink, 'Link copied!')}
+            className="flex items-center gap-2"
+          >
+            <Copy className="h-4 w-4" />
+            Copy Link
+          </Button>
         </div>
+        <input
+          type="text"
+          value={referralLink}
+          readOnly
+          className="w-full px-3 py-2 border rounded-md bg-muted text-sm"
+        />
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <div className="p-2 bg-primary/10 rounded-full">
-              <UserPlus className="h-6 w-6 text-primary" />
+              <UserPlus className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Referrals</p>
-              <h4 className="text-2xl font-bold">{stats?.totalReferrals || 0}</h4>
+              <p className="text-sm text-muted-foreground">Total Referrals</p>
+              <p className="text-xl font-bold">{stats?.totalReferrals || 0}</p>
             </div>
           </div>
         </Card>
 
         <Card className="p-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <div className="p-2 bg-yellow-100 rounded-full">
-              <UserPlus className="h-6 w-6 text-yellow-600" />
+              <UserPlus className="h-5 w-5 text-yellow-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Pending</p>
-              <h4 className="text-2xl font-bold">{stats?.pendingReferrals || 0}</h4>
+              <p className="text-sm text-muted-foreground">Pending</p>
+              <p className="text-xl font-bold">{stats?.pendingReferrals || 0}</p>
             </div>
           </div>
         </Card>
 
         <Card className="p-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <div className="p-2 bg-green-100 rounded-full">
-              <UserPlus className="h-6 w-6 text-green-600" />
+              <UserPlus className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Converted</p>
-              <h4 className="text-2xl font-bold">{stats?.convertedReferrals || 0}</h4>
+              <p className="text-sm text-muted-foreground">Converted</p>
+              <p className="text-xl font-bold">{stats?.convertedReferrals || 0}</p>
             </div>
           </div>
         </Card>
