@@ -1,11 +1,11 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import StatsGrid from "@/components/dashboard/StatsGrid";
-import { PointsAdjustmentDialog } from "@/components/admin/PointsAdjustmentDialog";
 import { useAuth } from "@/hooks/useAuth";
 
 const Dashboard = () => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
 
   // Fetch current user
   const { data: currentUser } = useQuery({
@@ -103,9 +103,6 @@ const Dashboard = () => {
     <div className="container max-w-7xl mx-auto py-8 space-y-8">
       <div className="flex justify-between items-center border-b pb-4">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        {isAdmin && user && (
-          <PointsAdjustmentDialog currentUserId={user.id} />
-        )}
       </div>
       
       <StatsGrid 
