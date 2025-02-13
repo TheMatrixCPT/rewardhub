@@ -1,8 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import StatsGrid from "@/components/dashboard/StatsGrid";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, X } from "lucide-react";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
 import {
   ScrollArea,
@@ -16,8 +17,6 @@ import {
 } from "@/components/ui/card";
 
 const Dashboard = () => {
-  const queryClient = useQueryClient();
-
   // Fetch current user
   const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
@@ -113,6 +112,7 @@ const Dashboard = () => {
   // Fetch announcements with reactions
   const { data: announcements } = useQuery({
     queryKey: ["announcements"],
+    enabled: !!currentUser?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
@@ -132,16 +132,17 @@ const Dashboard = () => {
 
   // Handle reaction
   const handleReaction = async (announcementId: string, reactionType: 'like' | 'dislike') => {
+    if (!currentUser) return;
+    
     try {
       const { error } = await supabase.from("announcement_reactions").upsert({
         announcement_id: announcementId,
-        user_id: currentUser?.id,
+        user_id: currentUser.id,
         reaction_type: reactionType,
       });
 
       if (error) throw error;
       toast.success("Reaction added!");
-      queryClient.invalidateQueries({ queryKey: ["announcements"] });
     } catch (error) {
       console.error("Error adding reaction:", error);
       toast.error("Failed to add reaction");
