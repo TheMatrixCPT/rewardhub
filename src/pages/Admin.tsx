@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import StatsCards from "@/components/admin/StatsCards";
 import SubmissionManagement from "@/components/admin/SubmissionManagement";
 import { PointsAdjustmentDialog } from "@/components/admin/PointsAdjustmentDialog";
@@ -14,8 +14,24 @@ const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
-  const [activeTab, setActiveTab] = useState("submissions");
+  const location = useLocation();
   const navigate = useNavigate();
+  
+  // Set initial active tab based on current path
+  const getInitialTab = () => {
+    if (location.pathname.includes('prizes')) return 'prizes';
+    if (location.pathname.includes('points')) return 'points';
+    if (location.pathname.includes('adjust-points')) return 'adjust-points';
+    return 'submissions';
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab());
+
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/admin/${value}`);
+  };
 
   useEffect(() => {
     const checkAuthAndAdmin = async () => {
@@ -98,7 +114,7 @@ const Admin = () => {
       <StatsCards stats={stats} />
 
       <div className="mt-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="submissions">Submission Management</TabsTrigger>
             <TabsTrigger value="points">Points Management</TabsTrigger>
