@@ -1,3 +1,4 @@
+
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -8,15 +9,18 @@ interface MobileMenuProps {
   user: any;
   handleLogout: () => void;
   setIsOpen: (isOpen: boolean) => void;
+  isAdmin?: boolean;
 }
 
-const MobileMenu = ({ navigation, user, handleLogout, setIsOpen }: MobileMenuProps) => {
+const MobileMenu = ({ navigation, user, handleLogout, setIsOpen, isAdmin }: MobileMenuProps) => {
   if (!user) return null;
+
+  const visibleItems = navigation.filter(item => !item.adminOnly || (item.adminOnly && isAdmin));
 
   return (
     <div className="md:hidden">
       <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-        {navigation.map((item) => (
+        {visibleItems.map((item) => (
           <Link
             key={item.name}
             to={item.href}

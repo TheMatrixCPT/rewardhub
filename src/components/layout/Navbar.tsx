@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -59,6 +60,7 @@ const Navbar = () => {
           user={user}
           handleLogout={handleLogout}
           setIsOpen={setIsOpen}
+          isAdmin={isAdmin}
         />
       )}
     </nav>
