@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -9,11 +10,15 @@ import { PersonalInfo } from "@/components/profile/PersonalInfo";
 import { ContactInfo } from "@/components/profile/ContactInfo";
 import { ProfessionalInfo } from "@/components/profile/ProfessionalInfo";
 import { ProfileActions } from "@/components/profile/ProfileActions";
+import { Button } from "@/components/ui/button";
+import { Copy } from "lucide-react";
 
 const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [referralCode, setReferralCode] = useState<string>("");
+  const [referralLink, setReferralLink] = useState<string>("");
   const [profile, setProfile] = useState({
     first_name: "",
     last_name: "",
@@ -61,6 +66,41 @@ const Profile = () => {
       }));
     }
   }, [userProfile]);
+
+  // Fetch user's referral code
+  useEffect(() => {
+    const fetchReferralCode = async () => {
+      if (!session?.user?.id) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('referral_code')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching referral code:', error);
+        return;
+      }
+
+      if (data?.referral_code) {
+        setReferralCode(data.referral_code);
+        setReferralLink(`${window.location.origin}/register?ref=${data.referral_code}`);
+      }
+    };
+
+    fetchReferralCode();
+  }, [session?.user?.id]);
+
+  const copyToClipboard = async (text: string, message: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(message);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      toast.error('Failed to copy to clipboard');
+    }
+  };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -124,7 +164,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="container max-w-3xl py-10">
+    <div className="container max-w-3xl py-10 space-y-6">
       <Card>
         <ProfileHeader isEditing={isEditing} setIsEditing={setIsEditing} />
         <CardContent>
@@ -162,6 +202,36 @@ const Profile = () => {
           </form>
         </CardContent>
       </Card>
+
+      {session?.user?.id && (
+        <Card>
+          <CardContent className="pt-6">
+            <h2 className="text-2xl font-bold mb-6">Referral Program</h2>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Your Referral Link</h3>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="text"
+                    value={referralLink}
+                    readOnly
+                    className="flex-1 px-3 py-2 border rounded-md bg-muted text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(referralLink, 'Link copied!')}
+                    className="flex items-center gap-2"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
