@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,6 +6,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import StatsCards from "@/components/admin/StatsCards";
 import SubmissionManagement from "@/components/admin/SubmissionManagement";
+import { PointsAdjustmentDialog } from "@/components/admin/PointsAdjustmentDialog";
 import type { DailyStats } from "@/types/admin";
 
 const Admin = () => {
@@ -82,9 +84,9 @@ const Admin = () => {
   return (
     <div className="container py-10">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold">Submission Management</h1>
+        <h1 className="text-2xl font-bold">Administration</h1>
         <p className="text-muted-foreground">
-          Review and manage user submissions
+          Manage submissions and user points
         </p>
       </div>
 
@@ -92,6 +94,16 @@ const Admin = () => {
 
       <div className="grid grid-cols-1 gap-8 mt-8">
         <section>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="text-xl font-semibold">Points Management</h2>
+              <p className="text-sm text-muted-foreground">Adjust user points manually</p>
+            </div>
+            <PointsAdjustmentDialog currentUserId={supabase.auth.getSession().then(({ data }) => data.session?.user.id || '')} />
+          </div>
+        </section>
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Submission Management</h2>
           <SubmissionManagement />
         </section>
       </div>
