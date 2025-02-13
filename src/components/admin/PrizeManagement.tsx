@@ -1,12 +1,16 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import PrizeForm from "./PrizeForm";
 import PrizeList from "./PrizeList";
+import { PointsAdjustmentDialog } from "./PointsAdjustmentDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Prize = Tables<"prizes">
 
 const PrizeManagement = () => {
+  const { user } = useAuth();
   const { data: prizes, isLoading, refetch } = useQuery({
     queryKey: ['prizes'],
     queryFn: async () => {
@@ -26,7 +30,13 @@ const PrizeManagement = () => {
 
   return (
     <div className="space-y-8">
-      <PrizeForm onPrizeAdded={refetch} />
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Prize Management</h2>
+        <div className="flex items-center gap-4">
+          <PointsAdjustmentDialog currentUserId={user?.id || ""} />
+          <PrizeForm onPrizeAdded={refetch} />
+        </div>
+      </div>
       <PrizeList prizes={prizes} onPrizeUpdated={refetch} />
     </div>
   );
