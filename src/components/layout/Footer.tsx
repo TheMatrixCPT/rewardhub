@@ -7,12 +7,9 @@ const Footer = () => {
   return (
     <footer className="border-t py-4 bg-background">
       <div className="container max-w-7xl mx-auto px-4">
-        <div className="flex justify-center items-center gap-6">
+        <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <p className="text-sm text-muted-foreground">
-              Powered by
-            </p>
-            <div className="w-32">
+            <div className="w-24">
               <AspectRatio ratio={3/1}>
                 <img
                   src="/lovable-uploads/7d8293fe-494e-44ac-996c-b74a26e03b81.png"
@@ -21,6 +18,9 @@ const Footer = () => {
                 />
               </AspectRatio>
             </div>
+            <p className="text-sm text-muted-foreground">
+              Powered by DIGI NEXT
+            </p>
           </div>
           <p className="text-sm text-muted-foreground">
             © {currentYear} RewardHub. All rights reserved.
