@@ -114,11 +114,6 @@ const Admin = () => {
       <StatsCards stats={stats} />
 
       <div className="mt-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Admin Controls</h2>
-          <PointsAdjustmentDialog currentUserId={currentUserId} />
-        </div>
-
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="submissions">Submission Management</TabsTrigger>
@@ -126,7 +121,7 @@ const Admin = () => {
             <TabsTrigger value="prizes">Prize Management</TabsTrigger>
           </TabsList>
           <TabsContent value="submissions" className="mt-6">
-            <SubmissionManagement />
+            <SubmissionManagement onPointsClick={() => handleTabChange('points')} />
           </TabsContent>
           <TabsContent value="points" className="mt-6">
             <div className="space-y-4">
@@ -135,6 +130,7 @@ const Admin = () => {
                   <h2 className="text-xl font-semibold">Points Management</h2>
                   <p className="text-sm text-muted-foreground">View and analyze points</p>
                 </div>
+                <PointsAdjustmentDialog currentUserId={currentUserId} />
               </div>
             </div>
           </TabsContent>

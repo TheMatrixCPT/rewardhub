@@ -12,10 +12,15 @@ import {
 } from "@/components/ui/select";
 import { Filter } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import SubmissionsTable from "./SubmissionsTable";
 import type { Submission } from "@/types/admin";
 
-const SubmissionManagement = () => {
+interface SubmissionManagementProps {
+  onPointsClick: () => void;
+}
+
+const SubmissionManagement = ({ onPointsClick }: SubmissionManagementProps) => {
   const [filter, setFilter] = useState<string>("all");
 
   const { data: submissions, isLoading } = useQuery({
@@ -122,20 +127,25 @@ const SubmissionManagement = () => {
       <div className="px-6 pt-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold">Submission Management</h2>
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-[180px] bg-background">
-                <SelectValue placeholder="Filter submissions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Submissions</SelectItem>
-                <SelectItem value="pending">Pending Only</SelectItem>
-                <SelectItem value="approved">Approved Only</SelectItem>
-                <SelectItem value="rejected">Rejected Only</SelectItem>
-                <SelectItem value="today">Today's Submissions</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={onPointsClick}>
+              Adjust Points
+            </Button>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={filter} onValueChange={setFilter}>
+                <SelectTrigger className="w-[180px] bg-background">
+                  <SelectValue placeholder="Filter submissions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Submissions</SelectItem>
+                  <SelectItem value="pending">Pending Only</SelectItem>
+                  <SelectItem value="approved">Approved Only</SelectItem>
+                  <SelectItem value="rejected">Rejected Only</SelectItem>
+                  <SelectItem value="today">Today's Submissions</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
