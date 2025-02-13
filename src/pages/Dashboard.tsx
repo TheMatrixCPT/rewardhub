@@ -6,18 +6,28 @@ import { Trophy, Activity, Medal } from "lucide-react";
 import ReferralStats from "@/components/dashboard/ReferralStats";
 
 const Dashboard = () => {
-  // Fetch total points and activities count
-  const { data: userStats } = useQuery({
-    queryKey: ["user-stats"],
+  // Fetch current user
+  const { data: currentUser } = useQuery({
+    queryKey: ["current-user"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
+      return user;
+    },
+  });
+
+  // Fetch total points and activities count
+  const { data: userStats } = useQuery({
+    queryKey: ["user-stats"],
+    enabled: !!currentUser?.id,
+    queryFn: async () => {
+      if (!currentUser) throw new Error("No user found");
 
       // Get all points from approved submissions
       const { data: points, error: pointsError } = await supabase
         .from("points")
         .select("points")
-        .eq("user_id", user.id);
+        .eq("user_id", currentUser.id);
 
       if (pointsError) throw pointsError;
 
@@ -26,7 +36,7 @@ const Dashboard = () => {
       const { count: activitiesCount, error: activitiesError } = await supabase
         .from("submissions")
         .select("*", { count: 'exact', head: true })
-        .eq("user_id", user.id);
+        .eq("user_id", currentUser.id);
 
       if (activitiesError) throw activitiesError;
 
@@ -40,9 +50,9 @@ const Dashboard = () => {
   // Fetch user rank
   const { data: userRank } = useQuery({
     queryKey: ["user-rank"],
+    enabled: !!currentUser?.id,
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
+      if (!currentUser) throw new Error("No user found");
 
       // Get all points per user
       const { data: points, error } = await supabase
@@ -61,13 +71,10 @@ const Dashboard = () => {
       const sortedUsers = Object.entries(userTotals)
         .sort(([, a], [, b]) => b - a);
 
-      const rank = sortedUsers.findIndex(([id]) => id === user.id) + 1;
+      const rank = sortedUsers.findIndex(([id]) => id === currentUser.id) + 1;
       return rank > 0 ? rank : "N/A";
     },
   });
-
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <div className="container max-w-7xl mx-auto py-8">
@@ -105,10 +112,10 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {user && (
+      {currentUser && (
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-6">Referral Program</h2>
-          <ReferralStats userId={user.id} />
+          <ReferralStats userId={currentUser.id} />
         </div>
       )}
     </div>
