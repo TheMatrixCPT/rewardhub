@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Users, Trophy, MapPin, Briefcase, BarChart, MessageSquare, Building2, Share2, ThumbsUp, Eye } from "lucide-react";
@@ -59,8 +60,7 @@ const AdminAnalytics = () => {
       const { data: pointsData, error: pointsError } = await supabase
         .from('points')
         .select(`
-          user_id,
-          total_points:points(sum),
+          points,
           profiles!inner(
             first_name,
             last_name,
@@ -69,8 +69,7 @@ const AdminAnalytics = () => {
             job_title
           )
         `)
-        .group('user_id, profiles.first_name, profiles.last_name, profiles.avatar_url, profiles.company, profiles.job_title')
-        .order('total_points', { ascending: false })
+        .order('points', { ascending: false })
         .limit(1);
 
       if (pointsError) {
@@ -82,33 +81,8 @@ const AdminAnalytics = () => {
 
       const topPerformerOverall = pointsData?.[0] ? {
         ...pointsData[0].profiles,
-        points: pointsData[0].total_points
+        points: pointsData[0].points
       } : null;
-
-      // Get top performers per prize
-      const { data: prizeTopPerformers, error: prizeTopError } = await supabase
-        .from('prize_registrations')
-        .select(`
-          points,
-          prizes:prize_id(
-            name,
-            id
-          ),
-          profiles:user_id(
-            first_name,
-            last_name,
-            company,
-            job_title
-          )
-        `)
-        .order('points', { ascending: false });
-
-      if (prizeTopError) {
-        console.error("Error fetching prize top performers:", prizeTopError);
-        throw prizeTopError;
-      }
-
-      console.log("Prize top performers:", prizeTopPerformers);
 
       // Get submissions with status counts
       const { data: submissions, error: submissionsError } = await supabase
@@ -320,28 +294,6 @@ const AdminAnalytics = () => {
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Top Performers by Prize */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Trophy className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Top Performers by Prize</h2>
-          </div>
-          <div className="space-y-6">
-            {analyticsData?.topPerformersByPrize.map((performer, index) => (
-              <div key={index} className="space-y-2 pb-4 border-b last:border-0">
-                <h3 className="font-medium">{performer.prizeName}</h3>
-                <p className="text-sm">
-                  {performer.first_name} {performer.last_name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {performer.job_title} at {performer.company}
-                </p>
-                <p className="text-lg font-bold text-primary">{performer.points} points</p>
               </div>
             ))}
           </div>

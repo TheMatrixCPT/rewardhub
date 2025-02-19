@@ -203,6 +203,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_points_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "points_submission_id_fkey"
             columns: ["submission_id"]
             isOneToOne: false
@@ -464,6 +471,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_submissions_prize"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "submissions_activity_id_fkey"
             columns: ["activity_id"]
