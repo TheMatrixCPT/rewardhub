@@ -12,15 +12,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths, startOfMonth } from "date-fns";
 
-interface TopPerformer {
-  prizeName: string;
-  points: number;
-  first_name: string | null;
-  last_name: string | null;
-  company: string | null;
-  job_title: string | null;
-}
-
 const AdminAnalytics = () => {
   const [timeframe, setTimeframe] = useState("3");
 
@@ -30,14 +21,14 @@ const AdminAnalytics = () => {
       console.log("Starting analytics data fetch...");
       const startDate = startOfMonth(subMonths(new Date(), parseInt(timeframe)));
       
-      // Get total users - Fixed to use simpler count query
+      // Get total users count
       const { count: totalUsers } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      console.log("Total users count:", totalUsers);
+      console.log("Total users:", totalUsers);
 
-      // Get active prizes with count
+      // Get active prizes
       const { data: prizes } = await supabase
         .from('prizes')
         .select('*')
@@ -45,38 +36,37 @@ const AdminAnalytics = () => {
 
       console.log("Active prizes:", prizes);
 
-      // Get overall top performer with aggregated points
-      const { data: aggregatedPoints } = await supabase
-        .from('points')
-        .select(`
-          user_id,
-          sum_points:points(sum),
-          profiles:profiles!points_user_id_fkey (
-            first_name,
-            last_name,
-            company,
-            job_title,
-            avatar_url
-          )
-        `)
-        .group('user_id, profiles.first_name, profiles.last_name, profiles.company, profiles.job_title, profiles.avatar_url')
-        .order('sum_points', { ascending: false })
+      // Get top performer by calculating total points
+      const { data: pointsData } = await supabase
+        .rpc('get_user_rankings')
         .limit(1);
 
-      console.log("Aggregated points:", aggregatedPoints);
+      console.log("Points data:", pointsData);
 
-      const topPerformerOverall = aggregatedPoints?.[0] ? {
-        ...aggregatedPoints[0].profiles,
-        points: aggregatedPoints[0].sum_points
-      } : null;
+      let topPerformerOverall = null;
+      if (pointsData?.[0]) {
+        const { data: userData } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, company, job_title, avatar_url')
+          .eq('id', pointsData[0].user_id)
+          .single();
 
-      // Get submissions with status counts using correct relationship
+        if (userData) {
+          topPerformerOverall = {
+            ...userData,
+            points: pointsData[0].rank === 1 ? pointsData[0].points || 0 : 0
+          };
+        }
+      }
+
+      // Get submissions
       const { data: submissions } = await supabase
         .from('submissions')
         .select(`
           id,
           prize_id,
-          prizes!fk_submissions_prize (
+          prizes (
+            id,
             name
           ),
           status,
@@ -90,8 +80,7 @@ const AdminAnalytics = () => {
       // Get demographics data
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('address, company, job_title')
-        .not('address', 'is', null);
+        .select('address, company, job_title');
 
       console.log("Profiles data:", profilesData);
 
@@ -137,7 +126,7 @@ const AdminAnalytics = () => {
       }, {});
 
       return {
-        totalUsers,
+        totalUsers: totalUsers || 0,
         totalPrizes: prizes?.length || 0,
         topPerformerOverall,
         submissionsByPrize: Object.entries(submissionStats),
