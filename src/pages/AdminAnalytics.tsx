@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, Trophy, MapPin, Briefcase, BarChart, MessageSquare, Building2, Share2, ThumbsUp, Eye } from "lucide-react";
+import { Users, Trophy, MapPin, Briefcase, BarChart, MessageSquare, Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -13,12 +12,14 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths, startOfMonth } from "date-fns";
 
+type SortType = "name" | "count";
+
 const AdminAnalytics = () => {
   const [timeframe, setTimeframe] = useState("3");
   const [selectedPrize, setSelectedPrize] = useState<string>("all");
-  const [locationSort, setLocationSort] = useState<"name" | "count">("count");
-  const [companySort, setCompanySort] = useState<"name" | "count">("count");
-  const [roleSort, setRoleSort] = useState<"name" | "count">("count");
+  const [locationSort, setLocationSort] = useState<SortType>("count");
+  const [companySort, setCompanySort] = useState<SortType>("count");
+  const [roleSort, setRoleSort] = useState<SortType>("count");
 
   const { data: analyticsData } = useQuery({
     queryKey: ["business-analytics", timeframe, selectedPrize],
@@ -151,6 +152,18 @@ const AdminAnalytics = () => {
     }
   });
 
+  const handleLocationSortChange = (value: string) => {
+    setLocationSort(value as SortType);
+  };
+
+  const handleCompanySortChange = (value: string) => {
+    setCompanySort(value as SortType);
+  };
+
+  const handleRoleSortChange = (value: string) => {
+    setRoleSort(value as SortType);
+  };
+
   return (
     <div className="container py-10">
       <div className="flex items-center justify-between mb-8">
@@ -269,7 +282,7 @@ const AdminAnalytics = () => {
                 <MapPin className="h-5 w-5 text-primary" />
                 <h2 className="text-lg font-semibold">Locations</h2>
               </div>
-              <Select value={locationSort} onValueChange={setLocationSort}>
+              <Select value={locationSort} onValueChange={handleLocationSortChange}>
                 <SelectTrigger className="w-[120px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -296,7 +309,7 @@ const AdminAnalytics = () => {
                 <Briefcase className="h-5 w-5 text-primary" />
                 <h2 className="text-lg font-semibold">Job Roles</h2>
               </div>
-              <Select value={roleSort} onValueChange={setRoleSort}>
+              <Select value={roleSort} onValueChange={handleRoleSortChange}>
                 <SelectTrigger className="w-[120px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -323,7 +336,7 @@ const AdminAnalytics = () => {
                 <Building2 className="h-5 w-5 text-primary" />
                 <h2 className="text-lg font-semibold">Companies</h2>
               </div>
-              <Select value={companySort} onValueChange={setCompanySort}>
+              <Select value={companySort} onValueChange={handleCompanySortChange}>
                 <SelectTrigger className="w-[120px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
