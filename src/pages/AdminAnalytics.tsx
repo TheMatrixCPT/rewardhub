@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Users, Trophy, MapPin, Briefcase, BarChart, MessageSquare, Building2, Share2, ThumbsUp, Eye } from "lucide-react";
@@ -31,10 +30,10 @@ const AdminAnalytics = () => {
       console.log("Starting analytics data fetch...");
       const startDate = startOfMonth(subMonths(new Date(), parseInt(timeframe)));
       
-      // Get total users
-      const { data: totalUsers, error: usersError } = await supabase
+      // Get total users - Modified to get actual count
+      const { count: totalUsers, error: usersError } = await supabase
         .from('profiles')
-        .select('count', { count: 'exact' });
+        .select('*', { count: 'exact', head: true });
 
       if (usersError) {
         console.error("Error fetching users:", usersError);
@@ -56,39 +55,46 @@ const AdminAnalytics = () => {
 
       console.log("Active prizes:", prizes);
 
-      // Get overall top performer
-      const { data: topPerformerOverall, error: topError } = await supabase
-        .from('profiles')
+      // Get overall top performer - Modified to correctly aggregate points
+      const { data: pointsData, error: pointsError } = await supabase
+        .from('points')
         .select(`
-          id,
-          first_name,
-          last_name,
-          avatar_url,
-          company,
-          job_title,
-          points:points(points)
+          user_id,
+          total_points:points(sum),
+          profiles!inner(
+            first_name,
+            last_name,
+            avatar_url,
+            company,
+            job_title
+          )
         `)
-        .order('points', { ascending: false })
-        .limit(1)
-        .single();
+        .group('user_id, profiles.first_name, profiles.last_name, profiles.avatar_url, profiles.company, profiles.job_title')
+        .order('total_points', { ascending: false })
+        .limit(1);
 
-      if (topError) {
-        console.error("Error fetching top performer:", topError);
-        throw topError;
+      if (pointsError) {
+        console.error("Error fetching points:", pointsError);
+        throw pointsError;
       }
 
-      console.log("Top performer:", topPerformerOverall);
+      console.log("Points data:", pointsData);
 
-      // Get top performers per prize using a join
+      const topPerformerOverall = pointsData?.[0] ? {
+        ...pointsData[0].profiles,
+        points: pointsData[0].total_points
+      } : null;
+
+      // Get top performers per prize
       const { data: prizeTopPerformers, error: prizeTopError } = await supabase
         .from('prize_registrations')
         .select(`
           points,
-          prize:prize_id(
+          prizes:prize_id(
             name,
             id
           ),
-          user:user_id(
+          profiles:user_id(
             first_name,
             last_name,
             company,
@@ -104,18 +110,18 @@ const AdminAnalytics = () => {
 
       console.log("Prize top performers:", prizeTopPerformers);
 
-      // Get submissions per prize with extended details
-      const { data: prizeSubmissions, error: submissionsError } = await supabase
+      // Get submissions with status counts
+      const { data: submissions, error: submissionsError } = await supabase
         .from('submissions')
         .select(`
           id,
           prize_id,
-          prizes (
+          prizes(
+            id,
             name
           ),
-          linkedin_url,
-          post_content,
           status,
+          linkedin_url,
           created_at
         `)
         .gte('created_at', startDate.toISOString());
@@ -125,41 +131,23 @@ const AdminAnalytics = () => {
         throw submissionsError;
       }
 
-      console.log("Prize submissions:", prizeSubmissions);
+      console.log("Submissions:", submissions);
 
-      // Get location demographics
-      const { data: locationData, error: locationError } = await supabase
+      // Get demographics data with actual counts
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('address')
-        .not('address', 'is', null);
+        .select('address, company, job_title');
 
-      if (locationError) throw locationError;
-
-      // Get industry demographics
-      const { data: companyData, error: companyError } = await supabase
-        .from('profiles')
-        .select('company')
-        .not('company', 'is', null);
-
-      if (companyError) throw companyError;
-
-      // Get job role demographics
-      const { data: jobRoles, error: jobError } = await supabase
-        .from('profiles')
-        .select('job_title')
-        .not('job_title', 'is', null);
-
-      if (jobError) throw jobError;
+      if (profilesError) throw profilesError;
 
       // Process submissions per prize
       const submissionStats = prizes.reduce((acc: {[key: string]: any}, prize) => {
-        const prizeSubmissionsList = prizeSubmissions.filter(s => s.prize_id === prize.id);
+        const prizeSubmissions = submissions.filter(s => s.prize_id === prize.id);
         acc[prize.name] = {
-          total: prizeSubmissionsList.length,
-          approved: prizeSubmissionsList.filter(s => s.status === 'approved').length,
-          pending: prizeSubmissionsList.filter(s => s.status === 'pending').length,
-          rejected: prizeSubmissionsList.filter(s => s.status === 'rejected').length,
-          // Placeholder for future LinkedIn metrics
+          total: prizeSubmissions.length,
+          approved: prizeSubmissions.filter(s => s.status === 'approved').length,
+          pending: prizeSubmissions.filter(s => s.status === 'pending').length,
+          rejected: prizeSubmissions.filter(s => s.status === 'rejected').length,
           linkedInMetrics: {
             likes: 0,
             shares: 0,
@@ -170,48 +158,33 @@ const AdminAnalytics = () => {
         return acc;
       }, {});
 
-      // Process top performers per prize
-      const topPerformersByPrize = prizeTopPerformers.reduce((acc: { [key: string]: TopPerformer }, curr) => {
-        const prizeId = curr.prize?.id;
-        const prizeName = curr.prize?.name;
-        
-        if (prizeId && prizeName && (!acc[prizeId] || (acc[prizeId].points < curr.points))) {
-          acc[prizeId] = {
-            prizeName,
-            points: curr.points,
-            first_name: curr.user?.first_name,
-            last_name: curr.user?.last_name,
-            company: curr.user?.company,
-            job_title: curr.user?.job_title
-          };
+      // Process demographics data
+      const locationStats = profilesData.reduce((acc: {[key: string]: number}, profile) => {
+        if (profile.address) {
+          const city = profile.address.split(',')[0].trim();
+          acc[city] = (acc[city] || 0) + 1;
         }
         return acc;
       }, {});
 
-      // Process demographics data
-      const locationStats = locationData.reduce((acc: {[key: string]: number}, curr) => {
-        const city = curr.address?.split(',')[0]?.trim() || 'Unknown';
-        acc[city] = (acc[city] || 0) + 1;
+      const jobRoleStats = profilesData.reduce((acc: {[key: string]: number}, profile) => {
+        if (profile.job_title) {
+          acc[profile.job_title] = (acc[profile.job_title] || 0) + 1;
+        }
         return acc;
       }, {});
 
-      const jobRoleStats = jobRoles.reduce((acc: {[key: string]: number}, curr) => {
-        const role = curr.job_title || 'Unknown';
-        acc[role] = (acc[role] || 0) + 1;
-        return acc;
-      }, {});
-
-      const companyStats = companyData.reduce((acc: {[key: string]: number}, curr) => {
-        const company = curr.company || 'Unknown';
-        acc[company] = (acc[company] || 0) + 1;
+      const companyStats = profilesData.reduce((acc: {[key: string]: number}, profile) => {
+        if (profile.company) {
+          acc[profile.company] = (acc[profile.company] || 0) + 1;
+        }
         return acc;
       }, {});
 
       return {
-        totalUsers: totalUsers[0]?.count || 0,
+        totalUsers: totalUsers || 0,
         totalPrizes: prizes.length,
         topPerformerOverall,
-        topPerformersByPrize: Object.values(topPerformersByPrize),
         submissionsByPrize: Object.entries(submissionStats),
         locationDemographics: Object.entries(locationStats)
           .sort((a, b) => b[1] - a[1])
