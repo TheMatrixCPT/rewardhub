@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths, startOfMonth } from "date-fns";
+import { DemographicsTable } from "@/components/admin/analytics/DemographicsTable";
 
 type SortType = "name" | "count";
 
@@ -28,10 +29,11 @@ const AdminAnalytics = () => {
       const startDate = startOfMonth(subMonths(new Date(), parseInt(timeframe)));
       const oneMonthAgo = subMonths(new Date(), 1);
       
-      // Get total users count
+      // Get total users count (only counting users who have completed their profiles)
       const { count: totalUsers } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .not('first_name', 'is', null);
 
       // Get active users (users with submissions in the last month)
       const { count: activeUsers } = await supabase
@@ -193,7 +195,7 @@ const AdminAnalytics = () => {
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">Total Users</p>
+              <p className="text-sm text-muted-foreground">Registered Users</p>
               <p className="text-3xl font-bold">{analyticsData?.totalUsers || 0}</p>
             </div>
             <div>
@@ -228,7 +230,7 @@ const AdminAnalytics = () => {
           )}
         </Card>
 
-        {/* Submissions per Prize */}
+        {/* Prize Performance */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -274,86 +276,33 @@ const AdminAnalytics = () => {
           </div>
         </Card>
 
+        {/* Demographics Tables */}
         <div className="grid gap-6 md:grid-cols-3">
-          {/* Location Demographics */}
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold">Locations</h2>
-              </div>
-              <Select value={locationSort} onValueChange={handleLocationSortChange}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="count">By Count</SelectItem>
-                  <SelectItem value="name">By Name</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              {analyticsData?.locationDemographics.map(([location, count]) => (
-                <div key={location} className="flex justify-between items-center">
-                  <span className="text-sm">{location}</span>
-                  <span className="text-sm font-semibold">{count} users</span>
-                </div>
-              ))}
-            </div>
+            <DemographicsTable
+              title="Locations"
+              data={analyticsData?.locationDemographics || []}
+              sortType={locationSort}
+              onSortChange={handleLocationSortChange}
+            />
           </Card>
 
-          {/* Job Roles */}
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold">Job Roles</h2>
-              </div>
-              <Select value={roleSort} onValueChange={handleRoleSortChange}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="count">By Count</SelectItem>
-                  <SelectItem value="name">By Name</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              {analyticsData?.jobRoleDemographics.map(([role, count]) => (
-                <div key={role} className="flex justify-between items-center">
-                  <span className="text-sm">{role}</span>
-                  <span className="text-sm font-semibold">{count} users</span>
-                </div>
-              ))}
-            </div>
+            <DemographicsTable
+              title="Job Roles"
+              data={analyticsData?.jobRoleDemographics || []}
+              sortType={roleSort}
+              onSortChange={handleRoleSortChange}
+            />
           </Card>
 
-          {/* Companies */}
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold">Companies</h2>
-              </div>
-              <Select value={companySort} onValueChange={handleCompanySortChange}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="count">By Count</SelectItem>
-                  <SelectItem value="name">By Name</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              {analyticsData?.companyDemographics.map(([company, count]) => (
-                <div key={company} className="flex justify-between items-center">
-                  <span className="text-sm">{company}</span>
-                  <span className="text-sm font-semibold">{count} users</span>
-                </div>
-              ))}
-            </div>
+            <DemographicsTable
+              title="Companies"
+              data={analyticsData?.companyDemographics || []}
+              sortType={companySort}
+              onSortChange={handleCompanySortChange}
+            />
           </Card>
         </div>
       </div>
