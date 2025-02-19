@@ -28,8 +28,8 @@ const AdminAnalytics = () => {
 
       if (usersError) throw usersError;
 
-      // Get top performer (user with most points)
-      const { data: topPerformer, error: topError } = await supabase
+      // Get overall top performer
+      const { data: topPerformerOverall, error: topError } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -38,15 +38,46 @@ const AdminAnalytics = () => {
           avatar_url,
           company,
           job_title,
-          points:points(sum)
+          points:points(points)
         `)
-        .inner_join('points', { foreignTable: 'points', conditionType: 'eq', condition: { user_id: 'id' } })
-        .group('id')
-        .order('sum', { ascending: false })
+        .order('points', { ascending: false })
         .limit(1)
         .single();
 
       if (topError) throw topError;
+
+      // Get top performers per prize
+      const { data: prizeTopPerformers, error: prizeTopError } = await supabase
+        .from('prize_registrations')
+        .select(`
+          points,
+          prizes (
+            name,
+            id
+          ),
+          profiles (
+            first_name,
+            last_name,
+            company,
+            job_title
+          )
+        `)
+        .order('points', { ascending: false });
+
+      if (prizeTopError) throw prizeTopError;
+
+      // Get submissions per prize
+      const { data: prizeSubmissions, error: submissionsError } = await supabase
+        .from('submissions')
+        .select(`
+          prize_id,
+          prizes (
+            name
+          )
+        `)
+        .gte('created_at', startDate.toISOString());
+
+      if (submissionsError) throw submissionsError;
 
       // Get location demographics
       const { data: locationData, error: locationError } = await supabase
@@ -56,7 +87,7 @@ const AdminAnalytics = () => {
 
       if (locationError) throw locationError;
 
-      // Get industry demographics (based on company field)
+      // Get industry demographics
       const { data: companyData, error: companyError } = await supabase
         .from('profiles')
         .select('company')
@@ -72,13 +103,30 @@ const AdminAnalytics = () => {
 
       if (jobError) throw jobError;
 
-      // Get total submissions (posts)
-      const { data: totalPosts, error: postsError } = await supabase
-        .from('submissions')
-        .select('count', { count: 'exact' })
-        .gte('created_at', startDate.toISOString());
+      // Process submissions per prize
+      const submissionStats = prizeSubmissions.reduce((acc: {[key: string]: number}, curr) => {
+        const prizeName = curr.prizes?.name || 'Unknown';
+        acc[prizeName] = (acc[prizeName] || 0) + 1;
+        return acc;
+      }, {});
 
-      if (postsError) throw postsError;
+      // Process top performers per prize
+      const topPerformersByPrize = Object.values(
+        prizeTopPerformers.reduce((acc: any, curr) => {
+          const prizeId = curr.prizes?.id;
+          if (prizeId && (!acc[prizeId] || acc[prizeId].points < curr.points)) {
+            acc[prizeId] = {
+              prizeName: curr.prizes?.name,
+              points: curr.points,
+              first_name: curr.profiles?.first_name,
+              last_name: curr.profiles?.last_name,
+              company: curr.profiles?.company,
+              job_title: curr.profiles?.job_title
+            };
+          }
+          return acc;
+        }, {})
+      );
 
       // Process demographics data
       const locationStats = locationData.reduce((acc: {[key: string]: number}, curr) => {
@@ -101,7 +149,9 @@ const AdminAnalytics = () => {
 
       return {
         totalUsers: totalUsers[0]?.count || 0,
-        topPerformer,
+        topPerformerOverall,
+        topPerformersByPrize,
+        submissionsByPrize: Object.entries(submissionStats),
         locationDemographics: Object.entries(locationStats)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 5),
@@ -110,8 +160,7 @@ const AdminAnalytics = () => {
           .slice(0, 5),
         companyDemographics: Object.entries(companyStats)
           .sort((a, b) => b[1] - a[1])
-          .slice(0, 5),
-        totalPosts: totalPosts[0]?.count || 0
+          .slice(0, 5)
       };
     }
   });
@@ -136,93 +185,129 @@ const AdminAnalytics = () => {
         </Select>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Overall Platform Statistics */}
-        <Card className="p-6 col-span-full bg-gradient-to-r from-primary/10 to-primary/5">
+      <div className="grid gap-6">
+        {/* Platform Overview */}
+        <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary/5">
           <div className="flex items-center gap-2 mb-4">
             <Users className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">Platform Overview</h2>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Users</p>
-              <p className="text-3xl font-bold">{analyticsData?.totalUsers || 0}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Posts</p>
-              <p className="text-3xl font-bold">{analyticsData?.totalPosts || 0}</p>
-            </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Total Users</p>
+            <p className="text-3xl font-bold mb-4">{analyticsData?.totalUsers || 0}</p>
           </div>
         </Card>
 
-        {/* Top Performer */}
-        <Card className="p-6 col-span-full md:col-span-1">
+        {/* Overall Top Performer */}
+        <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Trophy className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Top Performer</h2>
+            <h2 className="text-lg font-semibold">Overall Top Performer</h2>
           </div>
-          {analyticsData?.topPerformer && (
+          {analyticsData?.topPerformerOverall && (
             <div className="space-y-2">
               <p className="text-xl font-semibold">
-                {analyticsData.topPerformer.first_name} {analyticsData.topPerformer.last_name}
+                {analyticsData.topPerformerOverall.first_name} {analyticsData.topPerformerOverall.last_name}
               </p>
               <p className="text-sm text-muted-foreground">
-                {analyticsData.topPerformer.job_title} at {analyticsData.topPerformer.company}
+                {analyticsData.topPerformerOverall.job_title} at {analyticsData.topPerformerOverall.company}
               </p>
               <p className="text-2xl font-bold text-primary">
-                {analyticsData.topPerformer.points} points
+                {analyticsData.topPerformerOverall.points} points
               </p>
             </div>
           )}
         </Card>
 
-        {/* Location Demographics */}
+        {/* Submissions per Prize */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <MapPin className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Top Locations</h2>
+            <MessageSquare className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Submissions per Prize</h2>
           </div>
-          <div className="space-y-2">
-            {analyticsData?.locationDemographics.map(([location, count]) => (
-              <div key={location} className="flex justify-between items-center">
-                <span className="text-sm">{location}</span>
-                <span className="text-sm font-semibold">{count} users</span>
+          <div className="space-y-4">
+            {analyticsData?.submissionsByPrize.map(([prizeName, count]) => (
+              <div key={prizeName} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium">{prizeName}</h3>
+                  <span className="text-xl font-bold">{count}</span>
+                </div>
               </div>
             ))}
           </div>
         </Card>
 
-        {/* Job Roles */}
+        {/* Top Performers by Prize */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Briefcase className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Popular Job Roles</h2>
+            <Trophy className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Top Performers by Prize</h2>
           </div>
-          <div className="space-y-2">
-            {analyticsData?.jobRoleDemographics.map(([role, count]) => (
-              <div key={role} className="flex justify-between items-center">
-                <span className="text-sm">{role}</span>
-                <span className="text-sm font-semibold">{count} users</span>
+          <div className="space-y-6">
+            {analyticsData?.topPerformersByPrize.map((performer, index) => (
+              <div key={index} className="space-y-2 pb-4 border-b last:border-0">
+                <h3 className="font-medium">{performer.prizeName}</h3>
+                <p className="text-sm">
+                  {performer.first_name} {performer.last_name}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {performer.job_title} at {performer.company}
+                </p>
+                <p className="text-lg font-bold text-primary">{performer.points} points</p>
               </div>
             ))}
           </div>
         </Card>
 
-        {/* Companies */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Building2 className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Top Companies</h2>
-          </div>
-          <div className="space-y-2">
-            {analyticsData?.companyDemographics.map(([company, count]) => (
-              <div key={company} className="flex justify-between items-center">
-                <span className="text-sm">{company}</span>
-                <span className="text-sm font-semibold">{count} users</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Location Demographics */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Top Locations</h2>
+            </div>
+            <div className="space-y-2">
+              {analyticsData?.locationDemographics.map(([location, count]) => (
+                <div key={location} className="flex justify-between items-center">
+                  <span className="text-sm">{location}</span>
+                  <span className="text-sm font-semibold">{count} users</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Job Roles */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Briefcase className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Popular Job Roles</h2>
+            </div>
+            <div className="space-y-2">
+              {analyticsData?.jobRoleDemographics.map(([role, count]) => (
+                <div key={role} className="flex justify-between items-center">
+                  <span className="text-sm">{role}</span>
+                  <span className="text-sm font-semibold">{count} users</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Companies */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Building2 className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Top Companies</h2>
+            </div>
+            <div className="space-y-2">
+              {analyticsData?.companyDemographics.map(([company, count]) => (
+                <div key={company} className="flex justify-between items-center">
+                  <span className="text-sm">{company}</span>
+                  <span className="text-sm font-semibold">{count} users</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );
