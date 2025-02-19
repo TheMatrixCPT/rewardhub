@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -18,6 +17,7 @@ import NotFound from "@/pages/NotFound";
 import { Suspense } from "react";
 import AdminPoints from "@/pages/AdminPoints";
 import AdminAnnouncements from "@/pages/AdminAnnouncements";
+import AdminAnalytics from "@/pages/AdminAnalytics";
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen bg-background">
@@ -100,6 +100,14 @@ const AppRoutes = () => {
           element={
             <AdminRoute>
               <AdminPoints />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/analytics"
+          element={
+            <AdminRoute>
+              <AdminAnalytics />
             </AdminRoute>
           }
         />

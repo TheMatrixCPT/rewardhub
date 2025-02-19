@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Trophy, Activity, User, Gift, PlusSquare, Megaphone } from "lucide-react";
+import { LayoutDashboard, Trophy, Activity, User, Gift, PlusSquare, Megaphone, ChartBarIcon } from "lucide-react";
 import type { NavigationItem } from "@/components/navigation/types";
 
 export const navigationItems: NavigationItem[] = [
@@ -40,6 +40,11 @@ export const adminNavigationItems: NavigationItem[] = [
     name: "Adjust Points",
     href: "/admin/points",
     icon: PlusSquare,
+  },
+  {
+    name: "Analytics",
+    href: "/admin/analytics",
+    icon: ChartBarIcon,
   },
   {
     name: "Announcements",
