@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, Trophy, MapPin, Briefcase, BarChart, MessageSquare, Building2 } from "lucide-react";
+import { Users, Trophy, MapPin, Briefcase, BarChart, MessageSquare, Building2, Share2, ThumbsUp, Eye } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -27,6 +28,7 @@ const AdminAnalytics = () => {
   const { data: analyticsData } = useQuery({
     queryKey: ["business-analytics", timeframe],
     queryFn: async () => {
+      console.log("Starting analytics data fetch...");
       const startDate = startOfMonth(subMonths(new Date(), parseInt(timeframe)));
       
       // Get total users
@@ -34,7 +36,25 @@ const AdminAnalytics = () => {
         .from('profiles')
         .select('count', { count: 'exact' });
 
-      if (usersError) throw usersError;
+      if (usersError) {
+        console.error("Error fetching users:", usersError);
+        throw usersError;
+      }
+
+      console.log("Total users:", totalUsers);
+
+      // Get prizes
+      const { data: prizes, error: prizesError } = await supabase
+        .from('prizes')
+        .select('*')
+        .eq('active', true);
+
+      if (prizesError) {
+        console.error("Error fetching prizes:", prizesError);
+        throw prizesError;
+      }
+
+      console.log("Active prizes:", prizes);
 
       // Get overall top performer
       const { data: topPerformerOverall, error: topError } = await supabase
@@ -52,7 +72,12 @@ const AdminAnalytics = () => {
         .limit(1)
         .single();
 
-      if (topError) throw topError;
+      if (topError) {
+        console.error("Error fetching top performer:", topError);
+        throw topError;
+      }
+
+      console.log("Top performer:", topPerformerOverall);
 
       // Get top performers per prize using a join
       const { data: prizeTopPerformers, error: prizeTopError } = await supabase
@@ -72,20 +97,35 @@ const AdminAnalytics = () => {
         `)
         .order('points', { ascending: false });
 
-      if (prizeTopError) throw prizeTopError;
+      if (prizeTopError) {
+        console.error("Error fetching prize top performers:", prizeTopError);
+        throw prizeTopError;
+      }
 
-      // Get submissions per prize
+      console.log("Prize top performers:", prizeTopPerformers);
+
+      // Get submissions per prize with extended details
       const { data: prizeSubmissions, error: submissionsError } = await supabase
         .from('submissions')
         .select(`
+          id,
           prize_id,
           prizes (
             name
-          )
+          ),
+          linkedin_url,
+          post_content,
+          status,
+          created_at
         `)
         .gte('created_at', startDate.toISOString());
 
-      if (submissionsError) throw submissionsError;
+      if (submissionsError) {
+        console.error("Error fetching submissions:", submissionsError);
+        throw submissionsError;
+      }
+
+      console.log("Prize submissions:", prizeSubmissions);
 
       // Get location demographics
       const { data: locationData, error: locationError } = await supabase
@@ -112,9 +152,21 @@ const AdminAnalytics = () => {
       if (jobError) throw jobError;
 
       // Process submissions per prize
-      const submissionStats = prizeSubmissions.reduce((acc: {[key: string]: number}, curr) => {
-        const prizeName = curr.prizes?.name || 'Unknown';
-        acc[prizeName] = (acc[prizeName] || 0) + 1;
+      const submissionStats = prizes.reduce((acc: {[key: string]: any}, prize) => {
+        const prizeSubmissionsList = prizeSubmissions.filter(s => s.prize_id === prize.id);
+        acc[prize.name] = {
+          total: prizeSubmissionsList.length,
+          approved: prizeSubmissionsList.filter(s => s.status === 'approved').length,
+          pending: prizeSubmissionsList.filter(s => s.status === 'pending').length,
+          rejected: prizeSubmissionsList.filter(s => s.status === 'rejected').length,
+          // Placeholder for future LinkedIn metrics
+          linkedInMetrics: {
+            likes: 0,
+            shares: 0,
+            comments: 0,
+            views: 0
+          }
+        };
         return acc;
       }, {});
 
@@ -157,6 +209,7 @@ const AdminAnalytics = () => {
 
       return {
         totalUsers: totalUsers[0]?.count || 0,
+        totalPrizes: prizes.length,
         topPerformerOverall,
         topPerformersByPrize: Object.values(topPerformersByPrize),
         submissionsByPrize: Object.entries(submissionStats),
@@ -200,9 +253,15 @@ const AdminAnalytics = () => {
             <Users className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">Platform Overview</h2>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Total Users</p>
-            <p className="text-3xl font-bold mb-4">{analyticsData?.totalUsers || 0}</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Users</p>
+              <p className="text-3xl font-bold">{analyticsData?.totalUsers || 0}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Active Prizes</p>
+              <p className="text-3xl font-bold">{analyticsData?.totalPrizes || 0}</p>
+            </div>
           </div>
         </Card>
 
@@ -231,14 +290,62 @@ const AdminAnalytics = () => {
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <MessageSquare className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Submissions per Prize</h2>
+            <h2 className="text-lg font-semibold">Prize Performance</h2>
           </div>
-          <div className="space-y-4">
-            {analyticsData?.submissionsByPrize.map(([prizeName, count]) => (
+          <div className="space-y-6">
+            {analyticsData?.submissionsByPrize.map(([prizeName, stats]: [string, any]) => (
               <div key={prizeName} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium">{prizeName}</h3>
-                  <span className="text-xl font-bold">{count}</span>
+                <h3 className="text-lg font-semibold">{prizeName}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Submissions</p>
+                    <p className="text-xl font-bold">{stats.total}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Approved</p>
+                    <p className="text-xl font-bold text-green-600">{stats.approved}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Pending</p>
+                    <p className="text-xl font-bold text-yellow-600">{stats.pending}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Rejected</p>
+                    <p className="text-xl font-bold text-red-600">{stats.rejected}</p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-sm font-medium mb-2">LinkedIn Engagement</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="flex items-center gap-2">
+                      <ThumbsUp className="h-4 w-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Likes</p>
+                        <p className="text-lg font-semibold">{stats.linkedInMetrics.likes}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Share2 className="h-4 w-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Shares</p>
+                        <p className="text-lg font-semibold">{stats.linkedInMetrics.shares}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Comments</p>
+                        <p className="text-lg font-semibold">{stats.linkedInMetrics.comments}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Views</p>
+                        <p className="text-lg font-semibold">{stats.linkedInMetrics.views}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
