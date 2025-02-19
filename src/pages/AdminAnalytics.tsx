@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Users, Trophy, MapPin, Briefcase, BarChart, MessageSquare, Building2, Share2, ThumbsUp, Eye } from "lucide-react";
@@ -31,67 +30,53 @@ const AdminAnalytics = () => {
       console.log("Starting analytics data fetch...");
       const startDate = startOfMonth(subMonths(new Date(), parseInt(timeframe)));
       
-      // Get total users - Modified to get actual count
-      const { count: totalUsers, error: usersError } = await supabase
+      // Get total users - Fixed to use simpler count query
+      const { count: totalUsers } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      if (usersError) {
-        console.error("Error fetching users:", usersError);
-        throw usersError;
-      }
+      console.log("Total users count:", totalUsers);
 
-      console.log("Total users:", totalUsers);
-
-      // Get prizes
-      const { data: prizes, error: prizesError } = await supabase
+      // Get active prizes with count
+      const { data: prizes } = await supabase
         .from('prizes')
         .select('*')
         .eq('active', true);
 
-      if (prizesError) {
-        console.error("Error fetching prizes:", prizesError);
-        throw prizesError;
-      }
-
       console.log("Active prizes:", prizes);
 
-      // Get overall top performer - Modified to correctly aggregate points
-      const { data: pointsData, error: pointsError } = await supabase
+      // Get overall top performer with aggregated points
+      const { data: aggregatedPoints } = await supabase
         .from('points')
         .select(`
-          points,
-          profiles!inner(
+          user_id,
+          sum_points:points(sum),
+          profiles:profiles!points_user_id_fkey (
             first_name,
             last_name,
-            avatar_url,
             company,
-            job_title
+            job_title,
+            avatar_url
           )
         `)
-        .order('points', { ascending: false })
+        .group('user_id, profiles.first_name, profiles.last_name, profiles.company, profiles.job_title, profiles.avatar_url')
+        .order('sum_points', { ascending: false })
         .limit(1);
 
-      if (pointsError) {
-        console.error("Error fetching points:", pointsError);
-        throw pointsError;
-      }
+      console.log("Aggregated points:", aggregatedPoints);
 
-      console.log("Points data:", pointsData);
-
-      const topPerformerOverall = pointsData?.[0] ? {
-        ...pointsData[0].profiles,
-        points: pointsData[0].points
+      const topPerformerOverall = aggregatedPoints?.[0] ? {
+        ...aggregatedPoints[0].profiles,
+        points: aggregatedPoints[0].sum_points
       } : null;
 
-      // Get submissions with status counts
-      const { data: submissions, error: submissionsError } = await supabase
+      // Get submissions with status counts using correct relationship
+      const { data: submissions } = await supabase
         .from('submissions')
         .select(`
           id,
           prize_id,
-          prizes(
-            id,
+          prizes!fk_submissions_prize (
             name
           ),
           status,
@@ -100,23 +85,19 @@ const AdminAnalytics = () => {
         `)
         .gte('created_at', startDate.toISOString());
 
-      if (submissionsError) {
-        console.error("Error fetching submissions:", submissionsError);
-        throw submissionsError;
-      }
-
       console.log("Submissions:", submissions);
 
-      // Get demographics data with actual counts
-      const { data: profilesData, error: profilesError } = await supabase
+      // Get demographics data
+      const { data: profilesData } = await supabase
         .from('profiles')
-        .select('address, company, job_title');
+        .select('address, company, job_title')
+        .not('address', 'is', null);
 
-      if (profilesError) throw profilesError;
+      console.log("Profiles data:", profilesData);
 
       // Process submissions per prize
-      const submissionStats = prizes.reduce((acc: {[key: string]: any}, prize) => {
-        const prizeSubmissions = submissions.filter(s => s.prize_id === prize.id);
+      const submissionStats = (prizes || []).reduce((acc: {[key: string]: any}, prize) => {
+        const prizeSubmissions = (submissions || []).filter(s => s.prize_id === prize.id);
         acc[prize.name] = {
           total: prizeSubmissions.length,
           approved: prizeSubmissions.filter(s => s.status === 'approved').length,
@@ -133,7 +114,7 @@ const AdminAnalytics = () => {
       }, {});
 
       // Process demographics data
-      const locationStats = profilesData.reduce((acc: {[key: string]: number}, profile) => {
+      const locationStats = (profilesData || []).reduce((acc: {[key: string]: number}, profile) => {
         if (profile.address) {
           const city = profile.address.split(',')[0].trim();
           acc[city] = (acc[city] || 0) + 1;
@@ -141,14 +122,14 @@ const AdminAnalytics = () => {
         return acc;
       }, {});
 
-      const jobRoleStats = profilesData.reduce((acc: {[key: string]: number}, profile) => {
+      const jobRoleStats = (profilesData || []).reduce((acc: {[key: string]: number}, profile) => {
         if (profile.job_title) {
           acc[profile.job_title] = (acc[profile.job_title] || 0) + 1;
         }
         return acc;
       }, {});
 
-      const companyStats = profilesData.reduce((acc: {[key: string]: number}, profile) => {
+      const companyStats = (profilesData || []).reduce((acc: {[key: string]: number}, profile) => {
         if (profile.company) {
           acc[profile.company] = (acc[profile.company] || 0) + 1;
         }
@@ -156,8 +137,8 @@ const AdminAnalytics = () => {
       }, {});
 
       return {
-        totalUsers: totalUsers || 0,
-        totalPrizes: prizes.length,
+        totalUsers,
+        totalPrizes: prizes?.length || 0,
         topPerformerOverall,
         submissionsByPrize: Object.entries(submissionStats),
         locationDemographics: Object.entries(locationStats)
