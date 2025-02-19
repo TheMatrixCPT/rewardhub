@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Users, Trophy, MapPin, Briefcase, BarChart, MessageSquare, Building2 } from "lucide-react";
@@ -29,11 +30,10 @@ const AdminAnalytics = () => {
       const startDate = startOfMonth(subMonths(new Date(), parseInt(timeframe)));
       const oneMonthAgo = subMonths(new Date(), 1);
       
-      // Get total users count (only counting users who have completed their profiles)
+      // Get total registered users count (all users in the profiles table)
       const { count: totalUsers } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .not('first_name', 'is', null);
+        .select('*', { count: 'exact', head: true });
 
       // Get active users (users with submissions in the last month)
       const { count: activeUsers } = await supabase
@@ -48,25 +48,56 @@ const AdminAnalytics = () => {
         .select('*')
         .eq('active', true);
 
-      // Get top performer
+      // Get top performer (most points and approved submissions)
+      const { data: topPerformers } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          company,
+          job_title,
+          avatar_url
+        `);
+
+      // Get points data for top performers
       const { data: pointsData } = await supabase
-        .rpc('get_user_rankings')
-        .limit(1);
+        .from('points')
+        .select('user_id, points')
+        .order('points', { ascending: false });
 
+      // Get approved submissions count for top performers
+      const { data: submissionsData } = await supabase
+        .from('submissions')
+        .select('user_id, status')
+        .eq('status', 'approved');
+
+      // Calculate top performer based on points and approved submissions
       let topPerformerOverall = null;
-      if (pointsData?.[0]) {
-        const { data: userData } = await supabase
-          .from('profiles')
-          .select('first_name, last_name, company, job_title, avatar_url')
-          .eq('id', pointsData[0].user_id)
-          .single();
-
-        if (userData) {
-          topPerformerOverall = {
-            ...userData,
-            points: pointsData[0].rank
+      if (topPerformers && pointsData && submissionsData) {
+        const userStats = topPerformers.map(user => {
+          const userPoints = pointsData
+            .filter(p => p.user_id === user.id)
+            .reduce((sum, p) => sum + p.points, 0);
+          const approvedSubmissions = submissionsData
+            .filter(s => s.user_id === user.id)
+            .length;
+          return {
+            ...user,
+            points: userPoints,
+            approvedSubmissions
           };
-        }
+        });
+
+        // Sort by points and approved submissions
+        userStats.sort((a, b) => {
+          if (b.points !== a.points) {
+            return b.points - a.points;
+          }
+          return b.approvedSubmissions - a.approvedSubmissions;
+        });
+
+        topPerformerOverall = userStats[0];
       }
 
       // Get submissions with prize filter
@@ -91,7 +122,7 @@ const AdminAnalytics = () => {
 
       const { data: submissions } = await submissionsQuery;
 
-      // Get demographics data
+      // Get all profiles for demographics
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('address, company, job_title');
@@ -103,13 +134,7 @@ const AdminAnalytics = () => {
           total: prizeSubmissions.length,
           approved: prizeSubmissions.filter(s => s.status === 'approved').length,
           pending: prizeSubmissions.filter(s => s.status === 'pending').length,
-          rejected: prizeSubmissions.filter(s => s.status === 'rejected').length,
-          linkedInMetrics: {
-            likes: 0,
-            shares: 0,
-            comments: 0,
-            views: 0
-          }
+          rejected: prizeSubmissions.filter(s => s.status === 'rejected').length
         };
         return acc;
       }, {});
@@ -126,6 +151,8 @@ const AdminAnalytics = () => {
       const jobRoleStats = (profilesData || []).reduce((acc: {[key: string]: number}, profile) => {
         if (profile.job_title) {
           acc[profile.job_title] = (acc[profile.job_title] || 0) + 1;
+        } else {
+          acc['Not Specified'] = (acc['Not Specified'] || 0) + 1;
         }
         return acc;
       }, {});
@@ -133,6 +160,8 @@ const AdminAnalytics = () => {
       const companyStats = (profilesData || []).reduce((acc: {[key: string]: number}, profile) => {
         if (profile.company) {
           acc[profile.company] = (acc[profile.company] || 0) + 1;
+        } else {
+          acc['Not Specified'] = (acc['Not Specified'] || 0) + 1;
         }
         return acc;
       }, {});
