@@ -241,6 +241,13 @@ export type Database = {
             referencedRelation: "prizes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "prize_registrations_user_id_fkey1"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       prizes: {
@@ -492,6 +499,13 @@ export type Database = {
             columns: ["prize_id"]
             isOneToOne: false
             referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prize_registrations_user_id_fkey1"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

@@ -59,11 +59,11 @@ const AdminAnalytics = () => {
         .from('prize_registrations')
         .select(`
           points,
-          prizes:prize_id (
+          prize:prize_id(
             name,
             id
           ),
-          profiles:user_id (
+          user:user_id(
             first_name,
             last_name,
             company,
@@ -120,17 +120,17 @@ const AdminAnalytics = () => {
 
       // Process top performers per prize
       const topPerformersByPrize = prizeTopPerformers.reduce((acc: { [key: string]: TopPerformer }, curr) => {
-        const prizeId = curr.prizes?.id;
-        const prizeName = curr.prizes?.name;
+        const prizeId = curr.prize?.id;
+        const prizeName = curr.prize?.name;
         
         if (prizeId && prizeName && (!acc[prizeId] || (acc[prizeId].points < curr.points))) {
           acc[prizeId] = {
             prizeName,
             points: curr.points,
-            first_name: curr.profiles?.first_name,
-            last_name: curr.profiles?.last_name,
-            company: curr.profiles?.company,
-            job_title: curr.profiles?.job_title
+            first_name: curr.user?.first_name,
+            last_name: curr.user?.last_name,
+            company: curr.user?.company,
+            job_title: curr.user?.job_title
           };
         }
         return acc;
