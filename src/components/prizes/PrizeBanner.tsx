@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format, isPast, isFuture } from "date-fns";
+import { format, isPast, isFuture, startOfDay } from "date-fns";
 import { Trophy } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -106,12 +107,12 @@ const PrizeBanner = ({ prizes: propPrizes }: PrizeBannerProps) => {
   };
 
   const isRegistrationOpen = (prize: Tables<"prizes">) => {
-    const now = new Date();
-    const start = prize.registration_start ? new Date(prize.registration_start) : null;
-    const end = prize.registration_end ? new Date(prize.registration_end) : null;
+    const now = startOfDay(new Date());
+    const start = prize.registration_start ? startOfDay(new Date(prize.registration_start)) : null;
+    const end = prize.registration_end ? startOfDay(new Date(prize.registration_end)) : null;
     
     if (!start || !end) return true; // If no dates set, registration is open
-    return !isPast(end) && !isFuture(start);
+    return now >= start && now <= end; // Include current date in the registration period
   };
 
   if (!activePrizes?.length) return null;
@@ -129,11 +130,18 @@ const PrizeBanner = ({ prizes: propPrizes }: PrizeBannerProps) => {
             <CarouselItem key={prize.id} className="md:basis-1/2 lg:basis-1/3">
               <Card className="p-4">
                 {prize.image_url && (
-                  <img
-                    src={prize.image_url}
-                    alt={prize.name}
-                    className="w-full h-32 object-cover rounded-md mb-4"
-                  />
+                  <div className="relative w-full h-32 mb-4">
+                    <img
+                      src={prize.image_url}
+                      alt={prize.name}
+                      className="absolute inset-0 w-full h-full object-cover rounded-md"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg"; // Fallback image
+                        console.error("Failed to load image:", prize.image_url);
+                      }}
+                    />
+                  </div>
                 )}
                 <div className="space-y-2">
                   <h3 className="font-semibold">{prize.name}</h3>
