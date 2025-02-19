@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Users, Trophy, MapPin, Briefcase, BarChart, MessageSquare, Building2, Share2, ThumbsUp, Eye } from "lucide-react";
@@ -14,19 +15,29 @@ import { format, subMonths, startOfMonth } from "date-fns";
 
 const AdminAnalytics = () => {
   const [timeframe, setTimeframe] = useState("3");
+  const [selectedPrize, setSelectedPrize] = useState<string>("all");
+  const [locationSort, setLocationSort] = useState<"name" | "count">("count");
+  const [companySort, setCompanySort] = useState<"name" | "count">("count");
+  const [roleSort, setRoleSort] = useState<"name" | "count">("count");
 
   const { data: analyticsData } = useQuery({
-    queryKey: ["business-analytics", timeframe],
+    queryKey: ["business-analytics", timeframe, selectedPrize],
     queryFn: async () => {
       console.log("Starting analytics data fetch...");
       const startDate = startOfMonth(subMonths(new Date(), parseInt(timeframe)));
+      const oneMonthAgo = subMonths(new Date(), 1);
       
       // Get total users count
       const { count: totalUsers } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      console.log("Total users:", totalUsers);
+      // Get active users (users with submissions in the last month)
+      const { count: activeUsers } = await supabase
+        .from('submissions')
+        .select('user_id', { count: 'exact', head: true })
+        .gte('created_at', oneMonthAgo.toISOString())
+        .not('user_id', 'is', null);
 
       // Get active prizes
       const { data: prizes } = await supabase
@@ -34,14 +45,10 @@ const AdminAnalytics = () => {
         .select('*')
         .eq('active', true);
 
-      console.log("Active prizes:", prizes);
-
-      // Get top performer by calculating total points
+      // Get top performer
       const { data: pointsData } = await supabase
         .rpc('get_user_rankings')
         .limit(1);
-
-      console.log("Points data:", pointsData);
 
       let topPerformerOverall = null;
       if (pointsData?.[0]) {
@@ -54,13 +61,13 @@ const AdminAnalytics = () => {
         if (userData) {
           topPerformerOverall = {
             ...userData,
-            points: pointsData[0].rank === 1 ? pointsData[0].points || 0 : 0
+            points: pointsData[0].rank
           };
         }
       }
 
-      // Get submissions
-      const { data: submissions } = await supabase
+      // Get submissions with prize filter
+      let submissionsQuery = supabase
         .from('submissions')
         .select(`
           id,
@@ -75,14 +82,16 @@ const AdminAnalytics = () => {
         `)
         .gte('created_at', startDate.toISOString());
 
-      console.log("Submissions:", submissions);
+      if (selectedPrize !== 'all') {
+        submissionsQuery = submissionsQuery.eq('prize_id', selectedPrize);
+      }
+
+      const { data: submissions } = await submissionsQuery;
 
       // Get demographics data
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('address, company, job_title');
-
-      console.log("Profiles data:", profilesData);
 
       // Process submissions per prize
       const submissionStats = (prizes || []).reduce((acc: {[key: string]: any}, prize) => {
@@ -102,7 +111,7 @@ const AdminAnalytics = () => {
         return acc;
       }, {});
 
-      // Process demographics data
+      // Process demographics with sorting options
       const locationStats = (profilesData || []).reduce((acc: {[key: string]: number}, profile) => {
         if (profile.address) {
           const city = profile.address.split(',')[0].trim();
@@ -127,18 +136,17 @@ const AdminAnalytics = () => {
 
       return {
         totalUsers: totalUsers || 0,
+        activeUsers: activeUsers || 0,
         totalPrizes: prizes?.length || 0,
+        prizes: prizes || [],
         topPerformerOverall,
         submissionsByPrize: Object.entries(submissionStats),
         locationDemographics: Object.entries(locationStats)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5),
+          .sort((a, b) => locationSort === 'name' ? a[0].localeCompare(b[0]) : b[1] - a[1]),
         jobRoleDemographics: Object.entries(jobRoleStats)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5),
+          .sort((a, b) => roleSort === 'name' ? a[0].localeCompare(b[0]) : b[1] - a[1]),
         companyDemographics: Object.entries(companyStats)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5)
+          .sort((a, b) => companySort === 'name' ? a[0].localeCompare(b[0]) : b[1] - a[1])
       };
     }
   });
@@ -170,10 +178,14 @@ const AdminAnalytics = () => {
             <Users className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">Platform Overview</h2>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Total Users</p>
               <p className="text-3xl font-bold">{analyticsData?.totalUsers || 0}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Active Users</p>
+              <p className="text-3xl font-bold">{analyticsData?.activeUsers || 0}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Active Prizes</p>
@@ -205,9 +217,22 @@ const AdminAnalytics = () => {
 
         {/* Submissions per Prize */}
         <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <MessageSquare className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Prize Performance</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Prize Performance</h2>
+            </div>
+            <Select value={selectedPrize} onValueChange={setSelectedPrize}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select prize" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Prizes</SelectItem>
+                {analyticsData?.prizes.map(prize => (
+                  <SelectItem key={prize.id} value={prize.id}>{prize.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-6">
             {analyticsData?.submissionsByPrize.map(([prizeName, stats]: [string, any]) => (
@@ -231,39 +256,6 @@ const AdminAnalytics = () => {
                     <p className="text-xl font-bold text-red-600">{stats.rejected}</p>
                   </div>
                 </div>
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-sm font-medium mb-2">LinkedIn Engagement</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="flex items-center gap-2">
-                      <ThumbsUp className="h-4 w-4 text-blue-600" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Likes</p>
-                        <p className="text-lg font-semibold">{stats.linkedInMetrics.likes}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Share2 className="h-4 w-4 text-blue-600" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Shares</p>
-                        <p className="text-lg font-semibold">{stats.linkedInMetrics.shares}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4 text-blue-600" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Comments</p>
-                        <p className="text-lg font-semibold">{stats.linkedInMetrics.comments}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-blue-600" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Views</p>
-                        <p className="text-lg font-semibold">{stats.linkedInMetrics.views}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             ))}
           </div>
@@ -272,9 +264,20 @@ const AdminAnalytics = () => {
         <div className="grid gap-6 md:grid-cols-3">
           {/* Location Demographics */}
           <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <MapPin className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Top Locations</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold">Locations</h2>
+              </div>
+              <Select value={locationSort} onValueChange={setLocationSort}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="count">By Count</SelectItem>
+                  <SelectItem value="name">By Name</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               {analyticsData?.locationDemographics.map(([location, count]) => (
@@ -288,9 +291,20 @@ const AdminAnalytics = () => {
 
           {/* Job Roles */}
           <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Briefcase className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Popular Job Roles</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold">Job Roles</h2>
+              </div>
+              <Select value={roleSort} onValueChange={setRoleSort}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="count">By Count</SelectItem>
+                  <SelectItem value="name">By Name</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               {analyticsData?.jobRoleDemographics.map(([role, count]) => (
@@ -304,9 +318,20 @@ const AdminAnalytics = () => {
 
           {/* Companies */}
           <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Building2 className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Top Companies</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold">Companies</h2>
+              </div>
+              <Select value={companySort} onValueChange={setCompanySort}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="count">By Count</SelectItem>
+                  <SelectItem value="name">By Name</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               {analyticsData?.companyDemographics.map(([company, count]) => (
