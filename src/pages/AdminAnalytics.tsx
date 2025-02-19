@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Users, Trophy, MapPin, Briefcase, BarChart, MessageSquare, Building2 } from "lucide-react";
@@ -12,6 +11,15 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths, startOfMonth } from "date-fns";
+
+interface TopPerformer {
+  prizeName: string;
+  points: number;
+  first_name: string | null;
+  last_name: string | null;
+  company: string | null;
+  job_title: string | null;
+}
 
 const AdminAnalytics = () => {
   const [timeframe, setTimeframe] = useState("3");
@@ -46,16 +54,16 @@ const AdminAnalytics = () => {
 
       if (topError) throw topError;
 
-      // Get top performers per prize
+      // Get top performers per prize using a join
       const { data: prizeTopPerformers, error: prizeTopError } = await supabase
         .from('prize_registrations')
         .select(`
           points,
-          prizes (
+          prizes:prize_id (
             name,
             id
           ),
-          profiles (
+          profiles:user_id (
             first_name,
             last_name,
             company,
@@ -111,22 +119,22 @@ const AdminAnalytics = () => {
       }, {});
 
       // Process top performers per prize
-      const topPerformersByPrize = Object.values(
-        prizeTopPerformers.reduce((acc: any, curr) => {
-          const prizeId = curr.prizes?.id;
-          if (prizeId && (!acc[prizeId] || acc[prizeId].points < curr.points)) {
-            acc[prizeId] = {
-              prizeName: curr.prizes?.name,
-              points: curr.points,
-              first_name: curr.profiles?.first_name,
-              last_name: curr.profiles?.last_name,
-              company: curr.profiles?.company,
-              job_title: curr.profiles?.job_title
-            };
-          }
-          return acc;
-        }, {})
-      );
+      const topPerformersByPrize = prizeTopPerformers.reduce((acc: { [key: string]: TopPerformer }, curr) => {
+        const prizeId = curr.prizes?.id;
+        const prizeName = curr.prizes?.name;
+        
+        if (prizeId && prizeName && (!acc[prizeId] || (acc[prizeId].points < curr.points))) {
+          acc[prizeId] = {
+            prizeName,
+            points: curr.points,
+            first_name: curr.profiles?.first_name,
+            last_name: curr.profiles?.last_name,
+            company: curr.profiles?.company,
+            job_title: curr.profiles?.job_title
+          };
+        }
+        return acc;
+      }, {});
 
       // Process demographics data
       const locationStats = locationData.reduce((acc: {[key: string]: number}, curr) => {
@@ -150,7 +158,7 @@ const AdminAnalytics = () => {
       return {
         totalUsers: totalUsers[0]?.count || 0,
         topPerformerOverall,
-        topPerformersByPrize,
+        topPerformersByPrize: Object.values(topPerformersByPrize),
         submissionsByPrize: Object.entries(submissionStats),
         locationDemographics: Object.entries(locationStats)
           .sort((a, b) => b[1] - a[1])
